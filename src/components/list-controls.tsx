@@ -1,5 +1,7 @@
-import { Search } from "lucide-react";
+import { Search, type LucideIcon } from "lucide-react";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import { TableCell, TableRow } from "@/components/ui/table";
 import {
   Pagination,
   PaginationContent,
@@ -25,6 +27,25 @@ function href(path: string, params: { q: string; page: number; archived: boolean
   if (params.archived) search.set("archived", "1");
   const qs = search.toString();
   return qs ? `${path}?${qs}` : path;
+}
+
+/** Full-width table row shown when a list has no rows. */
+export function EmptyRow({ colSpan, icon: Icon, title, description }: { colSpan: number; icon: LucideIcon; title: string; description: string }) {
+  return (
+    <TableRow className="hover:bg-transparent">
+      <TableCell colSpan={colSpan} className="whitespace-normal">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Icon />
+            </EmptyMedia>
+            <EmptyTitle>{title}</EmptyTitle>
+            <EmptyDescription>{description}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </TableCell>
+    </TableRow>
+  );
 }
 
 /** GET search form; submitting resets to page 1. */

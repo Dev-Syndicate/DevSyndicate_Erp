@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Building2 } from "lucide-react";
+import { EmptyRow } from "@/components/list-controls";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listClients } from "@/features/clients/queries";
@@ -12,7 +14,7 @@ export function ClientsTable({ rows }: { rows: Rows }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Company</TableHead>
+              <TableHead className="w-[35%]">Company</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>GSTIN</TableHead>
               <TableHead>Primary contact</TableHead>
@@ -20,11 +22,7 @@ export function ClientsTable({ rows }: { rows: Rows }) {
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  No clients found.
-                </TableCell>
-              </TableRow>
+              <EmptyRow colSpan={4} icon={Building2} title="No clients found" description="Clients you add appear here. If you searched, try a different name." />
             )}
             {rows.map((c) => {
               const primary = c.client_contacts.find((x) => x.is_primary) ?? c.client_contacts[0];

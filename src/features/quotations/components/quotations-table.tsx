@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { FileText } from "lucide-react";
+import { EmptyRow } from "@/components/list-controls";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listQuotations } from "@/features/quotations/queries";
@@ -23,21 +25,17 @@ export function QuotationsTable({ rows }: { rows: Rows }) {
           <TableHeader>
             <TableRow>
               <TableHead>Number</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Client</TableHead>
+              <TableHead className="w-[30%]">Title</TableHead>
+              <TableHead className="w-[22%]">Client</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Valid until</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="pl-6">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  No quotations found.
-                </TableCell>
-              </TableRow>
+              <EmptyRow colSpan={7} icon={FileText} title="No quotations yet" description="Quotations you create appear here. If you searched, try a different title or number." />
             )}
             {rows.map((q) => (
               <TableRow key={q.id}>
@@ -55,7 +53,7 @@ export function QuotationsTable({ rows }: { rows: Rows }) {
                 <TableCell className="tabular-nums">{formatDate(q.quotation_date)}</TableCell>
                 <TableCell className="tabular-nums">{formatDate(q.valid_until)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatINR(q.grand_total)}</TableCell>
-                <TableCell>
+                <TableCell className="pl-6">
                   <QuotationStatusBadge status={displayStatus(q, today)} />
                 </TableCell>
               </TableRow>

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Truck } from "lucide-react";
+import { EmptyRow } from "@/components/list-controls";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listVendors } from "@/features/vendors/queries";
@@ -12,7 +14,7 @@ export function VendorsTable({ rows }: { rows: Rows }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Vendor</TableHead>
+              <TableHead className="w-[35%]">Vendor</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>GSTIN</TableHead>
               <TableHead>Default category</TableHead>
@@ -20,11 +22,7 @@ export function VendorsTable({ rows }: { rows: Rows }) {
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  No vendors found.
-                </TableCell>
-              </TableRow>
+              <EmptyRow colSpan={4} icon={Truck} title="No vendors found" description="Vendors you add appear here. If you searched, try a different name." />
             )}
             {rows.map((v) => (
               <TableRow key={v.id}>

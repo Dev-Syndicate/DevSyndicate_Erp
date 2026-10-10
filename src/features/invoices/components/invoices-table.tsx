@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ReceiptText } from "lucide-react";
+import { EmptyRow } from "@/components/list-controls";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listInvoices } from "@/features/invoices/queries";
@@ -18,20 +20,16 @@ export function InvoicesTable({ rows }: { rows: Rows }) {
           <TableHeader>
             <TableRow>
               <TableHead>Number</TableHead>
-              <TableHead>Client</TableHead>
+              <TableHead className="w-[40%]">Client</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Due</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="pl-6">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  No invoices found.
-                </TableCell>
-              </TableRow>
+              <EmptyRow colSpan={6} icon={ReceiptText} title="No invoices yet" description="Create an invoice or convert an accepted quotation. If you searched, try a different number." />
             )}
             {rows.map((inv) => (
               <TableRow key={inv.id}>
@@ -48,7 +46,7 @@ export function InvoicesTable({ rows }: { rows: Rows }) {
                 <TableCell className="tabular-nums">{formatDate(inv.invoice_date)}</TableCell>
                 <TableCell className="tabular-nums">{formatDate(inv.due_date)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatINR(inv.grand_total)}</TableCell>
-                <TableCell>
+                <TableCell className="pl-6">
                   <InvoiceStatusBadge status={displayStatus(inv, today)} />
                 </TableCell>
               </TableRow>
