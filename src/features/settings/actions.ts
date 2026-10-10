@@ -12,6 +12,7 @@ export async function updateCompanySettings(_prev: FormState, formData: FormData
     ...Object.fromEntries(formData),
     gst_registered: formData.get("gst_registered") === "on",
     round_off: formData.get("round_off") === "on",
+    show_sac: formData.get("show_sac") === "on",
   });
   const numbering = numberingSchema.safeParse(numberingFromForm(formData));
   if (!parsed.success || !numbering.success) {

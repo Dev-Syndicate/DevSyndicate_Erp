@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/dates";
 
 type Invoice = NonNullable<Awaited<ReturnType<typeof getInvoice>>>;
 
-export function InvoiceView({ inv }: { inv: Invoice }) {
+export function InvoiceView({ inv, showSac }: { inv: Invoice; showSac: boolean }) {
   const showTax = inv.gst_applicable && inv.supply_type !== "export";
   const c = inv.clients;
   // Issued invoices show the billing snapshot taken on issue; drafts show the client's current details.
@@ -77,7 +77,7 @@ export function InvoiceView({ inv }: { inv: Invoice }) {
         </p>
       )}
 
-      <DocumentItemsTable items={inv.invoice_items} showTax={showTax} showSac={inv.gst_applicable} />
+      <DocumentItemsTable items={inv.invoice_items} showTax={showTax} showSac={showSac} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
         <Card>

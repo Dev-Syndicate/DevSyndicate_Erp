@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/dates";
 
 type Quotation = NonNullable<Awaited<ReturnType<typeof getQuotation>>>;
 
-export function QuotationView({ q }: { q: Quotation }) {
+export function QuotationView({ q, showSac }: { q: Quotation; showSac: boolean }) {
   const showTax = q.gst_applicable && q.supply_type !== "export";
   const c = q.clients;
 
@@ -51,7 +51,7 @@ export function QuotationView({ q }: { q: Quotation }) {
 
       {q.description && <p className="text-sm whitespace-pre-line text-muted-foreground">{q.description}</p>}
 
-      <DocumentItemsTable items={q.quotation_items} showTax={showTax} showSac={q.gst_applicable} />
+      <DocumentItemsTable items={q.quotation_items} showTax={showTax} showSac={showSac} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
         <Card>

@@ -139,7 +139,7 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
           </CardContent>
         </Card>
 
-        <LineItemsCard items={items} setItems={setItems} newLine={() => blankLine(settings)} totals={totals} showTax={showTax} taxRates={taxRates} errors={errors} />
+        <LineItemsCard items={items} setItems={setItems} newLine={() => blankLine(settings)} totals={totals} showTax={showTax} showSac={settings?.show_sac ?? false} taxRates={taxRates} errors={errors} />
 
         <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
           <Card>

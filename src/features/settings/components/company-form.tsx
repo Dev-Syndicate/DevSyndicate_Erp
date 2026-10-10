@@ -48,7 +48,7 @@ export function CompanyForm({ settings: s, taxRates, numbering, canEdit }: Props
     </Field>
   );
 
-  const toggle = (name: "gst_registered" | "round_off", label: string, description: string) => (
+  const toggle = (name: "gst_registered" | "round_off" | "show_sac", label: string, description: string) => (
     <Field orientation="horizontal" className="rounded-lg border p-4">
       <FieldContent>
         <FieldLabel htmlFor={name}>{label}</FieldLabel>
@@ -111,6 +111,9 @@ export function CompanyForm({ settings: s, taxRates, numbering, canEdit }: Props
             <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="col-span-full">
                 {toggle("gst_registered", "GST registered", "Issue tax invoices with GSTIN, SAC codes and CGST/SGST/IGST.")}
+              </div>
+              <div className="col-span-full">
+                {toggle("show_sac", "Show SAC codes", "Show a SAC column on quotation and invoice lines. When off, every line uses the default SAC code.")}
               </div>
               {text("gstin", "GSTIN", { maxLength: 15, className: "uppercase" })}
               {text("default_sac_code", "Default SAC code", { inputMode: "numeric" })}

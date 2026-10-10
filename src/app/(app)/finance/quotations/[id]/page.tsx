@@ -12,6 +12,7 @@ import { QuotationView } from "@/features/quotations/components/quotation-view";
 import { quotationLabel } from "@/features/quotations/components/quotations-table";
 import { getQuotation } from "@/features/quotations/queries";
 import { displayStatus } from "@/features/quotations/schema";
+import { getCompanySettings } from "@/features/settings/queries";
 import { formatDate, istToday } from "@/lib/dates";
 import { formatINR } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
@@ -19,10 +20,11 @@ import { createClient } from "@/lib/supabase/server";
 async function QuotationDetail({ params }: { params: PageProps<"/finance/quotations/[id]">["params"] }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [q, user, newer] = await Promise.all([
+  const [q, user, newer, settings] = await Promise.all([
     getQuotation(id).catch(() => null),
     getCurrentUser(),
     supabase.from("quotations").select("id", { count: "exact", head: true }).eq("previous_revision_id", id),
+    getCompanySettings(),
   ]);
   if (!q) notFound();
   const status = displayStatus(q, istToday());
@@ -48,7 +50,7 @@ async function QuotationDetail({ params }: { params: PageProps<"/finance/quotati
           />
         </div>
       </div>
-      <QuotationView q={q} />
+      <QuotationView q={q} showSac={settings?.show_sac ?? false} />
       {q.invoices.length > 0 && (
         <Card>
           <CardHeader>

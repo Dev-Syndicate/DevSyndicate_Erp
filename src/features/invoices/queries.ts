@@ -42,7 +42,7 @@ export async function getInvoiceFormData() {
     supabase.from("tax_rates").select("id, name, rate").eq("is_active", true).order("rate"),
     supabase
       .from("company_settings")
-      .select("state, gst_registered, round_off, default_sac_code, payment_terms_days, invoice_terms, tax_rates(rate)")
+      .select("state, gst_registered, round_off, show_sac, default_sac_code, payment_terms_days, invoice_terms, tax_rates(rate)")
       .maybeSingle(),
   ]);
   if (clients.error) throw clients.error;

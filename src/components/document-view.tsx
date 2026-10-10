@@ -37,7 +37,7 @@ type Totals = {
 
 const discount = (type: string, value: number) => (value > 0 ? (type === "percent" ? `${value}%` : formatINR(value)) : "—");
 
-/** `showSac`: GST documents print the SAC code per line (PRD §15). */
+/** `showSac`: company setting "Show SAC codes". */
 export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[]; showTax: boolean; showSac: boolean }) {
   return (
     <Card>

@@ -28,6 +28,7 @@ export type FormSettings = {
   state: string;
   gst_registered: boolean;
   round_off: boolean;
+  show_sac: boolean;
   default_sac_code: string;
   tax_rates: { rate: number } | null;
 } | null;
@@ -44,7 +45,7 @@ type StoredItem = {
   tax_rate: number;
 };
 
-/** New line. SAC isn't edited per line: it comes from the company default (Settings → Company). */
+/** New line with the company default SAC code and tax rate. */
 export const blankLine = (settings: FormSettings): LineItem => ({
   key: crypto.randomUUID(),
   description: "",
@@ -226,11 +227,12 @@ export function LineItemsCard(props: {
   newLine: () => LineItem;
   totals: DocumentTotals;
   showTax: boolean;
+  showSac: boolean;
   taxRates: TaxRate[];
   /** Errors keyed like "items.0.quantity". */
   errors: Record<string, string>;
 }) {
-  const { items, setItems, totals, showTax, taxRates, errors } = props;
+  const { items, setItems, totals, showTax, showSac, taxRates, errors } = props;
   const setItem = (k: string, patch: Partial<LineItem>) => setItems((list) => list.map((i) => (i.key === k ? { ...i, ...patch } : i)));
 
   return (
@@ -249,6 +251,7 @@ export function LineItemsCard(props: {
           <TableHeader>
             <TableRow>
               <TableHead>Description</TableHead>
+              {showSac && <TableHead className="w-24">SAC</TableHead>}
               <TableHead className="w-24">Qty</TableHead>
               <TableHead className="w-32">Unit price</TableHead>
               <TableHead className="w-44">Discount</TableHead>
@@ -266,6 +269,11 @@ export function LineItemsCard(props: {
                     <Input aria-label={`Line ${i + 1} description`} value={item.description} onChange={(ev) => setItem(item.key, { description: ev.target.value })} aria-invalid={!!e("description")} />
                     <FieldError className="mt-1">{e("description")}</FieldError>
                   </TableCell>
+                  {showSac && (
+                    <TableCell>
+                      <Input aria-label={`Line ${i + 1} SAC code`} value={item.sac_code} onChange={(ev) => setItem(item.key, { sac_code: ev.target.value })} inputMode="numeric" />
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Input aria-label={`Line ${i + 1} quantity`} value={item.quantity} onChange={(ev) => setItem(item.key, { quantity: ev.target.value })} inputMode="decimal" className="text-right tabular-nums" aria-invalid={!!e("quantity")} />
                     <FieldError className="mt-1">{e("quantity")}</FieldError>

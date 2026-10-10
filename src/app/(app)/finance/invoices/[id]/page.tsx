@@ -7,11 +7,12 @@ import { InvoiceStatusBadge } from "@/features/invoices/components/invoice-statu
 import { InvoiceView } from "@/features/invoices/components/invoice-view";
 import { getInvoice } from "@/features/invoices/queries";
 import { displayStatus, invoiceLabel } from "@/features/invoices/schema";
+import { getCompanySettings } from "@/features/settings/queries";
 import { istToday } from "@/lib/dates";
 
 async function InvoiceDetail({ params }: { params: PageProps<"/finance/invoices/[id]">["params"] }) {
   const { id } = await params;
-  const [inv, user] = await Promise.all([getInvoice(id).catch(() => null), getCurrentUser()]);
+  const [inv, user, settings] = await Promise.all([getInvoice(id).catch(() => null), getCurrentUser(), getCompanySettings()]);
   if (!inv) notFound();
   const status = displayStatus(inv, istToday());
 
@@ -31,7 +32,7 @@ async function InvoiceDetail({ params }: { params: PageProps<"/finance/invoices/
           <InvoiceActions id={inv.id} status={status} can={(p) => !!user?.permissions.includes(p)} />
         </div>
       </div>
-      <InvoiceView inv={inv} />
+      <InvoiceView inv={inv} showSac={settings?.show_sac ?? false} />
     </>
   );
 }

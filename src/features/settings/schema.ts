@@ -18,6 +18,7 @@ export const companySettingsSchema = z
     website: text,
 
     gst_registered: z.boolean(),
+    show_sac: z.boolean(),
     gstin: optionalCode(GSTIN_RE, "Invalid GSTIN"),
     default_sac_code: z.string().trim().regex(/^[0-9]{4,8}$/, "4–8 digits"),
     default_tax_rate_id: z.union([z.literal(""), z.uuid()]).transform((v) => v || null),

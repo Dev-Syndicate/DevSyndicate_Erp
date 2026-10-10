@@ -206,6 +206,7 @@ export type Database = {
           quotation_terms: string
           quotation_validity_days: number
           round_off: boolean
+          show_sac: boolean
           signatory_name: string
           state: string
           trade_name: string
@@ -237,6 +238,7 @@ export type Database = {
           quotation_terms?: string
           quotation_validity_days?: number
           round_off?: boolean
+          show_sac?: boolean
           signatory_name?: string
           state?: string
           trade_name?: string
@@ -268,6 +270,7 @@ export type Database = {
           quotation_terms?: string
           quotation_validity_days?: number
           round_off?: boolean
+          show_sac?: boolean
           signatory_name?: string
           state?: string
           trade_name?: string
