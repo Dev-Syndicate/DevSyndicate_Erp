@@ -891,21 +891,37 @@ export type Database = {
           reset: string
         }[]
       }
-      document_period_key: { Args: { p_date: string; p_reset: string }; Returns: string }
+      document_period_key: {
+        Args: { p_date: string; p_reset: string }
+        Returns: string
+      }
       extend_quotation_validity: {
         Args: { p_id: string; p_valid_until: string }
         Returns: undefined
       }
       has_permission: { Args: { p: string }; Returns: boolean }
-      ist_today: { Args: never; Returns: string }
       is_super_admin: { Args: { uid: string }; Returns: boolean }
+      ist_today: { Args: never; Returns: string }
       my_permissions: { Args: never; Returns: string[] }
-      quotation_action: { Args: { p_action: string; p_id: string }; Returns: string }
-      render_document_number: {
-        Args: { p_date: string; p_padding: number; p_pattern: string; p_seq: number }
+      next_document_number: {
+        Args: { p_date?: string; p_doc_type: string }
         Returns: string
       }
-      save_quotation: { Args: { p_data: Json; p_id: string | null }; Returns: string }
+      quotation_action: {
+        Args: { p_action: string; p_id: string }
+        Returns: string
+      }
+      recalculate_quotation: { Args: { p_id: string }; Returns: undefined }
+      render_document_number: {
+        Args: {
+          p_date: string
+          p_padding: number
+          p_pattern: string
+          p_seq: number
+        }
+        Returns: string
+      }
+      save_quotation: { Args: { p_data: Json; p_id: string }; Returns: string }
       set_document_numbering: {
         Args: {
           p_doc_type: string
@@ -1008,3 +1024,43 @@ export type TablesUpdate<
       ? U
       : never
     : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

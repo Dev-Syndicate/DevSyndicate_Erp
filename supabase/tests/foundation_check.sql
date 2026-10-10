@@ -53,6 +53,7 @@ end $$;
 
 -- As Super Admin: last active super admin cannot be removed
 reset role;
+select set_config('request.jwt.claims', '', true); -- console context; otherwise the admin from above is still the actor
 update public.profiles set is_active = false
 where role_id = (select id from public.roles where key = 'super_admin') and email not like '%@test.local';
 do $$ begin

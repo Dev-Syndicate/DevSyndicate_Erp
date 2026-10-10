@@ -24,7 +24,8 @@ export async function saveQuotation(quotationId: string | null, input: Quotation
   if (!parsed.success) return { error: "Please fix the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("save_quotation", { p_id: quotationId, p_data: parsed.data });
+  // Generated types can't mark SQL args nullable; p_id = null creates a new quotation.
+  const { data, error } = await supabase.rpc("save_quotation", { p_id: quotationId as string, p_data: parsed.data });
   if (error) return { error: message(error) };
 
   revalidatePath("/finance/quotations");
