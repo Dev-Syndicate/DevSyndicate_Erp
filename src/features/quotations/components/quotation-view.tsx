@@ -51,7 +51,7 @@ export function QuotationView({ q }: { q: Quotation }) {
 
       {q.description && <p className="text-sm whitespace-pre-line text-muted-foreground">{q.description}</p>}
 
-      <DocumentItemsTable items={q.quotation_items} showTax={showTax} />
+      <DocumentItemsTable items={q.quotation_items} showTax={showTax} showSac={q.gst_applicable} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
         <Card>

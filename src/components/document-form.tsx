@@ -44,6 +44,7 @@ type StoredItem = {
   tax_rate: number;
 };
 
+/** New line. SAC isn't edited per line: it comes from the company default (Settings → Company). */
 export const blankLine = (settings: FormSettings): LineItem => ({
   key: crypto.randomUUID(),
   description: "",
@@ -244,11 +245,10 @@ export function LineItemsCard(props: {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <Table className="min-w-[56rem]">
+        <Table className="min-w-[50rem]">
           <TableHeader>
             <TableRow>
               <TableHead>Description</TableHead>
-              <TableHead className="w-24">SAC</TableHead>
               <TableHead className="w-24">Qty</TableHead>
               <TableHead className="w-32">Unit price</TableHead>
               <TableHead className="w-44">Discount</TableHead>
@@ -265,9 +265,6 @@ export function LineItemsCard(props: {
                   <TableCell>
                     <Input aria-label={`Line ${i + 1} description`} value={item.description} onChange={(ev) => setItem(item.key, { description: ev.target.value })} aria-invalid={!!e("description")} />
                     <FieldError className="mt-1">{e("description")}</FieldError>
-                  </TableCell>
-                  <TableCell>
-                    <Input aria-label={`Line ${i + 1} SAC code`} value={item.sac_code} onChange={(ev) => setItem(item.key, { sac_code: ev.target.value })} inputMode="numeric" />
                   </TableCell>
                   <TableCell>
                     <Input aria-label={`Line ${i + 1} quantity`} value={item.quantity} onChange={(ev) => setItem(item.key, { quantity: ev.target.value })} inputMode="decimal" className="text-right tabular-nums" aria-invalid={!!e("quantity")} />

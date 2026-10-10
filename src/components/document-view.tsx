@@ -37,7 +37,8 @@ type Totals = {
 
 const discount = (type: string, value: number) => (value > 0 ? (type === "percent" ? `${value}%` : formatINR(value)) : "—");
 
-export function DocumentItemsTable({ items, showTax }: { items: Item[]; showTax: boolean }) {
+/** `showSac`: GST documents print the SAC code per line (PRD §15). */
+export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[]; showTax: boolean; showSac: boolean }) {
   return (
     <Card>
       <CardContent>
@@ -46,7 +47,7 @@ export function DocumentItemsTable({ items, showTax }: { items: Item[]; showTax:
             <TableRow>
               <TableHead className="w-10">#</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>SAC</TableHead>
+              {showSac && <TableHead>SAC</TableHead>}
               <TableHead className="text-right">Qty</TableHead>
               <TableHead className="text-right">Unit price</TableHead>
               <TableHead className="text-right">Discount</TableHead>
@@ -60,7 +61,7 @@ export function DocumentItemsTable({ items, showTax }: { items: Item[]; showTax:
               <TableRow key={i.id}>
                 <TableCell className="text-muted-foreground">{i.position}</TableCell>
                 <TableCell className="whitespace-pre-line">{i.description}</TableCell>
-                <TableCell className="font-mono text-xs">{i.sac_code}</TableCell>
+                {showSac && <TableCell className="font-mono text-xs">{i.sac_code}</TableCell>}
                 <TableCell className="text-right tabular-nums">{i.quantity}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatINR(i.unit_price)}</TableCell>
                 <TableCell className="text-right tabular-nums">{discount(i.discount_type, i.discount_value)}</TableCell>

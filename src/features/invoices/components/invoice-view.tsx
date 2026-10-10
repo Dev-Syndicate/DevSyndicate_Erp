@@ -77,7 +77,7 @@ export function InvoiceView({ inv }: { inv: Invoice }) {
         </p>
       )}
 
-      <DocumentItemsTable items={inv.invoice_items} showTax={showTax} />
+      <DocumentItemsTable items={inv.invoice_items} showTax={showTax} showSac={inv.gst_applicable} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
         <Card>
