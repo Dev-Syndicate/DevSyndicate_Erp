@@ -13,7 +13,7 @@ async function EditInvoice({ params }: { params: PageProps<"/finance/invoices/[i
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Edit draft invoice</h1>
-      <InvoiceForm {...data} invoice={invoice} />
+      <InvoiceForm key={invoice.updated_at} {...data} invoice={invoice} />
     </>
   );
 }

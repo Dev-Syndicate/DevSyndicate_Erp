@@ -14,7 +14,7 @@ async function EditQuotation({ params }: { params: PageProps<"/finance/quotation
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Edit {quotationLabel(quotation)}</h1>
-      <QuotationForm {...data} quotation={quotation} />
+      <QuotationForm key={quotation.updated_at} {...data} quotation={quotation} />
     </>
   );
 }

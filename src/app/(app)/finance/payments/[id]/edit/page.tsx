@@ -19,7 +19,7 @@ async function EditPayment({ params }: { params: PageProps<"/finance/payments/[i
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Edit pending payment</h1>
-      <PaymentForm clients={clients} invoices={invoices} canRefund={!!user?.permissions.includes("payments.refund")} payment={payment} />
+      <PaymentForm key={payment.updated_at} clients={clients} invoices={invoices} canRefund={!!user?.permissions.includes("payments.refund")} payment={payment} />
     </>
   );
 }

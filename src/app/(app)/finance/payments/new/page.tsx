@@ -9,6 +9,9 @@ async function NewPayment({ searchParams }: { searchParams: PageProps<"/finance/
   const [clients, invoices, user] = await Promise.all([getPaymentClients(), getOpenInvoices(), getCurrentUser()]);
   return (
     <PaymentForm
+      // Next keeps a page's client state when you navigate away and back (Activity); a new key whenever the
+      // balances change makes the form start fresh instead of showing amounts from an earlier visit.
+      key={`${invoice ?? ""}|${invoices.map((i) => `${i.id}:${i.balance_due}`).join(",")}`}
       clients={clients}
       invoices={invoices}
       canRefund={!!user?.permissions.includes("payments.refund")}
