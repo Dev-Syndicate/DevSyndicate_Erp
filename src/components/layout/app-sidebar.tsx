@@ -2,11 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronsUpDown, LogOut } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
@@ -17,10 +26,23 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { brand, navigation } from "@/config/navigation";
+import { brand, navigation, type NavItem } from "@/config/navigation";
+import { signOut } from "@/features/auth/actions";
+import type { CurrentUser } from "@/features/auth/queries";
 
-export function AppSidebar() {
+// UI-only filtering; RLS enforces the real access rules.
+function visibleNav(permissions: string[]): NavItem[] {
+  const can = (item: NavItem) => permissions.includes(item.permission);
+  return navigation.flatMap((item) => {
+    if (!item.children) return can(item) ? [item] : [];
+    const children = item.children.filter(can);
+    return children.length ? [{ ...item, children }] : [];
+  });
+}
+
+export function AppSidebar({ user }: { user: CurrentUser | null }) {
   const pathname = usePathname();
+  const items = visibleNav(user?.permissions ?? []);
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href);
 
   return (
@@ -46,7 +68,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {navigation.map((item) =>
+            {items.map((item) =>
               item.children ? (
                 <Collapsible
                   key={item.href}
@@ -89,6 +111,42 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+
+      {user && (
+        <SidebarFooter>
+          {!user.isActive && (
+            <p className="px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+              Your account has no access yet. Ask an administrator.
+            </p>
+          )}
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size="lg">
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sm font-medium uppercase">
+                      {(user.fullName || user.email).charAt(0)}
+                    </div>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-medium">{user.fullName || user.email}</span>
+                      {user.fullName && <span className="truncate text-xs text-muted-foreground">{user.email}</span>}
+                    </div>
+                    <ChevronsUpDown className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="start" className="w-(--radix-dropdown-menu-trigger-width)">
+                  <DropdownMenuLabel className="truncate font-normal text-muted-foreground">{user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => signOut()}>
+                    <LogOut />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
       <SidebarRail />
     </Sidebar>
   );

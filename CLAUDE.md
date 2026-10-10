@@ -13,6 +13,14 @@ Stack: Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS v4, shadcn/ui (
 - `pnpm lint`: ESLint
 - `pnpm dlx shadcn@latest add <component>`: add a shadcn component
 
+## Supabase
+
+- Project: `devsyndicate-erp` (ref `hnwmgeplzdyhdjfqhymo`, region ap-south-1). Env vars in `.env.local` (template: `.env.example`).
+- Schema changes go in `supabase/migrations/<version>_<name>.sql`, one file per applied migration, matching the version Supabase records.
+- After every migration: regenerate `src/lib/supabase/database.types.ts`, run the security + performance advisors, and run `supabase/tests/*.sql` (each rolls back).
+- Every table: RLS on, policies use `has_permission('<module>.<action>')` and `current_org_id()`, audit trigger attached (`audit_row_change`).
+- Server code uses `@/lib/supabase/server` (user session, RLS applies). `src/proxy.ts` refreshes the session and redirects signed-out users to `/login`.
+
 ## Rules
 
 ### 1. Feature-based folder structure
