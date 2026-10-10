@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Download, Pencil } from "lucide-react";
+import { Copy, Download, Pencil, Send } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { deleteQuotation, quotationAction } from "@/features/quotations/actions";
@@ -71,8 +71,15 @@ export function QuotationActions({ id, status, validUntil, hasNewerRevision, can
         can("quotations.convert") &&
         can("invoices.create") && <ConvertQuotationButton id={id} {...convert} />}
       {status === "draft" && can("quotations.send") && (
-        <ConfirmButton action={act("send")} title="Mark as sent?" description="Assigns the quotation number and locks the content. Share the quotation with your client yourself." confirmLabel="Mark as sent" successMessage="Quotation marked as sent">
-          Mark as sent
+        <ConfirmButton
+          action={act("send")}
+          title="Send quotation?"
+          description="Assigns the quotation number, locks the content and downloads the PDF for you to share on WhatsApp or email."
+          confirmLabel="Send and download PDF"
+          successMessage="Quotation sent. PDF downloading."
+          downloadOnSuccess={`/finance/quotations/${id}/pdf`}
+        >
+          <Send /> Send
         </ConfirmButton>
       )}
     </div>

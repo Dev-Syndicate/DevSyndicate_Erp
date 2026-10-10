@@ -33,6 +33,8 @@ export function IssueInvoiceButton({ id, credit }: { id: string; credit?: { clie
       else if (result.error && !result.ok) toast.error(result.error);
       else {
         setOpen(false);
+        // Issuing is sending in V1 (PRD §17): download the numbered PDF to share.
+        window.location.assign(`/finance/invoices/${id}/pdf`);
         if (result.error) toast.warning(result.error);
         else toast.success(result.applied ? `Invoice issued · ${formatINR(result.applied)} of credit applied` : "Invoice issued");
       }
@@ -54,7 +56,7 @@ export function IssueInvoiceButton({ id, credit }: { id: string; credit?: { clie
         <DialogHeader>
           <DialogTitle>Issue invoice?</DialogTitle>
           <DialogDescription>
-            Assigns the invoice number, records the client&apos;s billing details and locks the content. Corrections after this need a credit note.
+            Assigns the invoice number, records the client&apos;s billing details, locks the content and downloads the PDF to share. Corrections after this need a credit note.
           </DialogDescription>
         </DialogHeader>
         {credit && (

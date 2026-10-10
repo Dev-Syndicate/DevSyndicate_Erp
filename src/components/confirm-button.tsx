@@ -22,11 +22,13 @@ type Props = {
   description: string;
   confirmLabel: string;
   successMessage?: string;
+  /** File to download once the action succeeds, e.g. the PDF of a document that was just sent. */
+  downloadOnSuccess?: string;
   children: ReactNode;
 } & Pick<ComponentProps<typeof Button>, "variant" | "size" | "aria-label">;
 
 /** Button that asks for confirmation, runs a server action and toasts the result. */
-export function ConfirmButton({ action, title, description, confirmLabel, successMessage, children, ...button }: Props) {
+export function ConfirmButton({ action, title, description, confirmLabel, successMessage, downloadOnSuccess, children, ...button }: Props) {
   const [pending, startTransition] = useTransition();
 
   return (
@@ -48,7 +50,11 @@ export function ConfirmButton({ action, title, description, confirmLabel, succes
               startTransition(async () => {
                 const result = await action();
                 if (result.error) toast.error(result.error);
-                else if (successMessage) toast.success(successMessage);
+                else {
+                  if (successMessage) toast.success(successMessage);
+                  // The route answers with Content-Disposition: attachment, so this downloads without leaving the page.
+                  if (downloadOnSuccess) window.location.assign(downloadOnSuccess);
+                }
               })
             }
           >

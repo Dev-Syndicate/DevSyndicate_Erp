@@ -529,7 +529,7 @@ Users with permissions can:
 - Delete quotation (Draft only)
 - Preview quotation
 - Generate / download PDF
-- **Mark as Sent** — assigns the quotation number and locks the content. In V1, "Send" means *issue + download the PDF to share manually*; automated email is V5.
+- **Send** — one step: assigns the quotation number, locks the content and downloads the PDF to share manually (WhatsApp, email). Same as "Mark as Sent" in Zoho for documents shared outside the app; automated email is V5. *Preview PDF* on a draft prints "DRAFT".
 - **Revise** — creates a new Draft revision of a Sent quotation with the same number and `Revision + 1`. The previous revision becomes *Superseded*. PDFs show `QTN/26-27/0001 (Rev 2)`.
 - Mark as Accepted
 - Mark as Rejected
