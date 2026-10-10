@@ -168,12 +168,12 @@ function DocumentPdf({ doc }: { doc: PdfDoc }) {
         {/* Number and dates */}
         <View style={[s.between, { marginTop: 18 }]}>
           <Text>
-            {doc.number[0]}: {doc.number[1]}
+            <Text style={s.bold}>{doc.number[0]}:</Text> {doc.number[1]}
           </Text>
           <View>
             {doc.meta.map(([k, v]) => (
               <Text key={k}>
-                {k}: {v}
+                <Text style={s.bold}>{k}:</Text> {v}
               </Text>
             ))}
           </View>
