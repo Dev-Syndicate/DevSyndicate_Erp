@@ -53,7 +53,7 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
     amount: payment ? String(payment.amount) : preset ? String(preset.balance_due ?? "") : "",
     tds_amount: String(payment?.tds_amount ?? 0),
     method: (payment?.method as PaymentInput["method"]) ?? "bank_transfer",
-    reference: payment?.reference ?? "",
+    reference: payment?.reference ?? "", // asked when confirming
     notes: payment?.notes ?? "",
   }));
   // Amount to apply per invoice id (empty = not applied).
@@ -122,7 +122,7 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
         <Card>
           <CardHeader>
             <CardTitle>Payment</CardTitle>
-            <CardDescription>Saved as pending. Confirm it once the money is in your account.</CardDescription>
+            <CardDescription>Saved as pending. When the money is in your account, confirm it and add the bank reference.</CardDescription>
           </CardHeader>
           <CardContent>
             <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -196,10 +196,6 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
                     ))}
                   </SelectContent>
                 </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="reference">Reference / UTR</FieldLabel>
-                <Input id="reference" value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. UPI ref 4321…" />
               </Field>
               <Field className="sm:col-span-2 lg:col-span-4">
                 <FieldLabel htmlFor="notes">Notes</FieldLabel>

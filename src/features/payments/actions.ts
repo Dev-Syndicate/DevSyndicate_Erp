@@ -33,10 +33,25 @@ export async function savePayment(paymentId: string | null, input: PaymentInput)
   redirect(`/finance/payments/${data}`);
 }
 
-export async function paymentAction(paymentId: string, action: "confirm" | "cancel", reason?: string): Promise<FormState> {
+/** Confirm or cancel. Confirming records when the money arrived and its bank reference (known only then). */
+export async function paymentAction(
+  paymentId: string,
+  action: "confirm" | "cancel",
+  reason?: string,
+  received?: { payment_date: string; reference: string },
+): Promise<FormState> {
   if (!id.safeParse(paymentId).success || (action !== "confirm" && action !== "cancel")) return { error: "Invalid request." };
+  if (received && (!z.iso.date().safeParse(received.payment_date).success || received.reference.length > 100)) {
+    return { error: "Check the date and reference." };
+  }
   const supabase = await createClient();
-  const { error } = await supabase.rpc("payment_action", { p_id: paymentId, p_action: action, p_reason: reason?.trim() || undefined });
+  const { error } = await supabase.rpc("payment_action", {
+    p_id: paymentId,
+    p_action: action,
+    p_reason: reason?.trim() || undefined,
+    p_reference: received?.reference.trim() || undefined,
+    p_payment_date: received?.payment_date,
+  });
   if (error) return { error: dbErrorMessage(error) };
   revalidateMoney(paymentId);
   return { ok: true };

@@ -39,6 +39,12 @@ begin
     assert false, 'invoice with payments cannot be cancelled';
   exception when invalid_parameter_value then null; end;
 
+  begin
+    perform public.payment_action(public.save_payment(null, jsonb_build_object('client_id', cid, 'amount', 1, 'method', 'cash')),
+      'confirm', null, null, public.ist_today() + 1);
+    assert false, 'date received cannot be in the future';
+  exception when invalid_parameter_value then null; end;
+
   -- Over-allocation is refused
   begin
     perform public.save_payment(null, jsonb_build_object('client_id', cid, 'amount', 100, 'method', 'upi',
@@ -48,7 +54,9 @@ begin
 
   -- Advance: no allocation → client credit, applied later to a full invoice
   adv := public.save_payment(null, jsonb_build_object('client_id', cid, 'amount', 10000, 'method', 'upi'));
-  perform public.payment_action(adv, 'confirm');
+  perform public.payment_action(adv, 'confirm', null, 'UPI 412345678901', public.ist_today() - 1);
+  assert (select reference = 'UPI 412345678901' and payment_date = public.ist_today() - 1 from public.payments where id = adv),
+    'confirm records the reference and date received';
   select * into c from public.clients where id = cid;
   assert public.client_credit(c) = 10000, 'advance becomes client credit';
   inv2 := public.save_invoice(null, jsonb_build_object('client_id', cid, 'due_date', public.ist_today() + 15, 'items', item));

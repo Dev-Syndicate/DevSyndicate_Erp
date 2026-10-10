@@ -1386,7 +1386,13 @@ export type Database = {
         Returns: string
       }
       payment_action: {
-        Args: { p_action: string; p_id: string; p_reason?: string }
+        Args: {
+          p_action: string
+          p_id: string
+          p_payment_date?: string
+          p_reason?: string
+          p_reference?: string
+        }
         Returns: string
       }
       quotation_action: {

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { Download, Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
-import { deletePayment, paymentAction } from "@/features/payments/actions";
+import { deletePayment } from "@/features/payments/actions";
 import { ApplyCreditButton } from "./apply-credit-button";
 import { CancelPaymentButton } from "./cancel-payment-button";
+import { ConfirmPaymentButton } from "./confirm-payment-button";
 
 type Props = {
-  p: { id: string; kind: string; status: string; unallocated: number | null };
+  p: { id: string; kind: string; status: string; method: string; payment_date: string; reference: string; unallocated: number | null };
   openInvoices: { id: string; number: string | null; balance_due: number | null }[];
   can: (permission: string) => boolean;
 };
@@ -44,15 +45,7 @@ export function PaymentActions({ p, openInvoices, can }: Props) {
         <ApplyCreditButton paymentId={p.id} unallocated={p.unallocated ?? 0} invoices={openInvoices} />
       )}
       {pending && can("payments.update") && (
-        <ConfirmButton
-          action={paymentAction.bind(null, p.id, "confirm", undefined)}
-          title="Confirm payment?"
-          description="Confirm only once the money is in your account. It then counts toward invoices and client credit and gets a receipt number."
-          confirmLabel="Confirm"
-          successMessage="Payment confirmed"
-        >
-          Confirm
-        </ConfirmButton>
+        <ConfirmPaymentButton id={p.id} method={p.method} paymentDate={p.payment_date} reference={p.reference} />
       )}
     </div>
   );
