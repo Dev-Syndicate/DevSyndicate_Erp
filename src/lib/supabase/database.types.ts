@@ -401,6 +401,237 @@ export type Database = {
           },
         ]
       }
+      invoice_items: {
+        Row: {
+          allocated_discount: number
+          cgst: number
+          description: string
+          discount_type: string
+          discount_value: number
+          id: string
+          igst: number
+          invoice_id: string
+          line_discount: number
+          line_gross: number
+          line_net: number
+          line_total: number
+          organization_id: string
+          position: number
+          quantity: number
+          sac_code: string
+          sgst: number
+          tax_rate: number
+          taxable: number
+          unit_price: number
+        }
+        Insert: {
+          allocated_discount?: number
+          cgst?: number
+          description: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          igst?: number
+          invoice_id: string
+          line_discount?: number
+          line_gross?: number
+          line_net?: number
+          line_total?: number
+          organization_id: string
+          position: number
+          quantity: number
+          sac_code?: string
+          sgst?: number
+          tax_rate?: number
+          taxable?: number
+          unit_price: number
+        }
+        Update: {
+          allocated_discount?: number
+          cgst?: number
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          igst?: number
+          invoice_id?: string
+          line_discount?: number
+          line_gross?: number
+          line_net?: number
+          line_total?: number
+          organization_id?: string
+          position?: number
+          quantity?: number
+          sac_code?: string
+          sgst?: number
+          tax_rate?: number
+          taxable?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          billing_address: string
+          billing_gstin: string
+          billing_name: string
+          cgst_total: number
+          client_id: string
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          discount_total: number
+          discount_type: string
+          discount_value: number
+          due_date: string
+          grand_total: number
+          gst_applicable: boolean
+          id: string
+          igst_total: number
+          invoice_date: string
+          issued_at: string | null
+          issued_by: string | null
+          lut_number: string
+          notes: string
+          number: string | null
+          organization_id: string
+          over_quotation_reason: string | null
+          place_of_supply: string
+          quotation_id: string | null
+          round_off: number
+          sgst_total: number
+          status: string
+          subtotal: number
+          supply_type: string
+          taxable_total: number
+          terms: string
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: string
+          billing_gstin?: string
+          billing_name?: string
+          cgst_total?: number
+          client_id: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_total?: number
+          discount_type?: string
+          discount_value?: number
+          due_date: string
+          grand_total?: number
+          gst_applicable?: boolean
+          id?: string
+          igst_total?: number
+          invoice_date?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          lut_number?: string
+          notes?: string
+          number?: string | null
+          organization_id: string
+          over_quotation_reason?: string | null
+          place_of_supply?: string
+          quotation_id?: string | null
+          round_off?: number
+          sgst_total?: number
+          status?: string
+          subtotal?: number
+          supply_type?: string
+          taxable_total?: number
+          terms?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: string
+          billing_gstin?: string
+          billing_name?: string
+          cgst_total?: number
+          client_id?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_total?: number
+          discount_type?: string
+          discount_value?: number
+          due_date?: string
+          grand_total?: number
+          gst_applicable?: boolean
+          id?: string
+          igst_total?: number
+          invoice_date?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          lut_number?: string
+          notes?: string
+          number?: string | null
+          organization_id?: string
+          over_quotation_reason?: string | null
+          place_of_supply?: string
+          quotation_id?: string | null
+          round_off?: number
+          sgst_total?: number
+          status?: string
+          subtotal?: number
+          supply_type?: string
+          taxable_total?: number
+          terms?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -602,6 +833,7 @@ export type Database = {
           title: string
           updated_at: string
           valid_until: string
+          invoiced_total: number | null
         }
         Insert: {
           cgst_total?: number
@@ -880,6 +1112,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      convert_quotation: {
+        Args: {
+          p_id: string
+          p_items?: Json
+          p_mode: string
+          p_percent?: number
+        }
+        Returns: string
+      }
       current_org_id: { Args: never; Returns: string }
       document_numbering_settings: {
         Args: never
@@ -900,6 +1141,16 @@ export type Database = {
         Returns: undefined
       }
       has_permission: { Args: { p: string }; Returns: boolean }
+      invoice_action: {
+        Args: { p_action: string; p_id: string; p_reason?: string }
+        Returns: string
+      }
+      invoiced_total: {
+        Args: { "": Database["public"]["Tables"]["quotations"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.invoiced_total with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
       is_super_admin: { Args: { uid: string }; Returns: boolean }
       ist_today: { Args: never; Returns: string }
       my_permissions: { Args: never; Returns: string[] }
@@ -911,6 +1162,10 @@ export type Database = {
         Args: { p_action: string; p_id: string }
         Returns: string
       }
+      recalculate_document: {
+        Args: { p_doc: string; p_id: string }
+        Returns: undefined
+      }
       recalculate_quotation: { Args: { p_id: string }; Returns: undefined }
       render_document_number: {
         Args: {
@@ -921,6 +1176,7 @@ export type Database = {
         }
         Returns: string
       }
+      save_invoice: { Args: { p_data: Json; p_id: string }; Returns: string }
       save_quotation: { Args: { p_data: Json; p_id: string }; Returns: string }
       set_document_numbering: {
         Args: {

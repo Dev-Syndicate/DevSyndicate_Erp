@@ -6,6 +6,8 @@ const STYLES: Record<QuotationStatus, { label: string; className: string }> = {
   draft: { label: "Draft", className: "border-border bg-transparent text-muted-foreground" },
   sent: { label: "Sent", className: "bg-info/15 text-info" },
   accepted: { label: "Accepted", className: "bg-success/15 text-success" },
+  partially_invoiced: { label: "Partially invoiced", className: "bg-warning/15 text-warning" },
+  invoiced: { label: "Invoiced", className: "bg-success/15 text-success" },
   rejected: { label: "Rejected", className: "bg-destructive/15 text-destructive" },
   expired: { label: "Expired", className: "bg-warning/15 text-warning" },
   cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground" },

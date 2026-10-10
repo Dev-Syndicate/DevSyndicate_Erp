@@ -3,13 +3,21 @@ import { Copy, Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { deleteQuotation, quotationAction } from "@/features/quotations/actions";
+import { ConvertQuotationButton } from "@/features/quotations/components/convert-quotation-button";
 import { ExtendValidityButton } from "@/features/quotations/components/extend-validity-button";
 import type { QuotationStatus } from "@/features/quotations/schema";
 
-type Props = { id: string; status: QuotationStatus; validUntil: string; hasNewerRevision: boolean; can: (permission: string) => boolean };
+type Props = {
+  id: string;
+  status: QuotationStatus;
+  validUntil: string;
+  hasNewerRevision: boolean;
+  can: (permission: string) => boolean;
+  convert: Omit<Parameters<typeof ConvertQuotationButton>[0], "id">;
+};
 
 /** Buttons for the actions allowed in the current status (mirrors public.quotation_action). */
-export function QuotationActions({ id, status, validUntil, hasNewerRevision, can }: Props) {
+export function QuotationActions({ id, status, validUntil, hasNewerRevision, can, convert }: Props) {
   const act = (action: Parameters<typeof quotationAction>[1]) => quotationAction.bind(null, id, action);
 
   return (
@@ -54,6 +62,9 @@ export function QuotationActions({ id, status, validUntil, hasNewerRevision, can
           </ConfirmButton>
         </>
       )}
+      {(status === "accepted" || status === "partially_invoiced" || status === "invoiced") &&
+        can("quotations.convert") &&
+        can("invoices.create") && <ConvertQuotationButton id={id} {...convert} />}
       {status === "draft" && can("quotations.send") && (
         <ConfirmButton action={act("send")} title="Mark as sent?" description="Assigns the quotation number and locks the content. Share the quotation with your client yourself." confirmLabel="Mark as sent" successMessage="Quotation marked as sent">
           Mark as sent

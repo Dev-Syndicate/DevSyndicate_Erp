@@ -56,7 +56,7 @@ export function QuotationsTable({ rows }: { rows: Rows }) {
                 <TableCell className="tabular-nums">{formatDate(q.valid_until)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatINR(q.grand_total)}</TableCell>
                 <TableCell>
-                  <QuotationStatusBadge status={displayStatus(q.status, q.valid_until, today)} />
+                  <QuotationStatusBadge status={displayStatus(q, today)} />
                 </TableCell>
               </TableRow>
             ))}

@@ -5,7 +5,7 @@ export async function listQuotations({ q, page }: { q: string; page: number }) {
   const supabase = await createClient();
   let query = supabase
     .from("quotations")
-    .select("id, number, revision, title, status, quotation_date, valid_until, grand_total, clients(company_name)", {
+    .select("id, number, revision, title, status, quotation_date, valid_until, grand_total, invoiced_total, clients(company_name)", {
       count: "exact",
     })
     .order("quotation_date", { ascending: false })
@@ -25,7 +25,7 @@ export async function getQuotation(id: string) {
   const { data, error } = await supabase
     .from("quotations")
     .select(
-      "*, quotation_items(*), clients(id, company_name, billing_address, city, state, pin_code, country, gstin), client_contacts(name, email, phone)",
+      "*, invoiced_total, quotation_items(*), clients(id, company_name, billing_address, city, state, pin_code, country, gstin), client_contacts(name, email, phone), invoices(id, number, status, invoice_date, grand_total)",
     )
     .eq("id", id)
     .order("position", { referencedTable: "quotation_items" })

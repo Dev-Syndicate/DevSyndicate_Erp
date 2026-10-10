@@ -1,6 +1,10 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCurrentUser } from "@/features/auth/queries";
 import { QuotationActions } from "@/features/quotations/components/quotation-actions";
 import { QuotationStatusBadge } from "@/features/quotations/components/quotation-status-badge";
@@ -8,7 +12,8 @@ import { QuotationView } from "@/features/quotations/components/quotation-view";
 import { quotationLabel } from "@/features/quotations/components/quotations-table";
 import { getQuotation } from "@/features/quotations/queries";
 import { displayStatus } from "@/features/quotations/schema";
-import { istToday } from "@/lib/dates";
+import { formatDate, istToday } from "@/lib/dates";
+import { formatINR } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 
 async function QuotationDetail({ params }: { params: PageProps<"/finance/quotations/[id]">["params"] }) {
@@ -20,7 +25,7 @@ async function QuotationDetail({ params }: { params: PageProps<"/finance/quotati
     supabase.from("quotations").select("id", { count: "exact", head: true }).eq("previous_revision_id", id),
   ]);
   if (!q) notFound();
-  const status = displayStatus(q.status, q.valid_until, istToday());
+  const status = displayStatus(q, istToday());
 
   return (
     <>
@@ -39,10 +44,48 @@ async function QuotationDetail({ params }: { params: PageProps<"/finance/quotati
             validUntil={q.valid_until}
             hasNewerRevision={(newer.count ?? 0) > 0}
             can={(p) => !!user?.permissions.includes(p)}
+            convert={{ lines: q.quotation_items, grandTotal: q.grand_total, invoicedTotal: q.invoiced_total ?? 0 }}
           />
         </div>
       </div>
       <QuotationView q={q} />
+      {q.invoices.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Number</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {q.invoices.map((inv) => (
+                  <TableRow key={inv.id}>
+                    <TableCell className="font-mono text-sm">
+                      <Link href={`/finance/invoices/${inv.id}`} className="hover:underline">
+                        {inv.number ?? "Draft"}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="tabular-nums">{formatDate(inv.invoice_date)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatINR(inv.grand_total)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {inv.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </>
   );
 }
