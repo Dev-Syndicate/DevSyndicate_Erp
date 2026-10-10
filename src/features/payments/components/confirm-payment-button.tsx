@@ -16,18 +16,29 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { paymentAction } from "@/features/payments/actions";
 import { referenceLabel } from "@/features/payments/schema";
+import { uploadProof } from "@/features/payments/upload";
 import { istToday } from "@/lib/dates";
 
 /** Confirm once the money is in the bank: records the date it arrived and its bank reference (UTR / UPI ID). */
-export function ConfirmPaymentButton(props: { id: string; method: string; paymentDate: string; reference: string }) {
+export function ConfirmPaymentButton(props: { id: string; organizationId: string; method: string; paymentDate: string; reference: string }) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(props.paymentDate);
   const [reference, setReference] = useState(props.reference);
+  const [proof, setProof] = useState<File | null>(null);
   const [pending, startTransition] = useTransition();
   const label = referenceLabel(props.method);
 
   function confirm() {
     startTransition(async () => {
+      // Proof first: if it fails, nothing is confirmed and the user can retry or confirm without it.
+      if (proof) {
+        const uploaded = await uploadProof(props.id, props.organizationId, proof);
+        if (uploaded.error) {
+          toast.error(uploaded.error);
+          return;
+        }
+        setProof(null); // uploaded: a retry after a failed confirm must not attach it twice
+      }
       const result = await paymentAction(props.id, "confirm", undefined, { payment_date: date, reference });
       if (result.error) toast.error(result.error);
       else {
@@ -61,6 +72,16 @@ export function ConfirmPaymentButton(props: { id: string; method: string; paymen
               <FieldDescription>{label.hint}</FieldDescription>
             </Field>
           )}
+          <Field>
+            <FieldLabel htmlFor="confirm-proof">Proof of payment received (optional)</FieldLabel>
+            <Input
+              id="confirm-proof"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              onChange={(e) => setProof(e.target.files?.[0] ?? null)}
+            />
+            <FieldDescription>Screenshot of the credit in your bank or UPI app. JPG, PNG, WEBP or PDF, up to 5 MB.</FieldDescription>
+          </Field>
         </FieldGroup>
         <DialogFooter>
           <Button onClick={confirm} disabled={pending || !date}>

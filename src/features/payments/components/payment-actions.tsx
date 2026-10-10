@@ -9,12 +9,13 @@ import { ConfirmPaymentButton } from "./confirm-payment-button";
 
 type Props = {
   p: { id: string; kind: string; status: string; method: string; payment_date: string; reference: string; unallocated: number | null };
+  organizationId: string;
   openInvoices: { id: string; number: string | null; balance_due: number | null }[];
   can: (permission: string) => boolean;
 };
 
 /** Buttons for the actions allowed in the current status (mirrors public.payment_action). */
-export function PaymentActions({ p, openInvoices, can }: Props) {
+export function PaymentActions({ p, organizationId, openInvoices, can }: Props) {
   const pending = p.status === "pending";
   const confirmed = p.status === "confirmed";
   const canWrite = can(p.kind === "refund" ? "payments.refund" : "payments.create");
@@ -45,7 +46,7 @@ export function PaymentActions({ p, openInvoices, can }: Props) {
         <ApplyCreditButton paymentId={p.id} unallocated={p.unallocated ?? 0} invoices={openInvoices} />
       )}
       {pending && can("payments.update") && (
-        <ConfirmPaymentButton id={p.id} method={p.method} paymentDate={p.payment_date} reference={p.reference} />
+        <ConfirmPaymentButton id={p.id} organizationId={organizationId} method={p.method} paymentDate={p.payment_date} reference={p.reference} />
       )}
     </div>
   );

@@ -40,11 +40,12 @@ async function PaymentDetail({ params }: { params: PageProps<"/finance/payments/
           </span>
         </div>
         <div className="ml-auto">
-          <PaymentActions p={p} openInvoices={openInvoices} can={can} />
+          <PaymentActions p={p} organizationId={org.data ?? ""} openInvoices={openInvoices} can={can} />
         </div>
       </div>
       <PaymentView p={p} canUnapply={p.status === "confirmed" && can("payments.update")} />
-      {org.data && (
+      {/* Pending payments attach proof in the Confirm dialog. */}
+      {org.data && (p.status === "confirmed" || proofs.length > 0) && (
         <ProofsCard
           paymentId={p.id}
           organizationId={org.data}
