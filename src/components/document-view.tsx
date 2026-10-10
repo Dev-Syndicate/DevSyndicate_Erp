@@ -11,6 +11,7 @@ type Item = {
   position: number;
   description: string;
   sac_code: string;
+  timeline?: string;
   quantity: number;
   unit_price: number;
   discount_type: string;
@@ -39,6 +40,7 @@ const discount = (type: string, value: number) => (value > 0 ? (type === "percen
 
 /** `showSac`: company setting "Show SAC codes". */
 export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[]; showTax: boolean; showSac: boolean }) {
+  const showTimeline = items.some((i) => i.timeline);
   return (
     <Card>
       <CardContent>
@@ -47,6 +49,7 @@ export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[];
             <TableRow>
               <TableHead className="w-10">#</TableHead>
               <TableHead>Description</TableHead>
+              {showTimeline && <TableHead>Timeline</TableHead>}
               {showSac && <TableHead>SAC</TableHead>}
               <TableHead className="text-right">Qty</TableHead>
               <TableHead className="text-right">Unit price</TableHead>
@@ -61,6 +64,7 @@ export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[];
               <TableRow key={i.id}>
                 <TableCell className="text-muted-foreground">{i.position}</TableCell>
                 <TableCell className="whitespace-pre-line">{i.description}</TableCell>
+                {showTimeline && <TableCell>{i.timeline}</TableCell>}
                 {showSac && <TableCell className="font-mono text-xs">{i.sac_code}</TableCell>}
                 <TableCell className="text-right tabular-nums">{i.quantity}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatINR(i.unit_price)}</TableCell>

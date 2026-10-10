@@ -208,6 +208,7 @@ export type Database = {
           quotation_validity_days: number
           round_off: boolean
           show_sac: boolean
+          signatory_designation: string
           signatory_name: string
           signature_path: string | null
           state: string
@@ -242,6 +243,7 @@ export type Database = {
           quotation_validity_days?: number
           round_off?: boolean
           show_sac?: boolean
+          signatory_designation?: string
           signatory_name?: string
           signature_path?: string | null
           state?: string
@@ -276,6 +278,7 @@ export type Database = {
           quotation_validity_days?: number
           round_off?: boolean
           show_sac?: boolean
+          signatory_designation?: string
           signatory_name?: string
           signature_path?: string | null
           state?: string
@@ -746,6 +749,7 @@ export type Database = {
           sgst: number
           tax_rate: number
           taxable: number
+          timeline: string
           unit_price: number
         }
         Insert: {
@@ -768,6 +772,7 @@ export type Database = {
           sgst?: number
           tax_rate?: number
           taxable?: number
+          timeline?: string
           unit_price: number
         }
         Update: {
@@ -790,6 +795,7 @@ export type Database = {
           sgst?: number
           tax_rate?: number
           taxable?: number
+          timeline?: string
           unit_price?: number
         }
         Relationships: [

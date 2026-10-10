@@ -38,6 +38,7 @@ type StoredItem = {
   id: string;
   description: string;
   sac_code: string;
+  timeline?: string;
   quantity: number;
   unit_price: number;
   discount_type: string;
@@ -50,6 +51,7 @@ export const blankLine = (settings: FormSettings): LineItem => ({
   key: crypto.randomUUID(),
   description: "",
   sac_code: settings?.default_sac_code ?? "",
+  timeline: "",
   quantity: "1",
   unit_price: "",
   discount_type: "amount",
@@ -63,6 +65,7 @@ export const linesFrom = (items: StoredItem[]): LineItem[] =>
     key: i.id,
     description: i.description,
     sac_code: i.sac_code,
+    timeline: i.timeline ?? "",
     quantity: String(i.quantity),
     unit_price: String(i.unit_price),
     discount_type: i.discount_type as DiscountType,
@@ -228,11 +231,13 @@ export function LineItemsCard(props: {
   totals: DocumentTotals;
   showTax: boolean;
   showSac: boolean;
+  /** Quotations: optional "Timeline" column (e.g. "2 days"). */
+  showTimeline?: boolean;
   taxRates: TaxRate[];
   /** Errors keyed like "items.0.quantity". */
   errors: Record<string, string>;
 }) {
-  const { items, setItems, totals, showTax, showSac, taxRates, errors } = props;
+  const { items, setItems, totals, showTax, showSac, showTimeline, taxRates, errors } = props;
   const setItem = (k: string, patch: Partial<LineItem>) => setItems((list) => list.map((i) => (i.key === k ? { ...i, ...patch } : i)));
 
   return (
@@ -251,6 +256,7 @@ export function LineItemsCard(props: {
           <TableHeader>
             <TableRow>
               <TableHead>Description</TableHead>
+              {showTimeline && <TableHead className="w-28">Timeline</TableHead>}
               {showSac && <TableHead className="w-24">SAC</TableHead>}
               <TableHead className="w-24">Qty</TableHead>
               <TableHead className="w-32">Unit price</TableHead>
@@ -269,6 +275,12 @@ export function LineItemsCard(props: {
                     <Input aria-label={`Line ${i + 1} description`} value={item.description} onChange={(ev) => setItem(item.key, { description: ev.target.value })} aria-invalid={!!e("description")} />
                     <FieldError className="mt-1">{e("description")}</FieldError>
                   </TableCell>
+                  {showTimeline && (
+                    <TableCell>
+                      <Input aria-label={`Line ${i + 1} timeline`} value={item.timeline ?? ""} onChange={(ev) => setItem(item.key, { timeline: ev.target.value })} placeholder="e.g. 2 days" aria-invalid={!!e("timeline")} />
+                      <FieldError className="mt-1">{e("timeline")}</FieldError>
+                    </TableCell>
+                  )}
                   {showSac && (
                     <TableCell>
                       <Input aria-label={`Line ${i + 1} SAC code`} value={item.sac_code} onChange={(ev) => setItem(item.key, { sac_code: ev.target.value })} inputMode="numeric" />

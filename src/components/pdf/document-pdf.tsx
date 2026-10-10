@@ -1,10 +1,13 @@
 // Quotation / invoice PDF (PRD §13, §15), rendered on the server with @react-pdf/renderer.
-// PDFs have no theme: the greys below are print colours, not UI tokens (CLAUDE.md rule 2 covers the app UI).
+// Layout follows the owner's quotation template: logo + company block, big title, client, project
+// description, gridded line table, shaded total, terms, signature over a line with the designation.
+// PDFs have no theme: the colours below are print colours, not UI tokens (CLAUDE.md rule 2 covers the app UI).
 // Noto Sans is embedded because the built-in PDF fonts have no ₹ glyph (PRD §33).
 
 import path from "node:path";
 import { Document, Font, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { formatDate } from "@/lib/dates";
 import { amountInWords, formatINR, paise } from "@/lib/money";
 
 const fonts = path.join(process.cwd(), "src/assets/fonts");
@@ -17,27 +20,27 @@ Font.register({
 });
 Font.registerHyphenationCallback((word) => [word]); // never split words across lines
 
-const INK = "#111111";
-const MUTED = "#666666";
-const RULE = "#dddddd";
-const SHADE = "#f4f4f4";
+const INK = "#000000";
+const MUTED = "#444444";
+const SHADE = "#efefef";
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Noto Sans", fontSize: 9, color: INK, padding: 36, paddingBottom: 56, lineHeight: 1.4 },
+  page: { fontFamily: "Noto Sans", fontSize: 9, color: INK, paddingHorizontal: 40, paddingTop: 36, paddingBottom: 50, lineHeight: 1.4 },
   row: { flexDirection: "row" },
   between: { flexDirection: "row", justifyContent: "space-between" },
-  muted: { color: MUTED },
   bold: { fontWeight: "bold" },
-  title: { fontSize: 18, fontWeight: "bold", textAlign: "right", lineHeight: 1.2, marginBottom: 2 },
-  big: { fontSize: 11, lineHeight: 1.3 },
-  logo: { maxHeight: 56, maxWidth: 160, marginBottom: 6, objectFit: "contain", objectPosition: "left" },
-  box: { borderWidth: 1, borderColor: RULE, borderRadius: 4, padding: 10 },
-  label: { fontSize: 7.5, color: MUTED, textTransform: "uppercase", marginBottom: 3 },
-  th: { backgroundColor: SHADE, fontWeight: "bold", paddingVertical: 5 },
-  tr: { borderBottomWidth: 1, borderBottomColor: RULE, paddingVertical: 5 },
-  cell: { paddingHorizontal: 4 },
-  right: { textAlign: "right" },
-  footer: { position: "absolute", bottom: 24, left: 36, right: 36, fontSize: 7.5, color: MUTED, flexDirection: "row", justifyContent: "space-between" },
+  muted: { color: MUTED },
+  small: { fontSize: 7.5, lineHeight: 1.35 },
+  logo: { width: 70, height: 70, objectFit: "contain", marginRight: 10 },
+  company: { fontSize: 12, fontWeight: "bold", lineHeight: 1.2, marginBottom: 2 },
+  title: { fontSize: 20, fontWeight: "bold", lineHeight: 1.2, textAlign: "right", textTransform: "uppercase" },
+  thick: { borderBottomWidth: 2, borderBottomColor: INK, marginVertical: 12 },
+  table: { borderTopWidth: 1, borderLeftWidth: 1, borderColor: INK },
+  tr: { flexDirection: "row" },
+  td: { borderRightWidth: 1, borderBottomWidth: 1, borderColor: INK, paddingHorizontal: 5, paddingVertical: 4, justifyContent: "center" },
+  th: { fontWeight: "bold", textAlign: "center" },
+  heading: { fontSize: 10, fontWeight: "bold", marginBottom: 4 },
+  footer: { position: "absolute", bottom: 22, left: 40, right: 40, fontSize: 7.5, color: MUTED, textAlign: "right" },
 });
 
 export type PdfImage = { data: Buffer; format: "png" | "jpg" };
@@ -46,6 +49,7 @@ type Item = {
   position: number;
   description: string;
   sac_code: string;
+  timeline?: string;
   quantity: number;
   unit_price: number;
   discount_type: string;
@@ -59,16 +63,17 @@ type Item = {
 };
 
 export type PdfDoc = {
-  /** "Quotation", "Tax Invoice" or "Invoice". */
+  /** "Quotation", "Tax Invoice" or "Invoice" (printed in capitals). */
   title: string;
-  /** Number with revision, or "DRAFT". */
-  number: string;
-  /** Right-hand header rows, e.g. [["Date", "10-10-2026"], ["Valid until", "25-10-2026"]]. */
+  /** e.g. ["Quotation No", "QT-2026-10-0001"]; drafts pass "DRAFT". */
+  number: [string, string];
+  /** Right-hand rows, e.g. [["Date", "10/10/2026"], ["Valid Until", "25/10/2026"]]. */
   meta: [string, string][];
-  heading?: string;
-  description?: string;
+  /** Quotations: title and description, shown as "Project Description". */
+  project?: { title: string; description: string };
   company: { name: string; lines: string[]; logo: PdfImage | null };
-  billTo: { name: string; address: string; gstin: string; attention?: string };
+  /** Address lines as they should print (address as entered, then city, state, PIN). */
+  billTo: { name: string; lines: string[]; gstin: string; attention?: string };
   supplyType: string;
   gst: boolean;
   showSac: boolean;
@@ -83,151 +88,178 @@ export type PdfDoc = {
     round_off: number;
     grand_total: number;
   };
-  /** Extra blocks under the totals, e.g. bank details on invoices. */
+  /** Invoices print the amount in words (PRD §15). */
+  amountInWords?: boolean;
+  /** Blocks after the totals, e.g. bank details and terms. Empty ones are skipped. */
   sections: { label: string; text: string }[];
-  signatory: { company: string; name: string; signature: PdfImage | null };
+  signatory: { name: string; designation: string; signature: PdfImage | null };
 };
 
-const money = (v: number) => formatINR(v);
-const discount = (type: string, value: number) => (value > 0 ? (type === "percent" ? `${value}%` : money(value)) : "—");
+/** Business date → DD/MM/YYYY, as on the template. */
+export const pdfDate = (date: string) => formatDate(date).replaceAll("-", "/");
+
+const discount = (type: string, value: number) => (value > 0 ? (type === "percent" ? `${value}%` : formatINR(value)) : "—");
+
+type Col = { label: string; flex: number; align: "left" | "center" | "right"; value: (i: Item) => string };
 
 function DocumentPdf({ doc }: { doc: PdfDoc }) {
   const showTax = doc.gst && doc.supplyType !== "export";
   const t = doc.totals;
-  // Column widths (flex); description takes the rest.
-  const cols = [
-    { key: "#", w: 0.35 },
-    { key: "Description", w: 3.2 },
-    ...(doc.showSac ? [{ key: "SAC", w: 0.8 }] : []),
-    { key: "Qty", w: 0.6, right: true },
-    { key: "Rate", w: 1.1, right: true },
-    { key: "Disc.", w: 0.9, right: true },
-    { key: "Taxable", w: 1.15, right: true },
-    ...(showTax ? [{ key: "Tax", w: 1.1, right: true }] : []),
-    { key: "Amount", w: 1.2, right: true },
+  // Columns appear only when the document uses them, so a simple quote reads S.No | Description | Timeline | Cost.
+  const cols: Col[] = [
+    { label: "S.No", flex: 0.5, align: "center", value: (i) => String(i.position) },
+    { label: "Description of Services / Milestones", flex: 3.4, align: "left", value: (i) => i.description },
+    ...(doc.items.some((i) => i.timeline)
+      ? [{ label: "Estimated days /\nTimeline", flex: 1.3, align: "center" as const, value: (i: Item) => i.timeline || "—" }]
+      : []),
+    ...(doc.showSac ? [{ label: "SAC", flex: 0.8, align: "center" as const, value: (i: Item) => i.sac_code }] : []),
+    ...(doc.items.some((i) => i.quantity !== 1)
+      ? [
+          { label: "Qty", flex: 0.6, align: "center" as const, value: (i: Item) => String(i.quantity) },
+          { label: "Rate", flex: 1.1, align: "right" as const, value: (i: Item) => formatINR(i.unit_price) },
+        ]
+      : []),
+    ...(doc.items.some((i) => i.discount_value > 0)
+      ? [{ label: "Discount", flex: 0.9, align: "right" as const, value: (i: Item) => discount(i.discount_type, i.discount_value) }]
+      : []),
+    ...(showTax
+      ? [
+          { label: "Taxable", flex: 1.1, align: "right" as const, value: (i: Item) => formatINR(i.taxable) },
+          {
+            label: "GST",
+            flex: 1.1,
+            align: "right" as const,
+            value: (i: Item) => `${formatINR(paise(i.cgst) + paise(i.sgst) + paise(i.igst))}\n@ ${i.tax_rate}%`,
+          },
+        ]
+      : []),
+    { label: showTax ? "Amount" : "Cost", flex: 1.2, align: "right", value: (i) => formatINR(i.line_total) },
   ];
+
   const totals: [string, number][] = [
     ["Subtotal", t.subtotal],
-    ...(t.discount_total > 0 ? ([["Discount", -t.discount_total]] as [string, number][]) : []),
-    ["Taxable value", t.taxable_total],
+    ...(t.discount_total > 0 ? ([["Discount", -t.discount_total], ["Taxable value", t.taxable_total]] as [string, number][]) : []),
     ...(showTax && doc.supplyType === "intra" ? ([["CGST", t.cgst_total], ["SGST", t.sgst_total]] as [string, number][]) : []),
     ...(showTax && doc.supplyType === "inter" ? ([["IGST", t.igst_total]] as [string, number][]) : []),
     ...(t.round_off !== 0 ? ([["Round off", t.round_off]] as [string, number][]) : []),
   ];
+  const sections = doc.sections.filter((x) => x.text.trim());
 
   return (
-    <Document title={`${doc.title} ${doc.number}`} author={doc.company.name}>
+    <Document title={`${doc.title} ${doc.number[1]}`} author={doc.company.name}>
       <Page size="A4" style={s.page}>
-        {/* Header: company left, document title and meta right */}
-        <View style={[s.between, { marginBottom: 18 }]}>
-          <View style={{ width: "55%" }}>
+        {/* Logo + company, title */}
+        <View style={[s.between, { alignItems: "flex-start" }]}>
+          <View style={[s.row, { width: "62%" }]}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
             {doc.company.logo && <Image src={doc.company.logo} style={s.logo} />}
-            <Text style={[s.bold, s.big]}>{doc.company.name}</Text>
-            {doc.company.lines.map((l) => (
-              <Text key={l} style={s.muted}>
-                {l}
-              </Text>
-            ))}
-          </View>
-          <View style={{ width: "40%" }}>
-            <Text style={s.title}>{doc.title}</Text>
-            <Text style={[s.right, s.bold, { marginBottom: 6 }]}>{doc.number}</Text>
-            {doc.meta.map(([k, v]) => (
-              <View key={k} style={s.between}>
-                <Text style={s.muted}>{k}</Text>
-                <Text>{v}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={[s.box, { marginBottom: 14 }]}>
-          <Text style={s.label}>Bill to</Text>
-          <Text style={s.bold}>{doc.billTo.name}</Text>
-          {doc.billTo.address && <Text>{doc.billTo.address}</Text>}
-          {doc.billTo.gstin && <Text>GSTIN: {doc.billTo.gstin}</Text>}
-          {doc.billTo.attention && <Text style={s.muted}>Attn: {doc.billTo.attention}</Text>}
-        </View>
-
-        {doc.heading && <Text style={[s.bold, s.big, { marginBottom: 2 }]}>{doc.heading}</Text>}
-        {doc.description && <Text style={[s.muted, { marginBottom: 8 }]}>{doc.description}</Text>}
-
-        {/* Line items */}
-        <View style={[s.row, s.th]} fixed>
-          {cols.map((c) => (
-            <Text key={c.key} style={[s.cell, { flex: c.w }, c.right ? s.right : {}]}>
-              {c.key}
-            </Text>
-          ))}
-        </View>
-        {doc.items.map((i) => {
-          const values: Record<string, string> = {
-            "#": String(i.position),
-            Description: i.description,
-            SAC: i.sac_code,
-            Qty: String(i.quantity),
-            Rate: money(i.unit_price),
-            "Disc.": discount(i.discount_type, i.discount_value),
-            Taxable: money(i.taxable),
-            Tax: `${formatINR(paise(i.cgst) + paise(i.sgst) + paise(i.igst))}\n${i.tax_rate}%`,
-            Amount: money(i.line_total),
-          };
-          return (
-            <View key={i.position} style={[s.row, s.tr]} wrap={false}>
-              {cols.map((c) => (
-                <Text key={c.key} style={[s.cell, { flex: c.w }, c.right ? s.right : {}]}>
-                  {values[c.key]}
+            <View style={{ flex: 1 }}>
+              <Text style={s.company}>{doc.company.name}</Text>
+              {doc.company.lines.map((l) => (
+                <Text key={l} style={s.small}>
+                  {l}
                 </Text>
               ))}
             </View>
-          );
-        })}
-
-        {/* Totals and amount in words */}
-        <View style={[s.between, { marginTop: 12 }]} wrap={false}>
-          <View style={{ width: "52%" }}>
-            <Text style={s.label}>Amount in words</Text>
-            <Text>{amountInWords(paise(t.grand_total))}</Text>
           </View>
-          <View style={{ width: "40%" }}>
-            {totals.map(([k, v]) => (
-              <View key={k} style={[s.between, { paddingVertical: 2 }]}>
-                <Text style={s.muted}>{k}</Text>
-                <Text>{money(v)}</Text>
+          <Text style={[s.title, { marginTop: 14 }]}>{doc.title}</Text>
+        </View>
+
+        {/* Number and dates */}
+        <View style={[s.between, { marginTop: 18 }]}>
+          <Text>
+            {doc.number[0]}: {doc.number[1]}
+          </Text>
+          <View>
+            {doc.meta.map(([k, v]) => (
+              <Text key={k}>
+                {k}: {v}
+              </Text>
+            ))}
+          </View>
+        </View>
+
+        {/* Client */}
+        <View style={{ marginTop: 6, width: "50%" }}>
+          <Text style={[s.bold, { textTransform: "uppercase" }]}>{doc.billTo.name}</Text>
+          {doc.billTo.lines.filter(Boolean).map((l, n) => (
+            <Text key={n}>{l}</Text>
+          ))}
+          {doc.billTo.gstin && <Text>GSTIN: {doc.billTo.gstin}</Text>}
+          {doc.billTo.attention && <Text>Attn: {doc.billTo.attention}</Text>}
+        </View>
+
+        <View style={s.thick} />
+
+        {doc.project && (
+          <View style={[s.row, { marginBottom: 12 }]} wrap={false}>
+            <Text style={[s.bold, { width: "30%", paddingLeft: 14 }]}>Project Description</Text>
+            <View style={{ width: "70%" }}>
+              <Text style={s.bold}>{doc.project.title}</Text>
+              {doc.project.description && <Text>{doc.project.description}</Text>}
+            </View>
+          </View>
+        )}
+
+        {/* Line items: full grid */}
+        <View style={s.table}>
+          <View style={s.tr} fixed>
+            {cols.map((c) => (
+              <View key={c.label} style={[s.td, { flex: c.flex }]}>
+                <Text style={s.th}>{c.label}</Text>
               </View>
             ))}
-            <View style={[s.between, { borderTopWidth: 1, borderTopColor: INK, marginTop: 4, paddingTop: 4 }]}>
-              <Text style={[s.bold, s.big]}>Total</Text>
-              <Text style={[s.bold, s.big]}>{money(t.grand_total)}</Text>
-            </View>
           </View>
-        </View>
-
-        {doc.sections
-          .filter((x) => x.text.trim())
-          .map((x) => (
-            <View key={x.label} style={{ marginTop: 14 }} wrap={false}>
-              <Text style={s.label}>{x.label}</Text>
-              <Text>{x.text}</Text>
+          {doc.items.map((i) => (
+            <View key={i.position} style={s.tr} wrap={false}>
+              {cols.map((c) => (
+                <View key={c.label} style={[s.td, { flex: c.flex }]}>
+                  <Text style={{ textAlign: c.align }}>{c.value(i)}</Text>
+                </View>
+              ))}
             </View>
           ))}
-
-        {/* Signature */}
-        <View style={{ marginTop: 24, alignSelf: "flex-end", width: 200, alignItems: "center" }} wrap={false}>
-          <Text style={s.muted}>For {doc.signatory.company}</Text>
-          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
-          {doc.signatory.signature ? <Image src={doc.signatory.signature} style={{ maxHeight: 50, maxWidth: 160, marginVertical: 6, objectFit: "contain" }} /> : <View style={{ height: 44 }} />}
-          {doc.signatory.name && <Text style={s.bold}>{doc.signatory.name}</Text>}
-          <Text style={s.muted}>Authorised Signatory</Text>
         </View>
 
-        <View style={s.footer} fixed>
-          <Text>
-            {doc.title} {doc.number}
+        {/* Totals */}
+        <View style={{ alignSelf: "flex-end", width: 210, marginTop: 10 }} wrap={false}>
+          {totals.map(([k, v]) => (
+            <View key={k} style={[s.between, { paddingVertical: 2, paddingHorizontal: 6 }]}>
+              <Text style={s.bold}>{k}</Text>
+              <Text>{formatINR(v)}</Text>
+            </View>
+          ))}
+          <View style={[s.between, { paddingVertical: 3, paddingHorizontal: 6 }]}>
+            <Text style={s.bold}>Total</Text>
+            <Text style={[s.bold, { backgroundColor: SHADE, paddingHorizontal: 6 }]}>{formatINR(t.grand_total)}</Text>
+          </View>
+        </View>
+        {doc.amountInWords && (
+          <Text style={{ marginTop: 6 }}>
+            <Text style={s.bold}>Amount in words: </Text>
+            {amountInWords(paise(t.grand_total))}
           </Text>
-          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+        )}
+
+        <View style={s.thick} />
+
+        {sections.map((x) => (
+          <View key={x.label} style={{ marginBottom: 10 }} wrap={false}>
+            <Text style={s.heading}>{x.label}:</Text>
+            <Text style={[s.small, { textAlign: "justify" }]}>{x.text}</Text>
+          </View>
+        ))}
+
+        {/* Signature over a line, designation below */}
+        <View style={{ alignSelf: "flex-end", width: 190, marginTop: 16, alignItems: "center" }} wrap={false}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
+          {doc.signatory.signature ? <Image src={doc.signatory.signature} style={{ height: 44, maxWidth: 160, objectFit: "contain" }} /> : <View style={{ height: 44 }} />}
+          <View style={{ borderTopWidth: 1, borderTopColor: INK, alignSelf: "stretch", marginTop: 4, marginBottom: 4 }} />
+          {doc.signatory.name && <Text style={s.bold}>{doc.signatory.name}</Text>}
+          <Text style={{ textTransform: "uppercase", letterSpacing: 0.5 }}>{doc.signatory.designation || "Authorised Signatory"}</Text>
         </View>
+
+        <Text style={s.footer} fixed render={({ pageNumber, totalPages }) => (totalPages > 1 ? `Page ${pageNumber} of ${totalPages}` : "")} />
       </Page>
     </Document>
   );
@@ -237,7 +269,7 @@ export function renderDocumentPdf(doc: PdfDoc) {
   return renderToBuffer(<DocumentPdf doc={doc} />);
 }
 
-/** Company details for the PDF header, with the logo and signature downloaded from the private bucket. */
+/** Company block and signatory for the PDF, with the logo and signature downloaded from the private bucket. */
 export async function pdfCompany(
   supabase: SupabaseClient,
   c: {
@@ -256,6 +288,7 @@ export async function pdfCompany(
     logo_path: string | null;
     signature_path: string | null;
     signatory_name: string;
+    signatory_designation: string;
   },
 ) {
   const image = async (p: string | null): Promise<PdfImage | null> => {
@@ -264,18 +297,18 @@ export async function pdfCompany(
     return data ? { data: Buffer.from(await data.arrayBuffer()), format: p.endsWith(".png") ? "png" : "jpg" } : null;
   };
   const [logo, signature] = await Promise.all([image(c.logo_path), image(c.signature_path)]);
-  const name = c.trade_name || c.legal_name;
   const lines = [
     c.trade_name && c.legal_name !== c.trade_name ? c.legal_name : "",
-    c.address,
-    [c.city, c.state, c.pin_code].filter(Boolean).join(", "),
-    c.country !== "India" ? c.country : "",
+    [c.address, c.city, c.state].filter(Boolean).join(", "),
+    [c.pin_code && `${c.pin_code}.`, c.country !== "India" ? c.country : ""].filter(Boolean).join(" "),
+    c.phone && `Mobile: ${c.phone}`,
+    c.email && `Email: ${c.email}`,
+    c.website && `Website: ${c.website}`,
     c.gst_registered && c.gstin ? `GSTIN: ${c.gstin}` : "",
-    [c.email, c.phone, c.website].filter(Boolean).join(" · "),
   ].filter(Boolean);
   return {
-    company: { name, lines, logo },
-    signatory: { company: name, name: c.signatory_name, signature },
+    company: { name: c.trade_name || c.legal_name, lines, logo },
+    signatory: { name: c.signatory_name, designation: c.signatory_designation, signature },
   };
 }
 

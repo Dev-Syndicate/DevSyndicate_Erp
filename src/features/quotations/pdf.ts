@@ -1,8 +1,7 @@
-import { pdfCompany, renderDocumentPdf } from "@/components/pdf/document-pdf";
+import { pdfCompany, pdfDate, renderDocumentPdf } from "@/components/pdf/document-pdf";
 import { quotationLabel } from "@/features/quotations/components/quotations-table";
 import { getQuotation } from "@/features/quotations/queries";
 import { getCompanySettings } from "@/features/settings/queries";
-import { formatDate } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 
 /** Renders a quotation PDF (RLS applies: null when the user can't see it). Drafts print as DRAFT. */
@@ -14,18 +13,20 @@ export async function quotationPdf(id: string) {
 
   const pdf = await renderDocumentPdf({
     title: "Quotation",
-    number,
+    number: ["Quotation No", number],
     meta: [
-      ["Date", formatDate(q.quotation_date)],
-      ["Valid until", formatDate(q.valid_until)],
-      ["Place of supply", q.supply_type === "export" ? "Outside India" : q.place_of_supply || "—"],
+      ["Date", pdfDate(q.quotation_date)],
+      ["Valid Until", pdfDate(q.valid_until)],
+      // Place of supply decides CGST/SGST vs IGST, so it only matters on GST quotations.
+      ...(q.gst_applicable
+        ? ([["Place of Supply", q.supply_type === "export" ? "Outside India" : q.place_of_supply || "—"]] as [string, string][])
+        : []),
     ],
-    heading: q.title,
-    description: q.description,
+    project: { title: q.title, description: q.description },
     ...(await pdfCompany(supabase, settings)),
     billTo: {
       name: c?.company_name ?? "",
-      address: [c?.billing_address, c?.city, c?.state, c?.pin_code, c?.country].filter(Boolean).join(", "),
+      lines: [c?.billing_address ?? "", c?.city ?? "", c?.state ?? "", c?.pin_code ?? "", c?.country !== "India" ? (c?.country ?? "") : ""],
       gstin: c?.gstin ?? "",
       attention: q.client_contacts?.name,
     },
@@ -35,7 +36,7 @@ export async function quotationPdf(id: string) {
     items: q.quotation_items,
     totals: q,
     sections: [
-      { label: "Terms & conditions", text: q.terms },
+      { label: "Terms and Conditions", text: q.terms },
       { label: "Notes", text: q.notes },
     ],
   });

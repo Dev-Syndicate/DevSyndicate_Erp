@@ -16,7 +16,7 @@ insert into public.clients (organization_id, company_name, state, country) value
   (public.current_org_id(), 'Export Co', '', 'USA');
 
 create temp table items as select '[
-  {"description": "Website design", "quantity": 1, "unit_price": 25000, "discount_type": "percent", "discount_value": 10, "tax_rate": 18},
+  {"description": "Website design", "timeline": "2 days", "quantity": 1, "unit_price": 25000, "discount_type": "percent", "discount_value": 10, "tax_rate": 18},
   {"description": "Hosting", "quantity": 12, "unit_price": 499.99, "tax_rate": 18}
 ]'::jsonb as j;
 grant select on items to authenticated;
@@ -72,6 +72,7 @@ begin
   rev := public.quotation_action(intra, 'revise');
   assert (select number = q.number and revision = 2 and status = 'draft' from public.quotations where id = rev), 'revision keeps number';
   assert (select grand_total from public.quotations where id = rev) = 32450.00, 'revision copies lines';
+  assert (select timeline from public.quotation_items where quotation_id = rev and position = 1) = '2 days', 'revision copies timeline';
   perform public.quotation_action(rev, 'send');
   assert (select status from public.quotations where id = intra) = 'superseded', 'original superseded';
   perform public.quotation_action(rev, 'accept');

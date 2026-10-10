@@ -222,6 +222,18 @@ export function CompanyForm({ settings: s, taxRates, numbering, canEdit }: Props
                 <FieldDescription>Name printed under the signature line.</FieldDescription>
                 <FieldError>{err.signatory_name}</FieldError>
               </Field>
+              <Field data-invalid={!!err.signatory_designation}>
+                <FieldLabel htmlFor="signatory_designation">Signatory designation</FieldLabel>
+                <Input
+                  id="signatory_designation"
+                  name="signatory_designation"
+                  defaultValue={s.signatory_designation}
+                  placeholder="e.g. Founder & CEO"
+                  aria-invalid={!!err.signatory_designation}
+                />
+                <FieldDescription>Printed under the signatory&apos;s name. Leave empty for &ldquo;Authorised Signatory&rdquo;.</FieldDescription>
+                <FieldError>{err.signatory_designation}</FieldError>
+              </Field>
             </FieldGroup>
           </CardContent>
         </Card>

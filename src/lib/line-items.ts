@@ -14,6 +14,8 @@ export const lineItemSchema = z
   .object({
     description: z.string().trim().min(1, "Describe the item").max(1000),
     sac_code: z.string().trim().max(8),
+    /** Quotations only: estimated time for the line, e.g. "2 days". */
+    timeline: z.string().trim().max(50, "Keep it under 50 characters").optional(),
     quantity: z
       .string()
       .trim()

@@ -37,6 +37,7 @@ export const companySettingsSchema = z
     invoice_terms: z.string().trim().max(5000),
     round_off: z.boolean(),
     signatory_name: text,
+    signatory_designation: z.string().trim().max(100),
   })
   .refine((s) => !s.gst_registered || s.gstin !== "", { path: ["gstin"], message: "Required when GST-registered" })
   .refine((s) => !s.gstin || !s.state || s.gstin.startsWith(INDIAN_STATES.find((x) => x.name === s.state)!.code), {
