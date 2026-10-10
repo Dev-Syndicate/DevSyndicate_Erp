@@ -27,3 +27,12 @@ export async function getDocumentNumbering() {
   if (error) throw error;
   return data;
 }
+
+/** Short-lived signed URLs for previewing the logo and signature (private `branding` bucket). */
+export async function getBrandingUrls(settings: { logo_path: string | null; signature_path: string | null }) {
+  const supabase = await createClient();
+  const sign = async (path: string | null) =>
+    path ? ((await supabase.storage.from("branding").createSignedUrl(path, 3600)).data?.signedUrl ?? null) : null;
+  const [logo, signature] = await Promise.all([sign(settings.logo_path), sign(settings.signature_path)]);
+  return { logo, signature };
+}

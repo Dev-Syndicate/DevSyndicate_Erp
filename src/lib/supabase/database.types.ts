@@ -197,6 +197,7 @@ export type Database = {
           gstin: string
           invoice_terms: string
           legal_name: string
+          logo_path: string | null
           lut_number: string
           lut_valid_until: string | null
           organization_id: string
@@ -208,6 +209,7 @@ export type Database = {
           round_off: boolean
           show_sac: boolean
           signatory_name: string
+          signature_path: string | null
           state: string
           trade_name: string
           updated_at: string
@@ -229,6 +231,7 @@ export type Database = {
           gstin?: string
           invoice_terms?: string
           legal_name?: string
+          logo_path?: string | null
           lut_number?: string
           lut_valid_until?: string | null
           organization_id: string
@@ -240,6 +243,7 @@ export type Database = {
           round_off?: boolean
           show_sac?: boolean
           signatory_name?: string
+          signature_path?: string | null
           state?: string
           trade_name?: string
           updated_at?: string
@@ -261,6 +265,7 @@ export type Database = {
           gstin?: string
           invoice_terms?: string
           legal_name?: string
+          logo_path?: string | null
           lut_number?: string
           lut_valid_until?: string | null
           organization_id?: string
@@ -272,6 +277,7 @@ export type Database = {
           round_off?: boolean
           show_sac?: boolean
           signatory_name?: string
+          signature_path?: string | null
           state?: string
           trade_name?: string
           updated_at?: string

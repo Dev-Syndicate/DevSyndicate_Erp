@@ -129,6 +129,35 @@ export function paise(rupees: number | string): bigint {
   return s.startsWith("-") ? -value : value;
 }
 
+const ONES = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
+  "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+const under100 = (n: number) => (n < 20 ? ONES[n] : [TENS[Math.floor(n / 10)], ONES[n % 10]].filter(Boolean).join(" "));
+const under1000 = (n: number) =>
+  [n >= 100 ? `${ONES[Math.floor(n / 100)]} Hundred` : "", under100(n % 100)].filter(Boolean).join(" ");
+
+/** Indian grouping: crore, lakh, thousand. */
+function indianWords(n: bigint): string {
+  if (n === 0n) return "";
+  const crore = n / 10000000n;
+  const rest = n % 10000000n;
+  return [
+    crore ? `${indianWords(crore)} Crore` : "",
+    rest >= 100000n ? `${under100(Number(rest / 100000n))} Lakh` : "",
+    (rest / 1000n) % 100n ? `${under100(Number((rest / 1000n) % 100n))} Thousand` : "",
+    under1000(Number(rest % 1000n)),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Paise → "Rupees Thirty Two Thousand Four Hundred Fifty Only" (amount in words on invoices, PRD §15). */
+export function amountInWords(value: bigint): string {
+  const abs = value < 0n ? -value : value;
+  const paiseWords = under100(Number(abs % 100n));
+  return `${value < 0n ? "Minus " : ""}Rupees ${indianWords(abs / 100n) || "Zero"}${paiseWords ? ` and ${paiseWords} Paise` : ""} Only`;
+}
+
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
 
 /** Formats paise (bigint) or a rupee amount from the database (number/string) as ₹1,25,000.00. */

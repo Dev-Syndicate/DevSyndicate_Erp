@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Pencil } from "lucide-react";
+import { Copy, Download, Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { deleteQuotation, quotationAction } from "@/features/quotations/actions";
@@ -22,6 +22,11 @@ export function QuotationActions({ id, status, validUntil, hasNewerRevision, can
 
   return (
     <div className="flex flex-wrap gap-2">
+      <Button variant="outline" asChild>
+        <a href={`/finance/quotations/${id}/pdf`} download>
+          <Download /> PDF
+        </a>
+      </Button>
       {status === "draft" && can("quotations.update") && (
         <Button variant="outline" asChild>
           <Link href={`/finance/quotations/${id}/edit`}>

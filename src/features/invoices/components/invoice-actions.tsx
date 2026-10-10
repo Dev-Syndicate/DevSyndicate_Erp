@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Pencil } from "lucide-react";
+import { Copy, Download, Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { deleteInvoice, invoiceAction } from "@/features/invoices/actions";
@@ -14,6 +14,11 @@ export function InvoiceActions({ id, status, can }: Props) {
 
   return (
     <div className="flex flex-wrap gap-2">
+      <Button variant="outline" asChild>
+        <a href={`/finance/invoices/${id}/pdf`} download>
+          <Download /> PDF
+        </a>
+      </Button>
       {status === "draft" && can("invoices.update") && (
         <Button variant="outline" asChild>
           <Link href={`/finance/invoices/${id}/edit`}>
