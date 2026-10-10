@@ -892,6 +892,10 @@ export type Database = {
         }[]
       }
       document_period_key: { Args: { p_date: string; p_reset: string }; Returns: string }
+      extend_quotation_validity: {
+        Args: { p_id: string; p_valid_until: string }
+        Returns: undefined
+      }
       has_permission: { Args: { p: string }; Returns: boolean }
       ist_today: { Args: never; Returns: string }
       is_super_admin: { Args: { uid: string }; Returns: boolean }

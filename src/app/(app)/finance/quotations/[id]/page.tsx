@@ -36,6 +36,7 @@ async function QuotationDetail({ params }: { params: PageProps<"/finance/quotati
           <QuotationActions
             id={q.id}
             status={status}
+            validUntil={q.valid_until}
             hasNewerRevision={(newer.count ?? 0) > 0}
             can={(p) => !!user?.permissions.includes(p)}
           />

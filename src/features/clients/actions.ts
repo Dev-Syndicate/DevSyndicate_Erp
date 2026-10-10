@@ -18,9 +18,25 @@ function parseContact(formData: FormData) {
   return contactSchema.safeParse({ ...Object.fromEntries(formData), is_primary: formData.get("is_primary") === "on" });
 }
 
+/** Optional primary contact on the create form (contact_* fields); null when left blank. */
+function parseNewContact(formData: FormData) {
+  const input = Object.fromEntries(
+    ["name", "designation", "email", "phone"].map((f) => [f, String(formData.get(`contact_${f}`) ?? "")]),
+  );
+  if (!Object.values(input).some((v) => v.trim())) return null;
+  return contactSchema.safeParse({ ...input, is_primary: true });
+}
+
 export async function createClientRecord(_prev: FormState, formData: FormData): Promise<FormState> {
   const client = parseClient(formData);
-  if (!client.success) return { error: "Please fix the highlighted fields.", fieldErrors: fieldErrors(client.error) };
+  const contact = parseNewContact(formData);
+  if (!client.success || contact?.success === false) {
+    const contactErrors = contact?.error ? Object.entries(fieldErrors(contact.error)).map(([k, m]) => [`contact_${k}`, m]) : [];
+    return {
+      error: "Please fix the highlighted fields.",
+      fieldErrors: { ...(client.error && fieldErrors(client.error)), ...Object.fromEntries(contactErrors) },
+    };
+  }
 
   const supabase = await createClient();
   const { data: organizationId } = await supabase.rpc("current_org_id");
@@ -33,19 +49,12 @@ export async function createClientRecord(_prev: FormState, formData: FormData): 
     .single();
   if (error) return { error: NO_PERMISSION };
 
-  // Optional primary contact entered on the create form.
-  const contactName = String(formData.get("contact_name") ?? "").trim();
-  if (contactName) {
-    const contact = contactSchema.safeParse({
-      name: contactName,
-      designation: formData.get("contact_designation") ?? "",
-      email: formData.get("contact_email") ?? "",
-      phone: formData.get("contact_phone") ?? "",
-      is_primary: true,
-    });
-    if (contact.success) {
-      await supabase.from("client_contacts").insert({ ...contact.data, client_id: data.id, organization_id: organizationId });
-    }
+  if (contact?.success) {
+    const { error: contactError } = await supabase
+      .from("client_contacts")
+      .insert({ ...contact.data, client_id: data.id, organization_id: organizationId });
+    // The client exists now; send the user to it to add the contact there rather than resubmitting a duplicate.
+    if (contactError) redirect(`/clients/${data.id}?contact=failed`);
   }
 
   revalidatePath("/clients");
@@ -94,10 +103,7 @@ export async function saveContact(
   const { data: organizationId } = await supabase.rpc("current_org_id");
   if (!organizationId) return { error: NO_PERMISSION };
 
-  if (contact.data.is_primary) {
-    // shortcut: two statements, not one transaction; a failed save can leave the client with no primary contact. Move to an RPC if that matters.
-    await supabase.from("client_contacts").update({ is_primary: false }).eq("client_id", clientId).eq("is_primary", true);
-  }
+  // Marking a contact primary un-marks the others in the database (trigger one_primary_contact).
   const { error } = contactId
     ? await supabase.from("client_contacts").update(contact.data).eq("id", contactId).eq("client_id", clientId)
     : await supabase.from("client_contacts").insert({ ...contact.data, client_id: clientId, organization_id: organizationId });

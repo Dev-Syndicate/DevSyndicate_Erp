@@ -1,7 +1,7 @@
 // Run: pnpm test. Cases match supabase/tests/quotations_check.sql (the database is the source of truth).
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { calculateDocument, formatINR, toScaled } from "./money.ts";
+import { calculateDocument, formatINR, paise, toScaled } from "./money.ts";
 
 const lines = [
   { quantity: "1", unitPrice: "25000", discountType: "percent", discountValue: "10", taxRate: "18" },
@@ -56,4 +56,7 @@ test("errors and parsing", () => {
   assert.equal(toScaled("abc", 2), null);
   assert.equal(formatINR(3245000n), "₹32,450.00");
   assert.equal(formatINR(12345678901n), "₹12,34,56,789.01");
+  assert.equal(paise(2474.99) + paise("2474.98"), 494997n);
+  assert.equal(paise(-0.15), -15n);
+  assert.equal(paise(0.1), 10n);
 });

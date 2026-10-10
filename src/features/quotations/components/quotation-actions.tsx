@@ -3,12 +3,13 @@ import { Copy, Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { deleteQuotation, quotationAction } from "@/features/quotations/actions";
+import { ExtendValidityButton } from "@/features/quotations/components/extend-validity-button";
 import type { QuotationStatus } from "@/features/quotations/schema";
 
-type Props = { id: string; status: QuotationStatus; hasNewerRevision: boolean; can: (permission: string) => boolean };
+type Props = { id: string; status: QuotationStatus; validUntil: string; hasNewerRevision: boolean; can: (permission: string) => boolean };
 
 /** Buttons for the actions allowed in the current status (mirrors public.quotation_action). */
-export function QuotationActions({ id, status, hasNewerRevision, can }: Props) {
+export function QuotationActions({ id, status, validUntil, hasNewerRevision, can }: Props) {
   const act = (action: Parameters<typeof quotationAction>[1]) => quotationAction.bind(null, id, action);
 
   return (
@@ -39,6 +40,9 @@ export function QuotationActions({ id, status, hasNewerRevision, can }: Props) {
         <ConfirmButton action={act("duplicate")} title="Duplicate quotation?" description="Creates a new draft with the same client and lines." confirmLabel="Duplicate" variant="outline">
           <Copy /> Duplicate
         </ConfirmButton>
+      )}
+      {(status === "sent" || status === "expired") && can("quotations.update") && (
+        <ExtendValidityButton id={id} validUntil={validUntil} />
       )}
       {status === "sent" && can("quotations.update") && (
         <>

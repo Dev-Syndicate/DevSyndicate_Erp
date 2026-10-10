@@ -122,7 +122,12 @@ export function calculateDocument(doc: DocumentInput): DocumentTotals {
 }
 
 /** Rupee amount from the database (2 decimals) → exact paise, for adding amounts without float error. */
-export const paise = (rupees: number | string) => BigInt(Math.round(Number(rupees) * 100));
+export function paise(rupees: number | string): bigint {
+  const s = String(rupees).trim();
+  const value = toScaled(s.replace(/^-/, ""), 2);
+  if (value === null) throw new Error(`Not an amount: ${rupees}`);
+  return s.startsWith("-") ? -value : value;
+}
 
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
 

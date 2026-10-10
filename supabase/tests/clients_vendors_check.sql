@@ -17,10 +17,8 @@ begin
   insert into public.clients (organization_id, company_name, state, gstin)
   values (public.current_org_id(), 'SIPLINK', 'Tamil Nadu', '33ABCDE1234F1Z5') returning id into c;
   insert into public.client_contacts (organization_id, client_id, name, is_primary) values (public.current_org_id(), c, 'Ravi', true);
-  begin
-    insert into public.client_contacts (organization_id, client_id, name, is_primary) values (public.current_org_id(), c, 'Second', true);
-    assert false, 'only one primary contact per client';
-  exception when unique_violation then null; end;
+  insert into public.client_contacts (organization_id, client_id, name, is_primary) values (public.current_org_id(), c, 'Second', true);
+  assert (select array_agg(name) from public.client_contacts where client_id = c and is_primary) = array['Second'], 'a new primary contact replaces the old one';
   begin
     insert into public.clients (organization_id, company_name, pin_code) values (public.current_org_id(), 'Bad PIN', '12');
     assert false, 'Indian PIN codes are validated';
@@ -36,7 +34,7 @@ end $$;
 select set_config('request.jwt.claims', json_build_object('sub', (select id from u where email = 'staff@test.local'), 'role', 'authenticated')::text, true);
 do $$ begin
   assert (select count(*) from public.clients where company_name = 'SIPLINK') = 1, 'staff can view clients';
-  assert (select count(*) from public.client_contacts) = 1, 'staff can view contacts';
+  assert (select count(*) from public.client_contacts) = 2, 'staff can view contacts';
   assert (select count(*) from public.vendors) = 0, 'staff cannot view vendors';
   update public.clients set notes = 'x';
   assert not found, 'staff cannot edit clients';

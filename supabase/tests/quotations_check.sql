@@ -76,6 +76,19 @@ begin
   assert (select status from public.quotations where id = intra) = 'superseded', 'original superseded';
   perform public.quotation_action(rev, 'accept');
   assert (select status from public.quotations where id = rev) = 'accepted', 'accepted';
+
+  -- Extend validity: sent quotations only, not into the past
+  perform public.quotation_action(inter, 'send');
+  perform public.extend_quotation_validity(inter, public.ist_today() + 30);
+  assert (select valid_until from public.quotations where id = inter) = public.ist_today() + 30, 'validity extended';
+  begin
+    perform public.extend_quotation_validity(inter, public.ist_today() - 1);
+    assert false, 'no past validity';
+  exception when invalid_parameter_value then null; end;
+  begin
+    perform public.extend_quotation_validity(export, public.ist_today() + 30);
+    assert false, 'drafts cannot be extended';
+  exception when invalid_parameter_value then null; end;
 end $$;
 
 -- Staff can create drafts but not send, edit or accept

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +13,8 @@ import { setClientArchived } from "@/features/clients/actions";
 import { ContactsCard } from "@/features/clients/components/contacts-card";
 import { getClient } from "@/features/clients/queries";
 
-async function ClientDetail({ params }: { params: PageProps<"/clients/[id]">["params"] }) {
-  const { id } = await params;
+async function ClientDetail({ params, searchParams }: PageProps<"/clients/[id]">) {
+  const [{ id }, { contact }] = await Promise.all([params, searchParams]);
   const [client, user] = await Promise.all([getClient(id).catch(() => null), getCurrentUser()]);
   if (!client) notFound();
   const can = (p: string) => !!user?.permissions.includes(p);
@@ -53,6 +54,11 @@ async function ClientDetail({ params }: { params: PageProps<"/clients/[id]">["pa
           )}
         </div>
       </div>
+      {contact === "failed" && (
+        <Alert variant="destructive">
+          <AlertDescription>The client was created, but the contact could not be saved. Add it under Contacts.</AlertDescription>
+        </Alert>
+      )}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -75,10 +81,10 @@ async function ClientDetail({ params }: { params: PageProps<"/clients/[id]">["pa
   );
 }
 
-export default function ClientPage({ params }: PageProps<"/clients/[id]">) {
+export default function ClientPage(props: PageProps<"/clients/[id]">) {
   return (
     <Suspense fallback={<Skeleton className="h-96" />}>
-      <ClientDetail params={params} />
+      <ClientDetail {...props} />
     </Suspense>
   );
 }

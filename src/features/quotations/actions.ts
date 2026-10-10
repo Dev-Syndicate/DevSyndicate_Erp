@@ -44,6 +44,18 @@ export async function quotationAction(quotationId: string, action: (typeof ACTIO
   return { ok: true };
 }
 
+/** Extends a sent (or expired) quotation's validity so it can be accepted (PRD §12). */
+export async function extendQuotationValidity(quotationId: string, validUntil: string): Promise<FormState> {
+  if (!id.safeParse(quotationId).success || !z.iso.date().safeParse(validUntil).success) return { error: "Pick a valid date." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("extend_quotation_validity", { p_id: quotationId, p_valid_until: validUntil });
+  if (error) return { error: message(error) };
+
+  revalidatePath("/finance/quotations");
+  revalidatePath(`/finance/quotations/${quotationId}`);
+  return { ok: true };
+}
+
 export async function deleteQuotation(quotationId: string) {
   if (!id.safeParse(quotationId).success) return { error: "Invalid request." };
   const supabase = await createClient();
