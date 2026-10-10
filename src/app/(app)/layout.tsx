@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AppBreadcrumb } from "@/components/layout/app-breadcrumb";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Separator } from "@/components/ui/separator";
@@ -13,13 +14,19 @@ async function UserSidebar() {
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <SidebarProvider>
-      <Suspense fallback={<AppSidebar user={null} />}>
+      {/* Fallback reserves the sidebar's space. It must not read the URL (dynamic routes prerender it)
+          or use sidebar context (unavailable when the fallback is prerendered). */}
+      <Suspense fallback={<div aria-hidden className="hidden w-(--sidebar-width) shrink-0 border-r bg-sidebar md:block" />}>
         <UserSidebar />
       </Suspense>
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+          <Separator orientation="vertical" className="mr-2 self-center data-[orientation=vertical]:h-4" />
+          {/* Reads the URL, so it must sit inside Suspense for dynamic routes. */}
+          <Suspense>
+            <AppBreadcrumb />
+          </Suspense>
           <div className="ml-auto">
             <ThemeToggle />
           </div>

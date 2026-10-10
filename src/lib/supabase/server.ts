@@ -1,9 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "./database.types";
 
 // Uses the signed-in user's session, so RLS applies. Never swap in the service-role key here (PRD §32.3).
 export async function createClient() {
+  // Supabase auth reads Date.now(); run only at request time, never during (runtime) prerendering.
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient<Database>(

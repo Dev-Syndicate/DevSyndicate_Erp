@@ -12,7 +12,7 @@ export function ArchiveButton({ table, id, isActive }: Props) {
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       disabled={pending}
       onClick={() =>

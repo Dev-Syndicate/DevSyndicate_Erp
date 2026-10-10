@@ -2,13 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import {
-  companySettingsSchema,
-  expenseCategorySchema,
-  fieldErrors,
-  taxRateSchema,
-  type FormState,
-} from "./schema";
+import { fieldErrors, type FormState } from "@/lib/forms";
+import { companySettingsSchema, expenseCategorySchema, numberingFromForm, numberingSchema, taxRateSchema } from "./schema";
 
 const NO_PERMISSION = "You don't have permission to change settings.";
 
@@ -18,7 +13,17 @@ export async function updateCompanySettings(_prev: FormState, formData: FormData
     gst_registered: formData.get("gst_registered") === "on",
     round_off: formData.get("round_off") === "on",
   });
-  if (!parsed.success) return { error: "Please fix the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
+  const numbering = numberingSchema.safeParse(numberingFromForm(formData));
+  if (!parsed.success || !numbering.success) {
+    const errors = parsed.success ? {} : fieldErrors(parsed.error);
+    // Numbering errors are keyed num_<doc type>_<field> to match the form inputs.
+    for (const issue of numbering.error?.issues ?? []) {
+      const [index, field] = issue.path as [number, string];
+      const key = `num_${numberingFromForm(formData)[index].doc_type}_${field === "next_value" ? "next" : field}`;
+      errors[key] ??= issue.message;
+    }
+    return { error: "Please fix the highlighted fields.", fieldErrors: errors };
+  }
 
   const { supabase, organizationId } = await orgId();
   if (!organizationId) return { error: NO_PERMISSION };
@@ -30,6 +35,17 @@ export async function updateCompanySettings(_prev: FormState, formData: FormData
     .select("organization_id");
   if (error) return { error: error.message };
   if (!data.length) return { error: NO_PERMISSION };
+
+  for (const n of numbering.data) {
+    const { error } = await supabase.rpc("set_document_numbering", {
+      p_doc_type: n.doc_type,
+      p_pattern: n.pattern,
+      p_padding: n.padding,
+      p_reset: n.reset,
+      p_next_value: n.next_value,
+    });
+    if (error) return { error: `Numbering for ${n.doc_type.replace("_", " ")}: ${error.message}` };
+  }
 
   revalidatePath("/settings/company");
   return { ok: true };

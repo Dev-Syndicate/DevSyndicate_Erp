@@ -11,6 +11,7 @@ Stack: Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS v4, shadcn/ui (
 - `pnpm dev`: start the dev server
 - `pnpm build`: production build (also type-checks)
 - `pnpm lint`: ESLint
+- `pnpm test`: unit tests (`src/**/*.test.mjs`, Node test runner; tested modules avoid `@/` imports)
 - `pnpm dlx shadcn@latest add <component>`: add a shadcn component
 
 ## Supabase

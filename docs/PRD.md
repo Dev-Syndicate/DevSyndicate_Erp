@@ -877,7 +877,6 @@ State                 (drives place of supply)
 Country
 PIN Code
 GSTIN                 (optional)
-PAN                   (optional)
 Default Payment Terms (days, e.g. 15)
 Notes
 
@@ -1082,7 +1081,6 @@ Company Details
     Logo
     Address, City, State, PIN, Country
     Email, Phone, Website
-    PAN
 
 Tax
     GST Registered        (yes/no — toggles all GST behaviour)

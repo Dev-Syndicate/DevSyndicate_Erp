@@ -62,6 +62,125 @@ export type Database = {
           },
         ]
       }
+      client_contacts: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          designation: string
+          email: string
+          id: string
+          is_primary: boolean
+          name: string
+          organization_id: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          designation?: string
+          email?: string
+          id?: string
+          is_primary?: boolean
+          name: string
+          organization_id: string
+          phone?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          designation?: string
+          email?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          organization_id?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          billing_address: string
+          city: string
+          company_name: string
+          country: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          gstin: string
+          id: string
+          notes: string
+          organization_id: string
+          payment_terms_days: number | null
+          pin_code: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: string
+          city?: string
+          company_name: string
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          gstin?: string
+          id?: string
+          notes?: string
+          organization_id: string
+          payment_terms_days?: number | null
+          pin_code?: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: string
+          city?: string
+          company_name?: string
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          gstin?: string
+          id?: string
+          notes?: string
+          organization_id?: string
+          payment_terms_days?: number | null
+          pin_code?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           address: string
@@ -81,15 +200,9 @@ export type Database = {
           lut_number: string
           lut_valid_until: string | null
           organization_id: string
-          pan: string
           payment_terms_days: number
           phone: string
           pin_code: string
-          prefix_credit_note: string
-          prefix_expense: string
-          prefix_invoice: string
-          prefix_quotation: string
-          prefix_receipt: string
           quotation_terms: string
           quotation_validity_days: number
           round_off: boolean
@@ -118,15 +231,9 @@ export type Database = {
           lut_number?: string
           lut_valid_until?: string | null
           organization_id: string
-          pan?: string
           payment_terms_days?: number
           phone?: string
           pin_code?: string
-          prefix_credit_note?: string
-          prefix_expense?: string
-          prefix_invoice?: string
-          prefix_quotation?: string
-          prefix_receipt?: string
           quotation_terms?: string
           quotation_validity_days?: number
           round_off?: boolean
@@ -155,15 +262,9 @@ export type Database = {
           lut_number?: string
           lut_valid_until?: string | null
           organization_id?: string
-          pan?: string
           payment_terms_days?: number
           phone?: string
           pin_code?: string
-          prefix_credit_note?: string
-          prefix_expense?: string
-          prefix_invoice?: string
-          prefix_quotation?: string
-          prefix_receipt?: string
           quotation_terms?: string
           quotation_validity_days?: number
           round_off?: boolean
@@ -186,6 +287,77 @@ export type Database = {
             foreignKeyName: "company_settings_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_numbering: {
+        Row: {
+          doc_type: string
+          organization_id: string
+          padding: number
+          pattern: string
+          reset: string
+          updated_at: string
+        }
+        Insert: {
+          doc_type: string
+          organization_id: string
+          padding?: number
+          pattern: string
+          reset?: string
+          updated_at?: string
+        }
+        Update: {
+          doc_type?: string
+          organization_id?: string
+          padding?: number
+          pattern?: string
+          reset?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_numbering_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_sequences: {
+        Row: {
+          doc_type: string
+          last_value: number
+          organization_id: string
+          period_key: string
+        }
+        Insert: {
+          doc_type: string
+          last_value?: number
+          organization_id: string
+          period_key: string
+        }
+        Update: {
+          doc_type?: string
+          last_value?: number
+          organization_id?: string
+          period_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_sequences_organization_id_doc_type_fkey"
+            columns: ["organization_id", "doc_type"]
+            isOneToOne: false
+            referencedRelation: "document_numbering"
+            referencedColumns: ["organization_id", "doc_type"]
+          },
+          {
+            foreignKeyName: "document_sequences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -313,6 +485,221 @@ export type Database = {
           },
         ]
       }
+      quotation_items: {
+        Row: {
+          allocated_discount: number
+          cgst: number
+          description: string
+          discount_type: string
+          discount_value: number
+          id: string
+          igst: number
+          line_discount: number
+          line_gross: number
+          line_net: number
+          line_total: number
+          organization_id: string
+          position: number
+          quantity: number
+          quotation_id: string
+          sac_code: string
+          sgst: number
+          tax_rate: number
+          taxable: number
+          unit_price: number
+        }
+        Insert: {
+          allocated_discount?: number
+          cgst?: number
+          description: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          igst?: number
+          line_discount?: number
+          line_gross?: number
+          line_net?: number
+          line_total?: number
+          organization_id: string
+          position: number
+          quantity: number
+          quotation_id: string
+          sac_code?: string
+          sgst?: number
+          tax_rate?: number
+          taxable?: number
+          unit_price: number
+        }
+        Update: {
+          allocated_discount?: number
+          cgst?: number
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          igst?: number
+          line_discount?: number
+          line_gross?: number
+          line_net?: number
+          line_total?: number
+          organization_id?: string
+          position?: number
+          quantity?: number
+          quotation_id?: string
+          sac_code?: string
+          sgst?: number
+          tax_rate?: number
+          taxable?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotations: {
+        Row: {
+          cgst_total: number
+          client_id: string
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          discount_total: number
+          discount_type: string
+          discount_value: number
+          grand_total: number
+          gst_applicable: boolean
+          id: string
+          igst_total: number
+          notes: string
+          number: string | null
+          organization_id: string
+          place_of_supply: string
+          previous_revision_id: string | null
+          quotation_date: string
+          revision: number
+          round_off: number
+          sent_at: string | null
+          sgst_total: number
+          status: string
+          subtotal: number
+          supply_type: string
+          taxable_total: number
+          terms: string
+          title: string
+          updated_at: string
+          valid_until: string
+        }
+        Insert: {
+          cgst_total?: number
+          client_id: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          discount_total?: number
+          discount_type?: string
+          discount_value?: number
+          grand_total?: number
+          gst_applicable?: boolean
+          id?: string
+          igst_total?: number
+          notes?: string
+          number?: string | null
+          organization_id: string
+          place_of_supply?: string
+          previous_revision_id?: string | null
+          quotation_date?: string
+          revision?: number
+          round_off?: number
+          sent_at?: string | null
+          sgst_total?: number
+          status?: string
+          subtotal?: number
+          supply_type?: string
+          taxable_total?: number
+          terms?: string
+          title: string
+          updated_at?: string
+          valid_until: string
+        }
+        Update: {
+          cgst_total?: number
+          client_id?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          discount_total?: number
+          discount_type?: string
+          discount_value?: number
+          grand_total?: number
+          gst_applicable?: boolean
+          id?: string
+          igst_total?: number
+          notes?: string
+          number?: string | null
+          organization_id?: string
+          place_of_supply?: string
+          previous_revision_id?: string | null
+          quotation_date?: string
+          revision?: number
+          round_off?: number
+          sent_at?: string | null
+          sgst_total?: number
+          status?: string
+          subtotal?: number
+          supply_type?: string
+          taxable_total?: number
+          terms?: string
+          title?: string
+          updated_at?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_previous_revision_id_fkey"
+            columns: ["previous_revision_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           permission: string
@@ -422,15 +809,109 @@ export type Database = {
           },
         ]
       }
+      vendors: {
+        Row: {
+          address: string
+          contact_person: string
+          created_at: string
+          created_by: string | null
+          default_expense_category_id: string | null
+          deleted_at: string | null
+          email: string
+          gstin: string
+          id: string
+          name: string
+          notes: string
+          organization_id: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          contact_person?: string
+          created_at?: string
+          created_by?: string | null
+          default_expense_category_id?: string | null
+          deleted_at?: string | null
+          email?: string
+          gstin?: string
+          id?: string
+          name: string
+          notes?: string
+          organization_id: string
+          phone?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          contact_person?: string
+          created_at?: string
+          created_by?: string | null
+          default_expense_category_id?: string | null
+          deleted_at?: string | null
+          email?: string
+          gstin?: string
+          id?: string
+          name?: string
+          notes?: string
+          organization_id?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendors_default_expense_category_id_fkey"
+            columns: ["default_expense_category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendors_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       current_org_id: { Args: never; Returns: string }
+      document_numbering_settings: {
+        Args: never
+        Returns: {
+          doc_type: string
+          next_value: number
+          padding: number
+          pattern: string
+          reset: string
+        }[]
+      }
+      document_period_key: { Args: { p_date: string; p_reset: string }; Returns: string }
       has_permission: { Args: { p: string }; Returns: boolean }
+      ist_today: { Args: never; Returns: string }
       is_super_admin: { Args: { uid: string }; Returns: boolean }
       my_permissions: { Args: never; Returns: string[] }
+      quotation_action: { Args: { p_action: string; p_id: string }; Returns: string }
+      render_document_number: {
+        Args: { p_date: string; p_padding: number; p_pattern: string; p_seq: number }
+        Returns: string
+      }
+      save_quotation: { Args: { p_data: Json; p_id: string | null }; Returns: string }
+      set_document_numbering: {
+        Args: {
+          p_doc_type: string
+          p_next_value: number
+          p_padding: number
+          p_pattern: string
+          p_reset: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

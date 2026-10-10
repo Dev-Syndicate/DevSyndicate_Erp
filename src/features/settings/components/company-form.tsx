@@ -4,23 +4,34 @@ import { useActionState, type ComponentProps } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { updateCompanySettings } from "@/features/settings/actions";
-import type { FormState } from "@/features/settings/schema";
+import { NumberingCard } from "@/features/settings/components/numbering-card";
+import type { FormState } from "@/lib/forms";
 import { INDIAN_STATES } from "@/lib/india";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type Props = {
   settings: Tables<"company_settings">;
   taxRates: { id: string; name: string }[];
+  numbering: { doc_type: string; pattern: string; padding: number; reset: string; next_value: number }[];
   canEdit: boolean;
 };
 
-export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
+export function CompanyForm({ settings: s, taxRates, numbering, canEdit }: Props) {
   const [state, action, pending] = useActionState(async (prev: FormState, formData: FormData) => {
     const result = await updateCompanySettings(prev, formData);
     if (result.ok) toast.success("Company settings saved");
@@ -38,17 +49,17 @@ export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
   );
 
   const toggle = (name: "gst_registered" | "round_off", label: string, description: string) => (
-    <Field orientation="horizontal">
-      <Switch id={name} name={name} defaultChecked={s[name]} />
-      <div className="flex flex-col gap-1">
+    <Field orientation="horizontal" className="rounded-lg border p-4">
+      <FieldContent>
         <FieldLabel htmlFor={name}>{label}</FieldLabel>
         <FieldDescription>{description}</FieldDescription>
-      </div>
+      </FieldContent>
+      <Switch id={name} name={name} defaultChecked={s[name]} />
     </Field>
   );
 
   return (
-    <form action={action} className="flex max-w-3xl flex-col gap-6">
+    <form action={action} className="flex flex-col gap-6">
       <FieldSet disabled={!canEdit || pending} className="contents">
         <Card>
           <CardHeader>
@@ -56,10 +67,10 @@ export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
             <CardDescription>Printed on quotations and invoices.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+            <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {text("legal_name", "Legal name", { required: true })}
               {text("trade_name", "Trade name")}
-              <div className="sm:col-span-2">
+              <div className="col-span-full">
                 <Field data-invalid={!!err.address}>
                   <FieldLabel htmlFor="address">Address</FieldLabel>
                   <Textarea id="address" name="address" defaultValue={s.address} rows={2} />
@@ -84,7 +95,6 @@ export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
                 <FieldError>{err.state}</FieldError>
               </Field>
               {text("pin_code", "PIN code", { inputMode: "numeric", maxLength: 6 })}
-              {text("pan", "PAN", { maxLength: 10, className: "uppercase" })}
               {text("email", "Email", { type: "email" })}
               {text("phone", "Phone", { type: "tel" })}
               {text("website", "Website")}
@@ -98,9 +108,9 @@ export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
             <CardDescription>GST details switch on tax fields across quotations and invoices.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FieldGroup className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                {toggle("gst_registered", "GST registered", "Issue tax invoices with CGST/SGST/IGST.")}
+            <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="col-span-full">
+                {toggle("gst_registered", "GST registered", "Issue tax invoices with GSTIN, SAC codes and CGST/SGST/IGST.")}
               </div>
               {text("gstin", "GSTIN", { maxLength: 15, className: "uppercase" })}
               {text("default_sac_code", "Default SAC code", { inputMode: "numeric" })}
@@ -119,7 +129,6 @@ export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
                   </SelectContent>
                 </Select>
               </Field>
-              <div />
               {text("lut_number", "LUT number", { placeholder: "For export invoices" })}
               {text("lut_valid_until", "LUT valid until", { type: "date" })}
             </FieldGroup>
@@ -132,7 +141,7 @@ export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
             <CardDescription>Payment details printed on invoices.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+            <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {text("bank_name", "Bank name")}
               {text("bank_account_name", "Account name")}
               {text("bank_account_number", "Account number", { inputMode: "numeric" })}
@@ -142,32 +151,74 @@ export function CompanyForm({ settings: s, taxRates, canEdit }: Props) {
           </CardContent>
         </Card>
 
+        <NumberingCard rows={numbering} errors={err} />
+
         <Card>
           <CardHeader>
-            <CardTitle>Documents</CardTitle>
-            <CardDescription>Numbering prefixes, defaults and terms.</CardDescription>
+            <CardTitle>Defaults</CardTitle>
+            <CardDescription>Pre-filled on new documents; you can change them per document.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FieldGroup className="grid gap-4 sm:grid-cols-5">
-              {text("prefix_quotation", "Quotation", { maxLength: 5, className: "uppercase" })}
-              {text("prefix_invoice", "Invoice", { maxLength: 5, className: "uppercase" })}
-              {text("prefix_credit_note", "Credit note", { maxLength: 5, className: "uppercase" })}
-              {text("prefix_receipt", "Receipt", { maxLength: 5, className: "uppercase" })}
-              {text("prefix_expense", "Expense", { maxLength: 5, className: "uppercase" })}
+            <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(
+                [
+                  ["quotation_validity_days", "Quotation validity", 1, "How long a quotation stays open."],
+                  ["payment_terms_days", "Payment terms", 0, "Due date is the invoice date plus these days."],
+                ] as const
+              ).map(([name, label, min, description]) => (
+                <Field key={name} data-invalid={!!err[name]}>
+                  <FieldLabel htmlFor={name}>{label}</FieldLabel>
+                  <InputGroup>
+                    <InputGroupInput
+                      id={name}
+                      name={name}
+                      type="number"
+                      min={min}
+                      max={365}
+                      defaultValue={s[name]}
+                      aria-invalid={!!err[name]}
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupText>days</InputGroupText>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <FieldDescription>{description}</FieldDescription>
+                  <FieldError>{err[name]}</FieldError>
+                </Field>
+              ))}
+              <div className="col-span-full">
+                {toggle("round_off", "Round off totals", "Round grand totals to the nearest ₹1 and show the difference as a round-off line.")}
+              </div>
             </FieldGroup>
-            <FieldGroup className="mt-4 grid gap-4 sm:grid-cols-2">
-              {text("quotation_validity_days", "Quotation validity (days)", { type: "number", min: 1, max: 365 })}
-              {text("payment_terms_days", "Payment terms (days)", { type: "number", min: 0, max: 365 })}
-              <Field className="sm:col-span-2">
-                <FieldLabel htmlFor="quotation_terms">Default quotation terms</FieldLabel>
-                <Textarea id="quotation_terms" name="quotation_terms" defaultValue={s.quotation_terms} rows={3} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Terms & signature</CardTitle>
+            <CardDescription>Printed at the bottom of quotations and invoices.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="quotation_terms">Quotation terms</FieldLabel>
+                <Textarea id="quotation_terms" name="quotation_terms" defaultValue={s.quotation_terms} rows={6} />
               </Field>
-              <Field className="sm:col-span-2">
-                <FieldLabel htmlFor="invoice_terms">Default invoice terms</FieldLabel>
-                <Textarea id="invoice_terms" name="invoice_terms" defaultValue={s.invoice_terms} rows={3} />
+              <Field>
+                <FieldLabel htmlFor="invoice_terms">Invoice terms</FieldLabel>
+                <Textarea id="invoice_terms" name="invoice_terms" defaultValue={s.invoice_terms} rows={6} />
               </Field>
-              {text("signatory_name", "Authorised signatory")}
-              <div className="self-end">{toggle("round_off", "Round off totals", "Round grand totals to the nearest ₹1.")}</div>
+              <Field data-invalid={!!err.signatory_name}>
+                <FieldLabel htmlFor="signatory_name">Authorised signatory</FieldLabel>
+                <Input
+                  id="signatory_name"
+                  name="signatory_name"
+                  defaultValue={s.signatory_name}
+                  aria-invalid={!!err.signatory_name}
+                />
+                <FieldDescription>Name printed under the signature line.</FieldDescription>
+                <FieldError>{err.signatory_name}</FieldError>
+              </Field>
             </FieldGroup>
           </CardContent>
         </Card>

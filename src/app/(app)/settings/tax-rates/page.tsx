@@ -13,7 +13,7 @@ export default function TaxRatesPage() {
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Tax Rates</h1>
-      <Suspense fallback={<Skeleton className="h-64 max-w-2xl" />}>
+      <Suspense fallback={<Skeleton className="h-64" />}>
         <TaxRates />
       </Suspense>
     </>

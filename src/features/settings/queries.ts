@@ -20,3 +20,10 @@ export async function getExpenseCategories() {
   if (error) throw error;
   return data;
 }
+
+export async function getDocumentNumbering() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("document_numbering_settings");
+  if (error) throw error;
+  return data;
+}

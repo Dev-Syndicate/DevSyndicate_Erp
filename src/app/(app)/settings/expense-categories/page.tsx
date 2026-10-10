@@ -13,7 +13,7 @@ export default function ExpenseCategoriesPage() {
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Expense Categories</h1>
-      <Suspense fallback={<Skeleton className="h-64 max-w-2xl" />}>
+      <Suspense fallback={<Skeleton className="h-64" />}>
         <ExpenseCategories />
       </Suspense>
     </>
