@@ -23,7 +23,7 @@ export function InvoiceActions({ id, status, hasPayments, credit, can }: Props) 
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" asChild>
         <a href={`/finance/invoices/${id}/pdf`} download>
-          <Download /> PDF
+          <Download /> {status === "draft" ? "Preview PDF" : "PDF"}
         </a>
       </Button>
       {status === "draft" && can("invoices.update") && (

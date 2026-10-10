@@ -24,7 +24,7 @@ export function QuotationActions({ id, status, validUntil, hasNewerRevision, can
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" asChild>
         <a href={`/finance/quotations/${id}/pdf`} download>
-          <Download /> PDF
+          <Download /> {status === "draft" ? "Preview PDF" : "PDF"}
         </a>
       </Button>
       {status === "draft" && can("quotations.update") && (
