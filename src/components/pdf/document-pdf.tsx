@@ -250,6 +250,9 @@ function DocumentPdf({ doc }: { doc: PdfDoc }) {
           </View>
         ))}
 
+        {/* Spacer: pushes the signature to the bottom of the last page */}
+        <View style={{ flexGrow: 1 }} />
+
         {/* Signature over a line, designation below */}
         <View style={{ alignSelf: "flex-end", width: 190, marginTop: 16, alignItems: "center" }} wrap={false}>
           {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
