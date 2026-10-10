@@ -9,7 +9,7 @@ type Rows = Awaited<ReturnType<typeof listVendors>>["rows"];
 
 export function VendorsTable({ rows }: { rows: Rows }) {
   return (
-    <Card>
+    <Card className="flex-1">
       <CardContent>
         <Table>
           <TableHeader>

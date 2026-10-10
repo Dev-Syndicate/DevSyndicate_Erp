@@ -19,7 +19,7 @@ export function quotationLabel(q: { number: string | null; revision: number }) {
 export function QuotationsTable({ rows }: { rows: Rows }) {
   const today = istToday();
   return (
-    <Card>
+    <Card className="flex-1">
       <CardContent>
         <Table>
           <TableHeader>

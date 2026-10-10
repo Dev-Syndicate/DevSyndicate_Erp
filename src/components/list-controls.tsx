@@ -34,7 +34,7 @@ export function EmptyRow({ colSpan, icon: Icon, title, description }: { colSpan:
   return (
     <TableRow className="hover:bg-transparent">
       <TableCell colSpan={colSpan} className="whitespace-normal">
-        <Empty>
+        <Empty className="min-h-[50vh]">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Icon />

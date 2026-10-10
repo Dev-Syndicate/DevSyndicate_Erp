@@ -14,7 +14,7 @@ type Rows = Awaited<ReturnType<typeof listInvoices>>["rows"];
 export function InvoicesTable({ rows }: { rows: Rows }) {
   const today = istToday();
   return (
-    <Card>
+    <Card className="flex-1">
       <CardContent>
         <Table>
           <TableHeader>

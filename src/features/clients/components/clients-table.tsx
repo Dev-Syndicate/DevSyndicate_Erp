@@ -9,7 +9,7 @@ type Rows = Awaited<ReturnType<typeof listClients>>["rows"];
 
 export function ClientsTable({ rows }: { rows: Rows }) {
   return (
-    <Card>
+    <Card className="flex-1">
       <CardContent>
         <Table>
           <TableHeader>
