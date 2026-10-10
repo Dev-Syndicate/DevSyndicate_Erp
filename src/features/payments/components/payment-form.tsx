@@ -64,6 +64,8 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
         ? { [preset.id]: String(preset.balance_due ?? "") }
         : {},
   );
+  // Until the user types in an Apply box, the amount is applied automatically (preset invoice first, then oldest).
+  const [manual, setManual] = useState(!!payment);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
 
@@ -76,6 +78,30 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
   const settled = scaled(form.amount) + (receipt ? scaled(form.tds_amount) : 0n);
   const appliedTotal = receipt ? Object.values(applied).reduce((s, v) => s + scaled(v), 0n) : 0n;
   const leftover = settled - appliedTotal;
+
+  /** Spreads amount + TDS over the client's open invoices: the invoice we came from first, then oldest first. */
+  function distribute(clientId: string, amount: string, tds: string): Record<string, string> {
+    let room = scaled(amount) + scaled(tds);
+    const next: Record<string, string> = {};
+    const list = invoices.filter((i) => i.client_id === clientId);
+    const ordered = [...list.filter((i) => i.id === presetInvoiceId), ...list.filter((i) => i.id !== presetInvoiceId)];
+    for (const inv of ordered) {
+      const balance = paise(inv.balance_due ?? 0);
+      const take = room < balance ? room : balance;
+      if (take <= 0n) break;
+      next[inv.id] = rupees(take);
+      room -= take;
+    }
+    return next;
+  }
+
+  function changeAmount(field: "amount" | "tds_amount", value: string) {
+    set(field, value);
+    if (!manual) {
+      const next = { ...form, [field]: value };
+      setApplied(distribute(form.client_id, next.amount, next.tds_amount));
+    }
+  }
 
   function fill(inv: OpenInvoice) {
     const others = appliedTotal - scaled(applied[inv.id] ?? "");
@@ -132,7 +158,8 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
                   value={form.client_id}
                   onValueChange={(v) => {
                     set("client_id", v);
-                    setApplied({});
+                    setManual(false);
+                    setApplied(distribute(v, form.amount, form.tds_amount));
                   }}
                 >
                   <SelectTrigger id="client_id" className="w-full" aria-invalid={!!err("client_id")}>
@@ -171,13 +198,13 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
               </Field>
               <Field data-invalid={!!err("amount")}>
                 <FieldLabel htmlFor="amount">{receipt ? "Amount received (₹)" : "Amount refunded (₹)"}</FieldLabel>
-                <Input id="amount" value={form.amount} onChange={(e) => set("amount", e.target.value)} inputMode="decimal" placeholder="0.00" className="tabular-nums" aria-invalid={!!err("amount")} />
+                <Input id="amount" value={form.amount} onChange={(e) => changeAmount("amount", e.target.value)} inputMode="decimal" placeholder="0.00" className="tabular-nums" aria-invalid={!!err("amount")} />
                 <FieldError>{err("amount")}</FieldError>
               </Field>
               {receipt && (
                 <Field data-invalid={!!err("tds_amount")}>
                   <FieldLabel htmlFor="tds_amount">TDS deducted (₹)</FieldLabel>
-                  <Input id="tds_amount" value={form.tds_amount} onChange={(e) => set("tds_amount", e.target.value)} inputMode="decimal" className="tabular-nums" aria-invalid={!!err("tds_amount")} />
+                  <Input id="tds_amount" value={form.tds_amount} onChange={(e) => changeAmount("tds_amount", e.target.value)} inputMode="decimal" className="tabular-nums" aria-invalid={!!err("tds_amount")} />
                   <FieldDescription>If the client withheld income tax, e.g. 10% of the value before GST.</FieldDescription>
                   <FieldError>{err("tds_amount")}</FieldError>
                 </Field>
@@ -209,7 +236,10 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
           <Card>
             <CardHeader>
               <CardTitle>Apply to invoices</CardTitle>
-              <CardDescription>Whatever you don&apos;t apply stays with the client as credit (an advance) and can be applied later.</CardDescription>
+              <CardDescription>
+                The amount is applied to open invoices automatically (oldest first). Change it if needed; whatever you don&apos;t apply
+                stays with the client as credit (an advance).
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               {!client ? (
@@ -239,7 +269,10 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
                             <Input
                               aria-label={`Apply to ${inv.number}`}
                               value={applied[inv.id] ?? ""}
-                              onChange={(e) => setApplied((a) => ({ ...a, [inv.id]: e.target.value }))}
+                              onChange={(e) => {
+                                setManual(true);
+                                setApplied((a) => ({ ...a, [inv.id]: e.target.value }));
+                              }}
                               inputMode="decimal"
                               placeholder="0.00"
                               className="tabular-nums"
