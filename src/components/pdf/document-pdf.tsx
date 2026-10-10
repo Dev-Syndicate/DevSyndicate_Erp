@@ -31,7 +31,7 @@ const s = StyleSheet.create({
   bold: { fontWeight: "bold" },
   muted: { color: MUTED },
   small: { fontSize: 7.5, lineHeight: 1.35 },
-  logo: { width: 70, height: 70, objectFit: "contain", marginRight: 10 },
+  logo: { width: 90, height: 90, objectFit: "contain", marginRight: 12 },
   company: { fontSize: 12, fontWeight: "bold", lineHeight: 1.2, marginBottom: 2 },
   title: { fontSize: 20, fontWeight: "bold", lineHeight: 1.2, textAlign: "right", textTransform: "uppercase" },
   thick: { borderBottomWidth: 2, borderBottomColor: INK, marginVertical: 12 },
