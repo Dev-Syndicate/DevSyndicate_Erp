@@ -22,6 +22,8 @@ import { formatINR, paise, toScaled } from "@/lib/money";
 
 type Line = { id: string; description: string; quantity: number };
 
+const rupees = (p: bigint) => `${p / 100n}.${String(p % 100n).padStart(2, "0")}`;
+
 const MODES = [
   { value: "full", label: "Full quotation", hint: "All lines at 100%." },
   { value: "percent", label: "Percentage", hint: "Each line at a share of its value, e.g. a 50% advance." },
@@ -31,10 +33,13 @@ const MODES = [
 
 /** Creates a draft invoice from an accepted quotation (PRD §14). The draft opens for review before issuing. */
 export function ConvertQuotationButton(props: { id: string; lines: Line[]; grandTotal: number; invoicedTotal: number; gst: boolean }) {
-  const [mode, setMode] = useState<ConvertInput["mode"]>("full");
-  const [percent, setPercent] = useState("50");
-  const [amount, setAmount] = useState("");
   const left = paise(props.grandTotal) - paise(props.invoicedTotal);
+  // Once part is invoiced, billing "what's left" is the safe default; Full / Percentage would bill it again.
+  const started = paise(props.invoicedTotal) > 0n;
+  const [mode, setMode] = useState<ConvertInput["mode"]>(started ? "amount" : "full");
+  const [percent, setPercent] = useState("50");
+  // With GST the amount is before tax, so only prefill the remaining total when there is none.
+  const [amount, setAmount] = useState(started && !props.gst && left > 0n ? rupees(left) : "");
   const billing = toScaled(amount, 2) ?? 0n; // live: what this invoice takes off the balance
   const [picked, setPicked] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
@@ -85,6 +90,13 @@ export function ConvertQuotationButton(props: { id: string; lines: Line[]; grand
               </SelectContent>
             </Select>
             <FieldDescription>{MODES.find((m) => m.value === mode)?.hint}</FieldDescription>
+            {started && (mode === "full" || mode === "percent") && (
+              <FieldDescription className="text-destructive">
+                {formatINR(props.invoicedTotal)} is already invoiced.{" "}
+                {mode === "full" ? `Full quotation bills ${formatINR(props.grandTotal)} again.` : "A percentage is of the full quotation, not of what's left."}{" "}
+                Use Specific amount for the remaining {formatINR(left)}.
+              </FieldDescription>
+            )}
           </Field>
           {mode === "percent" && (
             <Field>
