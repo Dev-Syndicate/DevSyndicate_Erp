@@ -1,7 +1,7 @@
 // Run: pnpm test. Cases match supabase/tests/quotations_check.sql (the database is the source of truth).
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { amountInWords, calculateDocument, formatINR, paise, toScaled } from "./money.ts";
+import { amountInWords, calculateDocument, formatINR, gstInside, paise, toScaled } from "./money.ts";
 
 const lines = [
   { quantity: "1", unitPrice: "25000", discountType: "percent", discountValue: "10", taxRate: "18" },
@@ -68,4 +68,10 @@ test("amount in words (Indian grouping)", () => {
   assert.equal(amountInWords(10000000000n), "Rupees Ten Crore Only");
   assert.equal(amountInWords(10050n), "Rupees One Hundred and Fifty Paise Only");
   assert.equal(amountInWords(0n), "Rupees Zero Only");
+});
+
+test("GST inside an inclusive amount (receipt vouchers)", () => {
+  assert.deepEqual(gstInside(1180000n, 1800n), { taxable: 1000000n, tax: 180000n });
+  assert.deepEqual(gstInside(1000000n, 1800n), { taxable: 847458n, tax: 152542n }); // ₹10,000 → ₹8,474.58 + ₹1,525.42
+  assert.deepEqual(gstInside(500n, 0n), { taxable: 500n, tax: 0n });
 });

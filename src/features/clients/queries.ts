@@ -20,7 +20,7 @@ export async function getClient(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("clients")
-    .select("*, client_contacts(*)")
+    .select("*, client_credit, client_contacts(*)")
     .eq("id", id)
     .order("is_primary", { referencedTable: "client_contacts", ascending: false })
     .maybeSingle();

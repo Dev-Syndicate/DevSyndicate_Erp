@@ -1,7 +1,7 @@
 # DevSyndicate ERP
 
 **Product Requirements Document (PRD)**  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Initial Development  
 **Product:** DevSyndicate ERP  
 **Primary Module:** Finance  
@@ -11,6 +11,14 @@
 ---
 
 ## Changelog
+
+### v1.2 (2026-10-10)
+
+- **TDS on receipts.** A receipt records amount received plus TDS deducted by the client; both settle invoices and count as revenue; TDS is reported as TDS Receivable (§9.2, §19).
+- **GST on advances.** When GST-registered, advances print as Rule 50 receipt vouchers and refunds of advances as Rule 51 refund vouchers; receipt numbers then stay within 16 characters (§19, §30).
+- **Payment corrections clarified.** Cancel needs a reason; credit can be applied to or removed from invoices after confirming; refunded credit blocks cancelling the receipt (§19).
+- **Proof uploads** go straight from the browser to Storage and are verified on the server (§20).
+- **Quotation template:** optional per-line timeline and signatory designation on PDFs (§13, §29).
 
 ### v1.1 (2026-10-10)
 
@@ -358,17 +366,20 @@ All revenue figures are **gross (including GST collected)**. GST collected on is
 
 | Metric | Formula |
 |---|---|
-| **Revenue** (period) | Σ confirmed receipts − Σ confirmed refunds, by payment date |
+| **Revenue** (period) | Σ settled value of confirmed receipts (amount received + TDS deducted by the client) − Σ confirmed refunds, by payment date |
 | **Expenses** (period) | Σ expenses, by expense date |
 | **Net Cash Position** (period) | Revenue − Expenses |
 | **Total Invoiced** (period) | Σ totals of issued, non-cancelled invoices − Σ issued credit notes, by document date |
-| **Invoice Balance** | Invoice total − Σ issued credit notes against it − Σ confirmed payment allocations to it |
+| **Invoice Balance** | Invoice total − Σ issued credit notes against it − Σ confirmed payment allocations to it (allocations settle with cash and TDS) |
 | **Outstanding** (as of date) | Σ balances of all issued, non-cancelled invoices |
-| **Client Credit** | Σ confirmed receipts − Σ allocations − Σ refunds for that client (money received but not yet applied to an invoice) |
+| **Client Credit** | Σ settled value of confirmed receipts − Σ their allocations − Σ confirmed refunds for that client (money received but not yet applied to an invoice) |
+| **TDS Receivable** (period) | Σ TDS deducted on confirmed receipts, by payment date (claimed against Form 26AS) |
 | **Pending Invoices** | Count of issued invoices with balance > 0 and not overdue |
 | **Overdue Invoices** | Count of issued invoices with balance > 0 and due date before today (IST) |
 
 The dashboard has one KPI per definition above. There is no separate "Net Revenue" or "Amount Received"; Revenue is the amount received.
+
+**TDS (v1.2):** business clients often deduct income-tax TDS (e.g. 10% under §194J for professional/technical services) and pay the rest. The TDS is our income, paid to the government on our behalf, so it counts toward Revenue and settles the invoice, but it never reaches the bank; it is reported separately as TDS Receivable. Clients compute TDS on the value **excluding GST** when GST is shown separately (CBDT Circular 23/2017).
 
 ## 9.3 Line & Document Calculation Order
 
@@ -711,7 +722,9 @@ Payments represent **money received from clients**. Money paid by DevSyndicate i
 Receipt Number        (TXN/26-27/0001, assigned on confirm)
 Kind                  Receipt | Refund
 Date
-Amount
+Amount Received       (money that reached us: cash / bank / UPI)
+TDS Deducted          (receipts only, optional: income tax the client withheld)
+Settled Value         (= Amount Received + TDS Deducted; what allocations draw from)
 
 Client
 
@@ -719,7 +732,7 @@ Allocations           (one or more)
     Invoice
     Amount
 
-Unallocated Amount    (= amount − Σ allocations; becomes Client Credit)
+Unallocated Amount    (= settled value − Σ allocations; becomes Client Credit)
 
 Payment Method
     UPI
@@ -735,6 +748,7 @@ Reference / UTR Number
 Payment Proof         (documents, §20)
 
 Status                Pending | Confirmed | Cancelled
+Cancel Reason         (required when cancelling)
 
 Notes
 
@@ -751,7 +765,11 @@ Updated At
 - **Advance payments** are payments with no allocation. They appear as Client Credit and can be allocated when an invoice is issued.
 - **Overpayment:** an allocation cannot exceed the invoice balance. Any excess stays unallocated as Client Credit.
 - **Refunds** are `Kind = Refund`, limited to the client's available credit, and reduce revenue in the period they are made.
-- Confirmed payments are not edited. A correction is made by cancelling and re-entering, with a reason (logged).
+- Confirmed payments are not edited. A correction is made by cancelling and re-entering, with a reason (logged). Allocations of a confirmed receipt can still be applied to or removed from invoices (moving credit), and each change is logged.
+- **TDS:** a receipt can record TDS deducted by the client. Allocations draw from amount received + TDS, so an invoice settled partly by TDS reaches *Paid*.
+- **Cancelling:** a confirmed receipt cannot be cancelled while its credit has been refunded (client credit would go negative). An invoice with confirmed allocations cannot be cancelled until those allocations are removed (§16).
+- **GST on advances (when GST-registered):** an advance for services is taxable when received. The confirmed receipt of an unallocated advance prints as a **Receipt Voucher** (CGST Rule 50: supplier and recipient details and GSTIN, serial number ≤ 16 characters, date, description, amount, tax rate and tax amount, place of supply, signature). Tax is computed inside the advance (amount × rate ÷ (100 + rate)) at 18% when the rate is not yet known, and treated as inter-state when the place of supply is not known. A refund of such an advance prints as a **Refund Voucher** (Rule 51). The GST paid on the advance is adjusted when the final tax invoice is issued (GSTR-1 tables 11A/11B).
+- Permissions: `payments.create` records pending receipts, `payments.update` confirms and applies/removes allocations, `payments.cancel` cancels, `payments.refund` records refunds.
 
 Example:
 
@@ -765,13 +783,34 @@ Payment TXN/26-27/0005        ₹25,000   → allocated ₹23,000
 Invoice balance               ₹0        Status: Paid
 ```
 
+Example with TDS (v1.2):
+
+```text
+Invoice INV/26-27/0002        ₹29,000   (no GST)
+
+Payment TXN/26-27/0006        received ₹26,100 + TDS ₹2,900 → allocated ₹29,000
+
+Invoice balance               ₹0        Status: Paid
+Revenue                       ₹29,000   (bank ₹26,100, TDS receivable ₹2,900)
+```
+
+Example with an advance (v1.2):
+
+```text
+Payment TXN/26-27/0007        ₹10,000   no allocation → Client Credit ₹10,000
+Invoice INV/26-27/0003        ₹29,000   issued for the full quotation
+Apply credit                  ₹10,000   → invoice shows "Less: paid ₹10,000, Balance due ₹19,000"
+```
+
+Sources: CBDT Circular 23/2017 (TDS excludes GST); CGST Rules 50 and 51 (receipt and refund vouchers); Zoho Books India (TDS withheld on record payment; retainers applied to invoices).
+
 ---
 
 # 20. Payment Proof
 
 Every payment (and every expense) can optionally have one or more supporting documents.
 
-Supported files: **JPG, PNG, WEBP, PDF**, max **5 MB** per file.
+Supported files: **JPG, PNG, WEBP, PDF**, max **5 MB** per file. Files upload straight from the browser to Storage (server actions cap request bodies at 1 MB); the server then checks the file signature before recording it.
 
 Examples:
 
@@ -1120,7 +1159,7 @@ Numbers are generated automatically, are unique per organization, and restart ea
 Rules:
 
 - `{FY}` is the financial year of the document date (`26-27` = April 2026 – March 2027). `{seq}` is zero-padded to 4 digits and grows beyond 9999 if needed.
-- Invoice and credit note numbers stay **within 16 characters** (GST requirement).
+- Invoice and credit note numbers stay **within 16 characters** (GST requirement). When GST-registered, receipt numbers do too, because advances print as receipt vouchers (Rule 50).
 - **Numbers are assigned on issue, not on draft creation.** Drafts display `DRAFT` and a short ID. Deleting a draft therefore never leaves a gap.
 - **Gapless and duplicate-free:** numbers come from a `document_sequences` counter table, incremented with a row lock (`SELECT … FOR UPDATE`) inside the same transaction that issues the document. PostgreSQL sequences are **not** used because they skip values on rollback.
 - A unique constraint on `(organization_id, document_type, number)` is the final safeguard.

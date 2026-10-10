@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { DocumentItemsTable, DocumentTotalsCard } from "@/components/document-view";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { getInvoice } from "@/features/invoices/queries";
+import { methodLabel } from "@/features/payments/schema";
 import { formatDate } from "@/lib/dates";
+import { formatINR } from "@/lib/money";
 
 type Invoice = NonNullable<Awaited<ReturnType<typeof getInvoice>>>;
 
@@ -89,8 +92,59 @@ export function InvoiceView({ inv, showSac }: { inv: Invoice; showSac: boolean }
             <p className="whitespace-pre-line">{inv.notes || <span className="text-muted-foreground">No notes</span>}</p>
           </CardContent>
         </Card>
-        <DocumentTotalsCard doc={inv} showTax={showTax} />
+        <DocumentTotalsCard doc={inv} showTax={showTax}>
+          {inv.status !== "draft" && (
+            <>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Paid</span>
+                <span className="tabular-nums">{formatINR(-(inv.amount_paid ?? 0))}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-medium">Balance due</span>
+                <span className="text-lg font-semibold tabular-nums">{formatINR(inv.balance_due ?? 0)}</span>
+              </div>
+            </>
+          )}
+        </DocumentTotalsCard>
       </div>
+
+      {inv.payment_allocations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Payments</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Receipt</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead className="text-right">Applied</TableHead>
+                  <TableHead className="pl-6">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {inv.payment_allocations.map((a) => (
+                  <TableRow key={a.id}>
+                    <TableCell className="font-mono text-sm">
+                      {a.payments && (
+                        <Link href={`/finance/payments/${a.payments.id}`} className="hover:underline">
+                          {a.payments.number ?? "Pending"}
+                        </Link>
+                      )}
+                    </TableCell>
+                    <TableCell className="tabular-nums">{formatDate(a.payments?.payment_date)}</TableCell>
+                    <TableCell>{a.payments ? methodLabel(a.payments.method) : ""}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatINR(a.amount)}</TableCell>
+                    <TableCell className="pl-6 capitalize">{a.payments?.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

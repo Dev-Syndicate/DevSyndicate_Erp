@@ -121,6 +121,15 @@ export function calculateDocument(doc: DocumentInput): DocumentTotals {
   };
 }
 
+/**
+ * Splits a GST-inclusive amount (paise) into taxable value and tax, e.g. a received advance on a receipt voucher
+ * (CGST Rule 50). `rate` is in hundredths of a percent (18% = 1800n); taxable is rounded, tax is the remainder.
+ */
+export function gstInside(amount: bigint, rate: bigint): { taxable: bigint; tax: bigint } {
+  const taxable = div(amount * 10000n, 10000n + rate);
+  return { taxable, tax: amount - taxable };
+}
+
 /** Rupee amount from the database (2 decimals) → exact paise, for adding amounts without float error. */
 export function paise(rupees: number | string): bigint {
   const s = String(rupees).trim();

@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { Copy, Download, Pencil } from "lucide-react";
+import { Copy, Download, IndianRupee, Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { deleteInvoice, invoiceAction } from "@/features/invoices/actions";
 import type { InvoiceStatus } from "@/features/invoices/schema";
 import { IssueInvoiceButton } from "./issue-invoice-button";
 
-type Props = { id: string; status: InvoiceStatus; can: (permission: string) => boolean };
+type Props = { id: string; status: InvoiceStatus; hasPayments: boolean; can: (permission: string) => boolean };
 
 /** Buttons for the actions allowed in the current status (mirrors public.invoice_action). */
-export function InvoiceActions({ id, status, can }: Props) {
-  const issued = status === "issued" || status === "overdue";
+export function InvoiceActions({ id, status, hasPayments, can }: Props) {
+  const issued = status === "issued" || status === "overdue" || status === "partially_paid";
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -31,7 +31,7 @@ export function InvoiceActions({ id, status, can }: Props) {
           Delete
         </ConfirmButton>
       )}
-      {issued && can("invoices.cancel") && (
+      {issued && !hasPayments && can("invoices.cancel") && (
         <ConfirmButton
           action={invoiceAction.bind(null, id, "cancel", undefined)}
           title="Cancel invoice?"
@@ -49,6 +49,13 @@ export function InvoiceActions({ id, status, can }: Props) {
         </ConfirmButton>
       )}
       {status === "draft" && can("invoices.issue") && <IssueInvoiceButton id={id} />}
+      {issued && can("payments.create") && (
+        <Button asChild>
+          <Link href={`/finance/payments/new?invoice=${id}`}>
+            <IndianRupee /> Record payment
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }

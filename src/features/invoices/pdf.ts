@@ -42,6 +42,7 @@ export async function invoicePdf(id: string) {
       attention: inv.client_contacts?.name,
     },
     amountInWords: true,
+    payments: issued && (inv.amount_paid ?? 0) > 0 ? { paid: inv.amount_paid ?? 0, balance: inv.balance_due ?? 0 } : undefined,
     supplyType: inv.supply_type,
     gst: inv.gst_applicable,
     showSac: settings.show_sac,

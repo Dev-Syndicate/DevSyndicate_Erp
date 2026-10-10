@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paise } from "@/lib/money";
 import { discountTypeSchema, lineItemSchema, moneyString, percentDiscountError, percentDiscountOk } from "@/lib/line-items";
 
 export const invoiceSchema = z
@@ -19,12 +20,20 @@ export const invoiceSchema = z
 
 export type InvoiceInput = z.input<typeof invoiceSchema>;
 
-// shortcut: paid / partially paid arrive with payments (PRD §16); until then an issued invoice's balance is its total.
-export type InvoiceStatus = "draft" | "issued" | "overdue" | "cancelled";
+export type InvoiceStatus = "draft" | "issued" | "partially_paid" | "paid" | "overdue" | "cancelled";
 
-/** Status shown to users: an issued invoice past its due date is "overdue" (derived, PRD §16). */
-export function displayStatus(inv: { status: string; due_date: string }, today: string): InvoiceStatus {
-  return inv.status === "issued" && inv.due_date < today ? "overdue" : (inv.status as InvoiceStatus);
+/**
+ * Status shown to users (PRD §16), derived from balances once issued: paid when nothing is due, overdue when a
+ * balance is left past the due date, partially paid when some of it is settled.
+ */
+export function displayStatus(
+  inv: { status: string; due_date: string; amount_paid: number | null; balance_due: number | null },
+  today: string,
+): InvoiceStatus {
+  if (inv.status !== "issued") return inv.status as InvoiceStatus;
+  if (paise(inv.balance_due ?? 0) <= 0n) return "paid";
+  if (inv.due_date < today) return "overdue";
+  return paise(inv.amount_paid ?? 0) > 0n ? "partially_paid" : "issued";
 }
 
 export const invoiceLabel = (inv: { number: string | null }) => inv.number ?? "Draft";

@@ -5,6 +5,8 @@ import type { InvoiceStatus } from "@/features/invoices/schema";
 const STYLES: Record<InvoiceStatus, { label: string; className: string }> = {
   draft: { label: "Draft", className: "border-border bg-transparent text-muted-foreground" },
   issued: { label: "Issued", className: "bg-info/15 text-info" },
+  partially_paid: { label: "Partially paid", className: "bg-warning/15 text-warning" },
+  paid: { label: "Paid", className: "bg-success/15 text-success" },
   overdue: { label: "Overdue", className: "bg-destructive/15 text-destructive" },
   cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground" },
 };

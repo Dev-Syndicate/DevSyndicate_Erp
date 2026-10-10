@@ -88,6 +88,8 @@ export type PdfDoc = {
     round_off: number;
     grand_total: number;
   };
+  /** Issued invoices with payments: "Less: paid" and "Balance due" under the total. */
+  payments?: { paid: number; balance: number };
   /** Invoices print the amount in words (PRD §15). */
   amountInWords?: boolean;
   /** Blocks after the totals, e.g. bank details and terms. Empty ones are skipped. */
@@ -101,6 +103,47 @@ export const pdfDate = (date: string) => formatDate(date).replaceAll("-", "/");
 const discount = (type: string, value: number) => (value > 0 ? (type === "percent" ? `${value}%` : formatINR(value)) : "—");
 
 type Col = { label: string; flex: number; align: "left" | "center" | "right"; value: (i: Item) => string };
+
+type Company = PdfDoc["company"];
+type Signatory = PdfDoc["signatory"];
+
+/** Logo + company details on the left, document title on the right. */
+function Header({ company, title }: { company: Company; title: string }) {
+  return (
+    <View style={[s.between, { alignItems: "flex-start" }]}>
+      <View style={[s.row, { width: "62%" }]}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
+        {company.logo && <Image src={company.logo} style={s.logo} />}
+        <View style={{ flex: 1 }}>
+          <Text style={s.company}>{company.name}</Text>
+          {company.lines.map((l) => (
+            <Text key={l} style={s.small}>
+              {l}
+            </Text>
+          ))}
+        </View>
+      </View>
+      <Text style={[s.title, { marginTop: 14 }]}>{title}</Text>
+    </View>
+  );
+}
+
+/** Signature over a line with the designation; sits at the bottom of the last page (spacer before it). */
+function Signature({ signatory }: { signatory: Signatory }) {
+  return (
+    <>
+      <View style={{ flexGrow: 1 }} />
+      {/* Signature over a line, designation below */}
+      <View style={{ alignSelf: "flex-end", width: 190, marginTop: 16, alignItems: "center" }} wrap={false}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
+        {signatory.signature ? <Image src={signatory.signature} style={{ height: 44, maxWidth: 160, objectFit: "contain" }} /> : <View style={{ height: 44 }} />}
+        <View style={{ borderTopWidth: 1, borderTopColor: INK, alignSelf: "stretch", marginTop: 4, marginBottom: 4 }} />
+        {signatory.name && <Text style={s.bold}>{signatory.name}</Text>}
+        <Text style={{ textTransform: "uppercase", letterSpacing: 0.5 }}>{signatory.designation || "Authorised Signatory"}</Text>
+      </View>
+    </>
+  );
+}
 
 function DocumentPdf({ doc }: { doc: PdfDoc }) {
   const showTax = doc.gst && doc.supplyType !== "export";
@@ -148,22 +191,7 @@ function DocumentPdf({ doc }: { doc: PdfDoc }) {
   return (
     <Document title={`${doc.title} ${doc.number[1]}`} author={doc.company.name}>
       <Page size="A4" style={s.page}>
-        {/* Logo + company, title */}
-        <View style={[s.between, { alignItems: "flex-start" }]}>
-          <View style={[s.row, { width: "62%" }]}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
-            {doc.company.logo && <Image src={doc.company.logo} style={s.logo} />}
-            <View style={{ flex: 1 }}>
-              <Text style={s.company}>{doc.company.name}</Text>
-              {doc.company.lines.map((l) => (
-                <Text key={l} style={s.small}>
-                  {l}
-                </Text>
-              ))}
-            </View>
-          </View>
-          <Text style={[s.title, { marginTop: 14 }]}>{doc.title}</Text>
-        </View>
+        <Header company={doc.company} title={doc.title} />
 
         {/* Number and dates */}
         <View style={[s.between, { marginTop: 18 }]}>
@@ -233,6 +261,18 @@ function DocumentPdf({ doc }: { doc: PdfDoc }) {
             <Text style={s.bold}>Total</Text>
             <Text style={[s.bold, { backgroundColor: SHADE, paddingHorizontal: 6 }]}>{formatINR(t.grand_total)}</Text>
           </View>
+          {doc.payments && (
+            <>
+              <View style={[s.between, { paddingVertical: 2, paddingHorizontal: 6 }]}>
+                <Text style={s.bold}>Less: paid</Text>
+                <Text>{formatINR(-doc.payments.paid)}</Text>
+              </View>
+              <View style={[s.between, { paddingVertical: 3, paddingHorizontal: 6 }]}>
+                <Text style={s.bold}>Balance due</Text>
+                <Text style={[s.bold, { backgroundColor: SHADE, paddingHorizontal: 6 }]}>{formatINR(doc.payments.balance)}</Text>
+              </View>
+            </>
+          )}
         </View>
         {doc.amountInWords && (
           <Text style={{ marginTop: 6 }}>
@@ -250,17 +290,7 @@ function DocumentPdf({ doc }: { doc: PdfDoc }) {
           </View>
         ))}
 
-        {/* Spacer: pushes the signature to the bottom of the last page */}
-        <View style={{ flexGrow: 1 }} />
-
-        {/* Signature over a line, designation below */}
-        <View style={{ alignSelf: "flex-end", width: 190, marginTop: 16, alignItems: "center" }} wrap={false}>
-          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
-          {doc.signatory.signature ? <Image src={doc.signatory.signature} style={{ height: 44, maxWidth: 160, objectFit: "contain" }} /> : <View style={{ height: 44 }} />}
-          <View style={{ borderTopWidth: 1, borderTopColor: INK, alignSelf: "stretch", marginTop: 4, marginBottom: 4 }} />
-          {doc.signatory.name && <Text style={s.bold}>{doc.signatory.name}</Text>}
-          <Text style={{ textTransform: "uppercase", letterSpacing: 0.5 }}>{doc.signatory.designation || "Authorised Signatory"}</Text>
-        </View>
+        <Signature signatory={doc.signatory} />
 
         <Text style={s.footer} fixed render={({ pageNumber, totalPages }) => (totalPages > 1 ? `Page ${pageNumber} of ${totalPages}` : "")} />
       </Page>
@@ -270,6 +300,167 @@ function DocumentPdf({ doc }: { doc: PdfDoc }) {
 
 export function renderDocumentPdf(doc: PdfDoc) {
   return renderToBuffer(<DocumentPdf doc={doc} />);
+}
+
+export type ReceiptDoc = {
+  /** "Payment Receipt", "Receipt Voucher", "Refund Receipt" or "Refund Voucher". */
+  title: string;
+  number: string;
+  date: string;
+  company: Company;
+  signatory: Signatory;
+  party: { label: string; name: string; lines: string[]; gstin: string };
+  /** Particulars in paise, e.g. [["Amount received", 2610000n], ["TDS deducted by client", 290000n]]. */
+  rows: [string, bigint][];
+  total: [string, bigint];
+  details: [string, string][];
+  applied: { invoice: string; date: string; amount: bigint }[];
+  /** Part of a receipt not applied to invoices (client credit / advance). */
+  advance: bigint;
+  /** Receipt / refund voucher tax lines (CGST Rule 50/51), when GST-registered. */
+  gst?: { rate: number; taxable: bigint; lines: [string, bigint][]; placeOfSupply: string };
+  notes: string;
+};
+
+function ReceiptPdf({ doc }: { doc: ReceiptDoc }) {
+  const cell = (flex: number, right = false) => [s.td, { flex, alignItems: (right ? "flex-end" : "flex-start") as "flex-end" | "flex-start" }];
+  return (
+    <Document title={`${doc.title} ${doc.number}`} author={doc.company.name}>
+      <Page size="A4" style={s.page}>
+        <Header company={doc.company} title={doc.title} />
+
+        <View style={[s.between, { marginTop: 18 }]}>
+          <Text>
+            <Text style={s.bold}>{doc.title.includes("Refund") ? "Refund No" : "Receipt No"}:</Text> {doc.number}
+          </Text>
+          <Text>
+            <Text style={s.bold}>Date:</Text> {doc.date}
+          </Text>
+        </View>
+
+        <View style={{ marginTop: 6, width: "50%" }}>
+          <Text style={s.small}>{doc.party.label}</Text>
+          <Text style={[s.bold, { textTransform: "uppercase" }]}>{doc.party.name}</Text>
+          {doc.party.lines.filter(Boolean).map((l, n) => (
+            <Text key={n}>{l}</Text>
+          ))}
+          {doc.party.gstin && <Text>GSTIN: {doc.party.gstin}</Text>}
+        </View>
+
+        <View style={s.thick} />
+
+        <View style={s.table}>
+          <View style={s.tr}>
+            <View style={cell(4)}>
+              <Text style={s.bold}>Particulars</Text>
+            </View>
+            <View style={cell(1.4, true)}>
+              <Text style={s.bold}>Amount</Text>
+            </View>
+          </View>
+          {doc.rows.map(([k, v]) => (
+            <View key={k} style={s.tr}>
+              <View style={cell(4)}>
+                <Text>{k}</Text>
+              </View>
+              <View style={cell(1.4, true)}>
+                <Text>{formatINR(v)}</Text>
+              </View>
+            </View>
+          ))}
+          <View style={s.tr}>
+            <View style={cell(4)}>
+              <Text style={s.bold}>{doc.total[0]}</Text>
+            </View>
+            <View style={[...cell(1.4, true), { backgroundColor: SHADE }]}>
+              <Text style={s.bold}>{formatINR(doc.total[1])}</Text>
+            </View>
+          </View>
+        </View>
+        <Text style={{ marginTop: 6 }}>
+          <Text style={s.bold}>Amount in words: </Text>
+          {amountInWords(doc.total[1])}
+        </Text>
+
+        <View style={{ marginTop: 10 }}>
+          {doc.details.map(([k, v]) => (
+            <Text key={k}>
+              <Text style={s.bold}>{k}:</Text> {v}
+            </Text>
+          ))}
+        </View>
+
+        {(doc.applied.length > 0 || doc.advance > 0n) && (
+          <View style={{ marginTop: 14 }} wrap={false}>
+            <Text style={s.heading}>Applied to:</Text>
+            <View style={s.table}>
+              <View style={s.tr}>
+                <View style={cell(2)}>
+                  <Text style={s.bold}>Invoice</Text>
+                </View>
+                <View style={cell(1.4)}>
+                  <Text style={s.bold}>Invoice date</Text>
+                </View>
+                <View style={cell(1.4, true)}>
+                  <Text style={s.bold}>Amount</Text>
+                </View>
+              </View>
+              {doc.applied.map((a) => (
+                <View key={a.invoice} style={s.tr}>
+                  <View style={cell(2)}>
+                    <Text>{a.invoice}</Text>
+                  </View>
+                  <View style={cell(1.4)}>
+                    <Text>{a.date}</Text>
+                  </View>
+                  <View style={cell(1.4, true)}>
+                    <Text>{formatINR(a.amount)}</Text>
+                  </View>
+                </View>
+              ))}
+              {doc.advance > 0n && (
+                <View style={s.tr}>
+                  <View style={cell(3.4)}>
+                    <Text>Advance (held as client credit)</Text>
+                  </View>
+                  <View style={cell(1.4, true)}>
+                    <Text>{formatINR(doc.advance)}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {doc.gst && (
+          <View style={{ marginTop: 14 }} wrap={false}>
+            <Text style={s.heading}>GST on advance (included above):</Text>
+            <Text style={s.small}>
+              Taxable value {formatINR(doc.gst.taxable)} @ {doc.gst.rate}% · Place of supply: {doc.gst.placeOfSupply} · Tax payable on reverse charge: No
+            </Text>
+            {doc.gst.lines.map(([k, v]) => (
+              <Text key={k} style={s.small}>
+                {k}: {formatINR(v)}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {doc.notes.trim() && (
+          <View style={{ marginTop: 14 }} wrap={false}>
+            <Text style={s.heading}>Notes:</Text>
+            <Text style={s.small}>{doc.notes}</Text>
+          </View>
+        )}
+
+        <Signature signatory={doc.signatory} />
+      </Page>
+    </Document>
+  );
+}
+
+export function renderReceiptPdf(doc: ReceiptDoc) {
+  return renderToBuffer(<ReceiptPdf doc={doc} />);
 }
 
 /** Company block and signatory for the PDF, with the logo and signature downloaded from the private bucket. */

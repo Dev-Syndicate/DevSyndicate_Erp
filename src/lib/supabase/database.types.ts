@@ -136,6 +136,7 @@ export type Database = {
           pin_code: string
           state: string
           updated_at: string
+          client_credit: number | null
         }
         Insert: {
           billing_address?: string
@@ -375,6 +376,53 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          file_name: string
+          id: string
+          mime_type: string
+          organization_id: string
+          path: string
+          size_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          file_name: string
+          id?: string
+          mime_type: string
+          organization_id: string
+          path: string
+          size_bytes: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          organization_id?: string
+          path?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_categories: {
         Row: {
           created_at: string
@@ -533,6 +581,8 @@ export type Database = {
           taxable_total: number
           terms: string
           updated_at: string
+          amount_paid: number | null
+          balance_due: number | null
         }
         Insert: {
           billing_address?: string
@@ -664,6 +714,144 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payment_allocations: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          organization_id: string
+          payment_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          organization_id: string
+          payment_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          organization_id?: string
+          payment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_allocations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_allocations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_allocations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          cancel_reason: string | null
+          client_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          method: string
+          notes: string
+          number: string | null
+          organization_id: string
+          payment_date: string
+          reference: string
+          status: string
+          tds_amount: number
+          updated_at: string
+          unallocated: number | null
+        }
+        Insert: {
+          amount: number
+          cancel_reason?: string | null
+          client_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          method: string
+          notes?: string
+          number?: string | null
+          organization_id: string
+          payment_date?: string
+          reference?: string
+          status?: string
+          tds_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          cancel_reason?: string | null
+          client_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          method?: string
+          notes?: string
+          number?: string | null
+          organization_id?: string
+          payment_date?: string
+          reference?: string
+          status?: string
+          tds_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       permissions: {
         Row: {
@@ -1127,6 +1315,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      amount_paid: {
+        Args: { "": Database["public"]["Tables"]["invoices"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.amount_paid with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
+      apply_payment: {
+        Args: { p_amount: number; p_invoice_id: string; p_payment_id: string }
+        Returns: undefined
+      }
+      balance_due: {
+        Args: { "": Database["public"]["Tables"]["invoices"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.balance_due with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
+      client_credit: {
+        Args: { "": Database["public"]["Tables"]["clients"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.client_credit with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
       convert_quotation: {
         Args: {
           p_amount?: number
@@ -1174,6 +1384,10 @@ export type Database = {
         Args: { p_date?: string; p_doc_type: string }
         Returns: string
       }
+      payment_action: {
+        Args: { p_action: string; p_id: string; p_reason?: string }
+        Returns: string
+      }
       quotation_action: {
         Args: { p_action: string; p_id: string }
         Returns: string
@@ -1193,6 +1407,7 @@ export type Database = {
         Returns: string
       }
       save_invoice: { Args: { p_data: Json; p_id: string }; Returns: string }
+      save_payment: { Args: { p_data: Json; p_id: string }; Returns: string }
       save_quotation: { Args: { p_data: Json; p_id: string }; Returns: string }
       set_document_numbering: {
         Args: {
@@ -1204,6 +1419,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      unallocated: {
+        Args: { "": Database["public"]["Tables"]["payments"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.unallocated with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
+      unapply_payment: { Args: { p_allocation_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
