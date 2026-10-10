@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { downloadFile } from "@/lib/download";
 
 type Props = {
   /** Server action (usually bound with its arguments). */
@@ -52,8 +53,7 @@ export function ConfirmButton({ action, title, description, confirmLabel, succes
                 if (result.error) toast.error(result.error);
                 else {
                   if (successMessage) toast.success(successMessage);
-                  // The route answers with Content-Disposition: attachment, so this downloads without leaving the page.
-                  if (downloadOnSuccess) window.location.assign(downloadOnSuccess);
+                  if (downloadOnSuccess) downloadFile(downloadOnSuccess);
                 }
               })
             }

@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { invoiceAction } from "@/features/invoices/actions";
+import { downloadFile } from "@/lib/download";
 import { formatINR } from "@/lib/money";
 
 /** Issues the invoice. When it would exceed its quotation's total, asks for an override reason (PRD §14). */
@@ -34,7 +35,7 @@ export function IssueInvoiceButton({ id, credit }: { id: string; credit?: { clie
       else {
         setOpen(false);
         // Issuing is sending in V1 (PRD §17): download the numbered PDF to share.
-        window.location.assign(`/finance/invoices/${id}/pdf`);
+        downloadFile(`/finance/invoices/${id}/pdf`);
         if (result.error) toast.warning(result.error);
         else toast.success(result.applied ? `Invoice issued · ${formatINR(result.applied)} of credit applied` : "Invoice issued");
       }
