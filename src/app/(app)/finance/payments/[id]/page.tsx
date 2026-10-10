@@ -7,7 +7,7 @@ import { PaymentStatusBadge } from "@/features/payments/components/payment-statu
 import { PaymentView } from "@/features/payments/components/payment-view";
 import { ProofsCard } from "@/features/payments/components/proofs-card";
 import { getOpenInvoices, getPayment, getPaymentProofs } from "@/features/payments/queries";
-import { paymentLabel, type PaymentStatus } from "@/features/payments/schema";
+import type { PaymentStatus } from "@/features/payments/schema";
 import { formatINR, paise } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,7 +35,9 @@ async function PaymentDetail({ params }: { params: PageProps<"/finance/payments/
             </h1>
             <PaymentStatusBadge status={p.status as PaymentStatus} />
           </div>
-          <span className="font-mono text-sm text-muted-foreground">{paymentLabel(p)}</span>
+          <span className={p.number ? "font-mono text-sm text-muted-foreground" : "text-sm text-muted-foreground"}>
+            {p.number ?? (p.status === "pending" ? "Receipt number is given when confirmed" : "Cancelled before confirming")}
+          </span>
         </div>
         <div className="ml-auto">
           <PaymentActions p={p} openInvoices={openInvoices} can={can} />

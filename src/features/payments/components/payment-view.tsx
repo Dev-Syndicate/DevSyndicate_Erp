@@ -19,7 +19,9 @@ export function PaymentView({ p, canUnapply }: { p: Payment; canUnapply: boolean
     [receipt ? "Amount received" : "Amount refunded", formatINR(p.amount)],
     ...(receipt && p.tds_amount > 0 ? ([["TDS deducted", formatINR(p.tds_amount)]] as [string, string][]) : []),
     ...(receipt ? ([["Total settled", formatINR(paise(p.amount) + paise(p.tds_amount))]] as [string, string][]) : []),
-    ...(receipt ? ([["Not applied (client credit)", formatINR(p.unallocated ?? 0)]] as [string, string][]) : []),
+    ...(receipt
+      ? ([[p.status === "confirmed" ? "Not applied (client credit)" : "Becomes client credit when confirmed", formatINR(p.unallocated ?? 0)]] as [string, string][])
+      : []),
   ];
 
   return (

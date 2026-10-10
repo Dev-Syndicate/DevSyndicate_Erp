@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { addProof, removeProof } from "@/features/payments/actions";
 import { createClient } from "@/lib/supabase/client";
 
@@ -72,12 +71,14 @@ export function ProofsCard(props: { paymentId: string; organizationId: string; p
           </div>
         ))}
         {props.canAdd && (
-          <div className="flex items-center gap-2">
-            <Input
+          <div>
+            {/* Hidden picker; the Upload button opens it. */}
+            <input
               ref={input}
               type="file"
               accept="image/jpeg,image/png,image/webp,application/pdf"
               aria-label="Proof file"
+              className="hidden"
               disabled={busy}
               onChange={(e) => {
                 const file = e.target.files?.[0];
