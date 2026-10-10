@@ -1129,6 +1129,7 @@ export type Database = {
     Functions: {
       convert_quotation: {
         Args: {
+          p_amount?: number
           p_id: string
           p_items?: Json
           p_mode: string

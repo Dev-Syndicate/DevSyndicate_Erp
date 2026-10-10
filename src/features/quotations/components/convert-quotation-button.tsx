@@ -18,7 +18,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertQuotation, type ConvertInput } from "@/features/quotations/actions";
-import { formatINR } from "@/lib/money";
+import { formatINR, paise } from "@/lib/money";
 
 type Line = { id: string; description: string; quantity: number };
 
@@ -26,12 +26,14 @@ const MODES = [
   { value: "full", label: "Full quotation", hint: "All lines at 100%." },
   { value: "percent", label: "Percentage", hint: "Each line at a share of its value, e.g. a 50% advance." },
   { value: "items", label: "Selected lines", hint: "Pick lines and quantities to bill now." },
+  { value: "amount", label: "Specific amount", hint: "One line for the amount you enter, e.g. an advance. GST, if any, is added on top." },
 ] as const;
 
 /** Creates a draft invoice from an accepted quotation (PRD §14). The draft opens for review before issuing. */
 export function ConvertQuotationButton(props: { id: string; lines: Line[]; grandTotal: number; invoicedTotal: number }) {
   const [mode, setMode] = useState<ConvertInput["mode"]>("full");
   const [percent, setPercent] = useState("50");
+  const [amount, setAmount] = useState("");
   const [picked, setPicked] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
 
@@ -41,7 +43,9 @@ export function ConvertQuotationButton(props: { id: string; lines: Line[]; grand
         ? { mode }
         : mode === "percent"
           ? { mode, percent }
-          : { mode, items: Object.entries(picked).map(([id, quantity]) => ({ id, quantity })) };
+          : mode === "amount"
+            ? { mode, amount }
+            : { mode, items: Object.entries(picked).map(([id, quantity]) => ({ id, quantity })) };
     startTransition(async () => {
       const result = await convertQuotation(props.id, input);
       if (result?.error) toast.error(result.error);
@@ -86,6 +90,13 @@ export function ConvertQuotationButton(props: { id: string; lines: Line[]; grand
               <Input id="convert-percent" value={percent} onChange={(e) => setPercent(e.target.value)} inputMode="decimal" className="w-32 text-right tabular-nums" />
             </Field>
           )}
+          {mode === "amount" && (
+            <Field>
+              <FieldLabel htmlFor="convert-amount">Amount (₹)</FieldLabel>
+              <Input id="convert-amount" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="10000" className="w-40 text-right tabular-nums" />
+              <FieldDescription>Left to invoice: {formatINR(paise(props.grandTotal) - paise(props.invoicedTotal))}</FieldDescription>
+            </Field>
+          )}
           {mode === "items" &&
             props.lines.map((line) => {
               const checked = line.id in picked;
@@ -119,7 +130,7 @@ export function ConvertQuotationButton(props: { id: string; lines: Line[]; grand
             })}
         </FieldGroup>
         <DialogFooter>
-          <Button onClick={submit} disabled={pending || (mode === "items" && Object.keys(picked).length === 0)}>
+          <Button onClick={submit} disabled={pending || (mode === "items" && Object.keys(picked).length === 0) || (mode === "amount" && !amount.trim())}>
             {pending ? "Creating…" : "Create draft invoice"}
           </Button>
         </DialogFooter>

@@ -69,6 +69,12 @@ begin
   perform public.invoice_action(c, 'issue');
   assert (select public.invoiced_total(q) from public.quotations q where q.id = qid) = 32450.00, 'fully invoiced';
 
+  -- Specific amount: one line before GST, at the quotation's single tax rate
+  d := public.convert_quotation(qid, 'amount', null, null, 1000);
+  assert (select taxable_total = 1000.00 and grand_total = 1180.00 from public.invoices where id = d), 'amount mode adds GST on top';
+  assert (select description from public.invoice_items where invoice_id = d) = 'Part payment — SIPLINK Website', 'amount line label';
+  delete from public.invoices where id = d;
+
   -- Past the quotation total: needs a reason
   d := public.convert_quotation(qid, 'items', null, jsonb_build_array(jsonb_build_object(
          'id', (select id from public.quotation_items where quotation_id = qid and position = 2), 'quantity', 1)));

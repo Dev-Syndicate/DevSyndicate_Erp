@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fieldErrors, type FormState } from "@/lib/forms";
-import { dbErrorMessage } from "@/lib/line-items";
+import { dbErrorMessage, moneyString } from "@/lib/line-items";
 import { createClient } from "@/lib/supabase/server";
 import { quotationSchema, type QuotationInput } from "./schema";
 
@@ -54,11 +54,13 @@ export async function extendQuotationValidity(quotationId: string, validUntil: s
 export type ConvertInput =
   | { mode: "full" }
   | { mode: "percent"; percent: string }
+  | { mode: "amount"; amount: string }
   | { mode: "items"; items: { id: string; quantity: string }[] };
 
 const convertSchema = z.discriminatedUnion("mode", [
   z.object({ mode: z.literal("full") }),
   z.object({ mode: z.literal("percent"), percent: z.string().trim().regex(/^\d{1,3}(\.\d{1,2})?$/, "Up to 2 decimals") }),
+  z.object({ mode: z.literal("amount"), amount: moneyString.refine((v) => Number(v) > 0, "Enter an amount above 0") }),
   z.object({
     mode: z.literal("items"),
     items: z.array(z.object({ id: z.uuid(), quantity: z.string().trim().regex(/^\d{1,9}(\.\d{1,3})?$/) })).min(1, "Select at least one line"),
@@ -78,6 +80,7 @@ export async function convertQuotation(quotationId: string, input: ConvertInput)
     p_mode: c.mode,
     p_percent: c.mode === "percent" ? Number(c.percent) : undefined,
     p_items: c.mode === "items" ? c.items : undefined,
+    p_amount: c.mode === "amount" ? Number(c.amount) : undefined,
   });
   if (error) return { error: dbErrorMessage(error) };
 
