@@ -18,7 +18,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertQuotation, type ConvertInput } from "@/features/quotations/actions";
-import { formatINR, paise } from "@/lib/money";
+import { formatINR, paise, toScaled } from "@/lib/money";
 
 type Line = { id: string; description: string; quantity: number };
 
@@ -30,10 +30,12 @@ const MODES = [
 ] as const;
 
 /** Creates a draft invoice from an accepted quotation (PRD §14). The draft opens for review before issuing. */
-export function ConvertQuotationButton(props: { id: string; lines: Line[]; grandTotal: number; invoicedTotal: number }) {
+export function ConvertQuotationButton(props: { id: string; lines: Line[]; grandTotal: number; invoicedTotal: number; gst: boolean }) {
   const [mode, setMode] = useState<ConvertInput["mode"]>("full");
   const [percent, setPercent] = useState("50");
   const [amount, setAmount] = useState("");
+  const left = paise(props.grandTotal) - paise(props.invoicedTotal);
+  const billing = toScaled(amount, 2) ?? 0n; // live: what this invoice takes off the balance
   const [picked, setPicked] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
 
@@ -87,14 +89,23 @@ export function ConvertQuotationButton(props: { id: string; lines: Line[]; grand
           {mode === "percent" && (
             <Field>
               <FieldLabel htmlFor="convert-percent">Percentage</FieldLabel>
-              <Input id="convert-percent" value={percent} onChange={(e) => setPercent(e.target.value)} inputMode="decimal" className="w-32 text-right tabular-nums" />
+              <Input id="convert-percent" value={percent} onChange={(e) => setPercent(e.target.value)} inputMode="decimal" className="w-32 tabular-nums" />
             </Field>
           )}
           {mode === "amount" && (
             <Field>
               <FieldLabel htmlFor="convert-amount">Amount (₹)</FieldLabel>
-              <Input id="convert-amount" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="10000" className="w-40 text-right tabular-nums" />
-              <FieldDescription>Left to invoice: {formatINR(paise(props.grandTotal) - paise(props.invoicedTotal))}</FieldDescription>
+              <Input id="convert-amount" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="10000" className="w-40 tabular-nums" />
+              <FieldDescription>
+                Left to invoice: {formatINR(left)}
+                {billing > 0n && <> → {formatINR(left - billing > 0n ? left - billing : 0n)} after this invoice</>}
+                {props.gst && " (before GST)"}
+              </FieldDescription>
+              {billing > left && (
+                <FieldDescription className="text-destructive">
+                  {formatINR(billing - left)} more than what&apos;s left. Issuing it will need a reason.
+                </FieldDescription>
+              )}
             </Field>
           )}
           {mode === "items" &&

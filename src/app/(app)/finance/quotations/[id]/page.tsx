@@ -46,7 +46,7 @@ async function QuotationDetail({ params }: { params: PageProps<"/finance/quotati
             validUntil={q.valid_until}
             hasNewerRevision={(newer.count ?? 0) > 0}
             can={(p) => !!user?.permissions.includes(p)}
-            convert={{ lines: q.quotation_items, grandTotal: q.grand_total, invoicedTotal: q.invoiced_total ?? 0 }}
+            convert={{ lines: q.quotation_items, grandTotal: q.grand_total, invoicedTotal: q.invoiced_total ?? 0, gst: q.gst_applicable && q.supply_type !== "export" }}
           />
         </div>
       </div>
