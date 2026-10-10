@@ -12,25 +12,29 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { invoiceAction } from "@/features/invoices/actions";
+import { formatINR } from "@/lib/money";
 
 /** Issues the invoice. When it would exceed its quotation's total, asks for an override reason (PRD §14). */
-export function IssueInvoiceButton({ id }: { id: string }) {
+export function IssueInvoiceButton({ id, credit }: { id: string; credit?: { client: string; amount: number } }) {
   const [open, setOpen] = useState(false);
+  const [applyCredit, setApplyCredit] = useState(true);
   const [needsReason, setNeedsReason] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
 
   function issue() {
     startTransition(async () => {
-      const result = await invoiceAction(id, "issue", needsReason ? reason : undefined);
+      const result = await invoiceAction(id, "issue", needsReason ? reason : undefined, !!credit && applyCredit);
       if (result.needsReason) setNeedsReason(result.error ?? "");
-      else if (result.error) toast.error(result.error);
+      else if (result.error && !result.ok) toast.error(result.error);
       else {
         setOpen(false);
-        toast.success("Invoice issued");
+        if (result.error) toast.warning(result.error);
+        else toast.success(result.applied ? `Invoice issued · ${formatINR(result.applied)} of credit applied` : "Invoice issued");
       }
     });
   }
@@ -53,6 +57,14 @@ export function IssueInvoiceButton({ id }: { id: string }) {
             Assigns the invoice number, records the client&apos;s billing details and locks the content. Corrections after this need a credit note.
           </DialogDescription>
         </DialogHeader>
+        {credit && (
+          <Field orientation="horizontal">
+            <Checkbox id="apply-credit" checked={applyCredit} onCheckedChange={(v) => setApplyCredit(v === true)} />
+            <FieldLabel htmlFor="apply-credit" className="font-normal">
+              Apply {credit.client}&apos;s available credit ({formatINR(credit.amount)}) to this invoice
+            </FieldLabel>
+          </Field>
+        )}
         {needsReason !== null && (
           <Field data-invalid>
             <FieldLabel htmlFor="override-reason">Reason for exceeding the quotation</FieldLabel>

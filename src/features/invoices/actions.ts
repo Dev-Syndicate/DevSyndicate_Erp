@@ -34,18 +34,23 @@ export async function invoiceAction(
   invoiceId: string,
   action: (typeof ACTIONS)[number],
   reason?: string,
-): Promise<FormState & { needsReason?: boolean }> {
+  /** Issue only: then apply the client's available credit (advances), oldest receipts first. */
+  applyCredit?: boolean,
+): Promise<FormState & { needsReason?: boolean; applied?: number }> {
   if (!id.safeParse(invoiceId).success || !ACTIONS.includes(action)) return { error: "Invalid request." };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("invoice_action", { p_id: invoiceId, p_action: action, p_reason: reason?.trim() || undefined });
   if (error) return { error: dbErrorMessage(error), needsReason: error.hint === "override_reason" };
 
-  revalidatePath("/finance/invoices");
-  revalidatePath(`/finance/invoices/${invoiceId}`);
-  revalidatePath("/finance/quotations", "layout");
+  // Separate step: if it fails the invoice stays issued and credit can still be applied from the payment.
+  const credit = action === "issue" && applyCredit ? await supabase.rpc("apply_client_credit", { p_invoice_id: invoiceId }) : null;
+
+  // Invoices, quotations (invoiced status) and payments (credit left) all change.
+  revalidatePath("/finance", "layout");
   // Duplicate creates a new draft: open it.
   if (data !== invoiceId) redirect(`/finance/invoices/${data}/edit`);
-  return { ok: true };
+  if (credit?.error) return { ok: true, error: `Invoice issued, but the credit wasn't applied: ${dbErrorMessage(credit.error)}` };
+  return { ok: true, applied: credit?.data };
 }
 
 export async function deleteInvoice(invoiceId: string) {

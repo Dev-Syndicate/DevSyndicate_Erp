@@ -21,7 +21,7 @@ export async function getInvoice(id: string) {
   const { data, error } = await supabase
     .from("invoices")
     .select(
-      "*, amount_paid, balance_due, invoice_items(*), clients(id, company_name, billing_address, city, state, pin_code, country, gstin), client_contacts(name, email, phone), quotations(id, number, revision, title), payment_allocations(id, amount, payments(id, number, status, kind, payment_date, method))",
+      "*, amount_paid, balance_due, invoice_items(*), clients(id, company_name, billing_address, city, state, pin_code, country, gstin, client_credit), client_contacts(name, email, phone), quotations(id, number, revision, title), payment_allocations(id, amount, payments(id, number, status, kind, payment_date, method))",
     )
     .eq("id", id)
     .order("position", { referencedTable: "invoice_items" })

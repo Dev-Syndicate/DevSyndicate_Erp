@@ -29,7 +29,8 @@ async function InvoiceDetail({ params }: { params: PageProps<"/finance/invoices/
           <span className="font-mono text-sm text-muted-foreground">{invoiceLabel(inv)}</span>
         </div>
         <div className="ml-auto">
-          <InvoiceActions id={inv.id} status={status} hasPayments={(inv.amount_paid ?? 0) > 0} can={(p) => !!user?.permissions.includes(p)} />
+          <InvoiceActions id={inv.id} status={status} hasPayments={(inv.amount_paid ?? 0) > 0}
+            credit={inv.clients && (inv.clients.client_credit ?? 0) > 0 ? { client: inv.clients.company_name, amount: inv.clients.client_credit ?? 0 } : undefined} can={(p) => !!user?.permissions.includes(p)} />
         </div>
       </div>
       <InvoiceView inv={inv} showSac={settings?.show_sac ?? false} />

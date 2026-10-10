@@ -6,10 +6,17 @@ import { deleteInvoice, invoiceAction } from "@/features/invoices/actions";
 import type { InvoiceStatus } from "@/features/invoices/schema";
 import { IssueInvoiceButton } from "./issue-invoice-button";
 
-type Props = { id: string; status: InvoiceStatus; hasPayments: boolean; can: (permission: string) => boolean };
+type Props = {
+  id: string;
+  status: InvoiceStatus;
+  hasPayments: boolean;
+  /** Client credit (advances) offered when issuing. */
+  credit?: { client: string; amount: number };
+  can: (permission: string) => boolean;
+};
 
 /** Buttons for the actions allowed in the current status (mirrors public.invoice_action). */
-export function InvoiceActions({ id, status, hasPayments, can }: Props) {
+export function InvoiceActions({ id, status, hasPayments, credit, can }: Props) {
   const issued = status === "issued" || status === "overdue" || status === "partially_paid";
 
   return (
@@ -48,7 +55,7 @@ export function InvoiceActions({ id, status, hasPayments, can }: Props) {
           <Copy /> Duplicate
         </ConfirmButton>
       )}
-      {status === "draft" && can("invoices.issue") && <IssueInvoiceButton id={id} />}
+      {status === "draft" && can("invoices.issue") && <IssueInvoiceButton id={id} credit={credit && can("payments.update") ? credit : undefined} />}
       {issued && can("payments.create") && (
         <Button asChild>
           <Link href={`/finance/payments/new?invoice=${id}`}>

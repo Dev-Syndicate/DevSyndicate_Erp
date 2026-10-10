@@ -76,6 +76,17 @@ begin
   select * into c from public.clients where id = cid;
   assert public.client_credit(c) = 6000, 'refund reduces credit';
 
+  -- Credit after a refund is 6,000: applying more is refused; issuing applies credit oldest-first
+  begin
+    perform public.apply_payment(adv, inv2, 7000);
+    assert false, 'apply capped at client credit';
+  exception when invalid_parameter_value then null; end;
+  assert public.apply_client_credit(inv2) = 6000, 'apply_client_credit uses all available credit';
+  select * into i from public.invoices where id = inv2;
+  select * into c from public.clients where id = cid;
+  assert public.balance_due(i) = 23000 and public.client_credit(c) = 0, 'credit applied to the invoice';
+  perform public.unapply_payment((select id from public.payment_allocations where payment_id = adv));
+
   -- Cancelling needs a reason, and is blocked when the credit was refunded
   begin
     perform public.payment_action(adv, 'cancel');

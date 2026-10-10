@@ -1321,6 +1321,7 @@ export type Database = {
           error: true
         } & "the function public.amount_paid with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
+      apply_client_credit: { Args: { p_invoice_id: string }; Returns: number }
       apply_payment: {
         Args: { p_amount: number; p_invoice_id: string; p_payment_id: string }
         Returns: undefined
