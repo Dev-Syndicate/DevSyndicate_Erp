@@ -18,7 +18,7 @@ import { formatDate, istToday } from "@/lib/dates";
 import { formatINR, paise, toScaled } from "@/lib/money";
 
 type Client = { id: string; company_name: string; client_credit: number | null };
-type OpenInvoice = { id: string; number: string | null; client_id: string; invoice_date: string; due_date: string; balance_due: number | null };
+type OpenInvoice = { id: string; number: string | null; client_id: string; invoice_date: string; due_date: string | null; balance_due: number | null };
 type Saved = {
   id: string;
   client_id: string;

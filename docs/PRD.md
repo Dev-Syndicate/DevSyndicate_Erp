@@ -17,6 +17,7 @@
 - **Credit notes researched:** tax follows the original invoice, the GST 30-November time limit, Rule 53(1A) contents, overpayment released to client credit, cancel rules (§18).
 - **Payments:** the date received and bank reference (UTR / UPI ID) are entered when confirming; proof of payment received can be attached there (§19).
 - **Quotations:** Send = assign number + download PDF in one step (§13).
+- **Invoices:** due date is optional; an invoice without one is never overdue (§15, §16).
 
 ### v1.2 (2026-10-10)
 
@@ -585,7 +586,7 @@ When converting:
 ```text
 Invoice Number             (assigned on issue, §30)
 Invoice Date
-Due Date                   (default: invoice date + client payment terms)
+Due Date                   (optional; default: invoice date + client payment terms; can be switched off)
 
 Client
 Client Contact
@@ -653,7 +654,7 @@ Draft
 Issued           (sent to client, no payment yet)
 Partially Paid
 Paid
-Overdue          (derived: balance > 0 and due date < today; not stored)
+Overdue          (derived: balance > 0 and due date < today; not stored; never without a due date)
 Cancelled
 ```
 

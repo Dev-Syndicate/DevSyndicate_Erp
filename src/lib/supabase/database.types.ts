@@ -1,4 +1,3 @@
-// Generated from the Supabase schema. Regenerate after every migration; do not edit by hand.
 export type Json =
   | string
   | number
@@ -770,7 +769,7 @@ export type Database = {
           discount_total: number
           discount_type: string
           discount_value: number
-          due_date: string
+          due_date: string | null
           grand_total: number
           gst_applicable: boolean
           id: string
@@ -809,7 +808,7 @@ export type Database = {
           discount_total?: number
           discount_type?: string
           discount_value?: number
-          due_date: string
+          due_date?: string | null
           grand_total?: number
           gst_applicable?: boolean
           id?: string
@@ -845,7 +844,7 @@ export type Database = {
           discount_total?: number
           discount_type?: string
           discount_value?: number
-          due_date?: string
+          due_date?: string | null
           grand_total?: number
           gst_applicable?: boolean
           id?: string

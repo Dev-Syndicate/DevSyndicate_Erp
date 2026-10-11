@@ -46,6 +46,11 @@ begin
   perform public.invoice_action(a, 'cancel');
   assert (select status = 'cancelled' and number = inv.number from public.invoices where id = a), 'cancel keeps the number';
 
+  -- Due date is optional; without one the invoice has no due date
+  b := public.save_invoice(null, base);
+  assert (select due_date is null from public.invoices where id = b), 'no due date';
+  delete from public.invoices where id = b;
+
   -- Duplicate: new draft with the same lines
   d := public.invoice_action(a, 'duplicate');
   assert (select status = 'draft' and grand_total = 32450.00 from public.invoices where id = d), 'duplicate';

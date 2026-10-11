@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { saveInvoice } from "@/features/invoices/actions";
 import { invoiceSchema, type InvoiceInput } from "@/features/invoices/schema";
@@ -47,7 +48,7 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
     client_id: invoice?.client_id ?? "",
     contact_id: invoice?.contact_id ?? "",
     invoice_date: invoice?.invoice_date ?? today,
-    due_date: invoice?.due_date ?? addDays(today, termsDays(undefined)),
+    due_date: invoice ? (invoice.due_date ?? "") : addDays(today, termsDays(undefined)),
     place_of_supply: invoice?.place_of_supply ?? "",
     discount_type: (invoice?.discount_type as DiscountType) ?? "amount",
     discount_value: String(invoice?.discount_value ?? 0),
@@ -115,7 +116,7 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
                     client_id: c.id,
                     contact_id: defaultContactId(c),
                     place_of_supply: "",
-                    due_date: addDays(f.invoice_date, termsDays(c)),
+                    due_date: f.due_date && addDays(f.invoice_date, termsDays(c)),
                   }))
                 }
                 onContactChange={(v) => set("contact_id", v)}
@@ -126,12 +127,23 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
                   id="invoice_date"
                   type="date"
                   value={form.invoice_date}
-                  onChange={(e) => setForm((f) => ({ ...f, invoice_date: e.target.value, due_date: e.target.value ? addDays(e.target.value, termsDays(client)) : f.due_date }))}
+                  onChange={(e) => setForm((f) => ({ ...f, invoice_date: e.target.value, due_date: e.target.value && f.due_date ? addDays(e.target.value, termsDays(client)) : f.due_date }))}
                 />
               </Field>
               <Field data-invalid={!!err("due_date")}>
-                <FieldLabel htmlFor="due_date">Due date</FieldLabel>
-                <Input id="due_date" type="date" value={form.due_date} onChange={(e) => set("due_date", e.target.value)} aria-invalid={!!err("due_date")} />
+                <div className="flex items-center justify-between gap-2">
+                  <FieldLabel htmlFor="due_date">Due date</FieldLabel>
+                  <Switch
+                    aria-label="Set a due date"
+                    checked={form.due_date !== ""}
+                    onCheckedChange={(on) => set("due_date", on ? addDays(form.invoice_date || today, termsDays(client)) : "")}
+                  />
+                </div>
+                {form.due_date !== "" ? (
+                  <Input id="due_date" type="date" value={form.due_date} onChange={(e) => set("due_date", e.target.value)} aria-invalid={!!err("due_date")} />
+                ) : (
+                  <FieldDescription>No due date: not printed and never shown as overdue.</FieldDescription>
+                )}
                 <FieldError>{err("due_date")}</FieldError>
               </Field>
               <PlaceOfSupplyField client={client} value={placeOfSupply} supplyType={supplyType} gst={gst} onChange={(v) => set("place_of_supply", v)} />
