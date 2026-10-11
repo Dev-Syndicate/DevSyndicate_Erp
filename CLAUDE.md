@@ -13,6 +13,7 @@ Stack: Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS v4, shadcn/ui (
 - `pnpm lint`: ESLint
 - `pnpm test`: unit tests (`src/**/*.test.mjs`, Node test runner; tested modules avoid `@/` imports)
 - `pnpm test:db`: database tests (`supabase/tests/*.sql` against the linked project; each rolls back)
+- Sample data: `pnpm dlx supabase db query --linked -f supabase/seed/sample_data.sql`; wipe all business data before go-live with `supabase/seed/clear_business_data.sql`
 - `pnpm dlx shadcn@latest add <component>`: add a shadcn component
 
 ## Supabase
