@@ -352,7 +352,7 @@ export function LineItemsCard(props: {
                       </Select>
                     </TableCell>
                   )}
-                  <TableCell className="pt-4 text-right font-medium tabular-nums">{formatINR(totals.lines[i]?.total ?? 0n)}</TableCell>
+                  <TableCell className="pt-5.5 text-right font-medium tabular-nums">{formatINR(totals.lines[i]?.total ?? 0n)}</TableCell>
                   <TableCell>
                     <Button
                       type="button"
