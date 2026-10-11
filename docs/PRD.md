@@ -14,6 +14,7 @@
 
 ### v1.4 (2026-10-11)
 
+- **Reports researched:** Revenue, Expenses, Profit, Outstanding, plus a Sales register and TDS report (what a CA needs for GSTR-1 and Form 26AS), GST summary when registered; Excel-friendly CSV (§27).
 - **Backups:** nightly encrypted backup to Google Drive, one file replaced each night with 30 days of Drive versions (§34).
 - **Dashboard researched:** "Net Cash Position" renamed **Net Profit (cash basis)**: it includes TDS, which never reaches the bank, so it is profit, not cash. Unpaid invoices are aged by days since the invoice date (due dates are optional). Period filter, monthly chart, TDS payable (§9.2, §10, §36).
 - **Expenses researched:** recorded when paid (no bills in V1); the vendor's bill number; GST on the bill with an input-tax-credit flag; reverse charge; TDS withheld from vendors; receipts attached. GST fields only when GST-registered (§21).
@@ -1050,51 +1051,23 @@ documents/
 
 # 27. Reports
 
-V1 reports (default period: current financial year):
+One Reports page (Finance → Reports). Every report has a date range (presets: this month, this quarter, this financial year — the default — and last financial year, or custom dates), opens records from its rows, and downloads as CSV with `reports.export`. Figures come from database functions or selects that run with the user's permissions (RLS).
 
-### Revenue Report
+| Report | On screen | CSV (for the accountant) |
+|---|---|---|
+| **Revenue** | By month (received, TDS, refunds, revenue) and by client | Receipts and refunds register |
+| **Expenses** | By month and by category (bills, amount, GST, TDS) | Expense (purchase) register; filter by category |
+| **Profit** | Revenue − expenses per month (cash basis, §9.2) | Same table |
+| **Outstanding** | Unpaid invoices as of today, by age (0–30, 31–60, 61–90, 90+ days since the invoice date) and in detail (total, credited, paid, balance, overdue days when there is a due date); filter by client | Detail table |
+| **Sales register** (v1.4) | Every issued invoice and credit note in the period: number, client, GSTIN, place of supply, taxable value, CGST/SGST/IGST, total; credit notes negative; filter by client | Same table |
+| **TDS** (v1.4) | Deducted by clients (TDS receivable, to match Form 26AS / AIS) and deducted by us from vendors (TDS payable) | Both, with a Type column |
+| **GST summary** (GST-registered only) | Per month: taxable value, CGST, SGST, IGST, output GST (invoices − credit notes), input GST claimed, reverse-charge GST, net GST | Same table |
 
-```text
-Month | Receipts | Refunds | Revenue
-```
+**Why these (v1.4 research):** Zoho Books' standard set is sales by customer, receivables ageing, a TDS receivables summary by customer, tax summary and expenses by category ([Zoho reports](https://zstatic.zohostatic.com/books/help/reports/)). At filing time a CA asks for the **sales register** (basis of GSTR-1), the **purchase/expense register**, and the **TDS deducted by customers** to reconcile with Form 26AS ([Form 26AS](https://incometaxindia.gov.in/w/what-is-form-26as-)), so those two registers were added. GST figures are for reference; filing happens on the GST portal after matching GSTR-2B.
 
-### Expense Report
+**CSV format:** UTF-8 with a byte-order mark (Excel otherwise garbles ₹ and names), RFC 4180 quoting, amounts as plain numbers (`-1180.50`, no ₹ or grouping) so they can be summed, dates DD-MM-YYYY, a total row; text that would run as a spreadsheet formula is prefixed with an apostrophe ([Oracle CSV notes](https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N576068.html)).
 
-```text
-Month | Category | Expenses
-```
-
-### Profit (Cash) Report
-
-```text
-Revenue
-- Expenses
-= Net Profit
-```
-
-### Outstanding (Receivables Ageing) Report
-
-```text
-Client | Invoice | Invoice Date | Due Date | Total | Credited | Paid | Balance | Days Overdue | Status
-```
-
-Grouped by ageing buckets: Not due, 1–30, 31–60, 61–90, 90+ days.
-
-### Tax Summary Report (if GST-registered)
-
-```text
-Month | Taxable Value | CGST | SGST | IGST | Total Tax
-```
-
-Based on issued invoices minus credit notes. For reference only; filing is out of scope.
-
-Reports support:
-
-- Date range filtering (with financial-year presets)
-- Client filtering
-- Status filtering
-- Category filtering (expenses)
-- CSV export (`reports.export`)
+shortcut: registers read at most the API's row limit (1,000 by default) per period; page through them if a year ever has more.
 
 ---
 

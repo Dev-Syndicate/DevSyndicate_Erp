@@ -7,7 +7,7 @@ import { KpiCards } from "@/features/dashboard/components/kpi-cards";
 import { PeriodSelect } from "@/features/dashboard/components/period-select";
 import { RevenueChart } from "@/features/dashboard/components/revenue-chart";
 import { getDashboard, getDashboardLists, getRecentQuotations } from "@/features/dashboard/queries";
-import { PERIODS, periodRange } from "@/features/dashboard/utils";
+import { PERIODS, periodRange } from "@/lib/periods";
 import { istToday } from "@/lib/dates";
 
 async function Dashboard({ searchParams }: { searchParams: PageProps<"/">["searchParams"] }) {

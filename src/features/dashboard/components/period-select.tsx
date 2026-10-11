@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PERIODS } from "@/features/dashboard/utils";
+import { PERIODS } from "@/lib/periods";
 
 export function PeriodSelect({ value }: { value: string }) {
   const router = useRouter();

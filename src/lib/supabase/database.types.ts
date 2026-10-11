@@ -1762,6 +1762,48 @@ export type Database = {
         }
         Returns: string
       }
+      report_expenses_by_category: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          amount: number
+          category: string
+          count: number
+          gst: number
+          tds: number
+        }[]
+      }
+      report_monthly: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          expenses: number
+          month: string
+          received: number
+          refunds: number
+          tds: number
+        }[]
+      }
+      report_revenue_by_client: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          client: string
+          client_id: string
+          received: number
+          refunds: number
+          tds: number
+        }[]
+      }
+      report_tax_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          cgst: number
+          igst: number
+          input_gst: number
+          month: string
+          reverse_charge_gst: number
+          sgst: number
+          taxable: number
+        }[]
+      }
       save_credit_note: {
         Args: { p_data: Json; p_id: string }
         Returns: string

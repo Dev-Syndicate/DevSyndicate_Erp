@@ -1,4 +1,4 @@
-// Dashboard periods (PRD §10). The financial year runs April–March, so its quarters are the calendar quarters.
+// Report and dashboard periods (PRD §10, §27). The financial year runs April–March, so its quarters are the calendar quarters.
 
 export const PERIODS = [
   { value: "month", label: "This month" },

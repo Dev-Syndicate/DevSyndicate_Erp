@@ -138,6 +138,12 @@ export function paise(rupees: number | string): bigint {
   return s.startsWith("-") ? -value : value;
 }
 
+/** Paise → plain rupees for CSV ("-1180.50"): no symbol or grouping, so spreadsheets can add them up. */
+export function toRupees(value: bigint): string {
+  const abs = value < 0n ? -value : value;
+  return `${value < 0n ? "-" : ""}${abs / 100n}.${String(abs % 100n).padStart(2, "0")}`;
+}
+
 const ONES = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
   "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
 const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
