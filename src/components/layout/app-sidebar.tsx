@@ -67,7 +67,7 @@ export function AppSidebar({ user }: { user: CurrentUser | null }) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu>
+          <SidebarMenu className="gap-1">
             {items.map((item) =>
               item.children ? (
                 <Collapsible
