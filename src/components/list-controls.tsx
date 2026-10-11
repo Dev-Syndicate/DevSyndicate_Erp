@@ -20,8 +20,9 @@ export function parseListParams(params: ListParams) {
   return { q: (params.q ?? "").trim(), page, archived: params.archived === "1" };
 }
 
-function href(path: string, params: { q: string; page: number; archived: boolean }) {
-  const search = new URLSearchParams();
+function href(path: string, params: { q: string; page: number; archived: boolean; params?: Record<string, string> }) {
+  // Extra filters (e.g. audit log module/user) ride along so paging keeps them.
+  const search = new URLSearchParams(Object.entries(params.params ?? {}).filter(([, v]) => v));
   if (params.q) search.set("q", params.q);
   if (params.page > 1) search.set("page", String(params.page));
   if (params.archived) search.set("archived", "1");
@@ -68,7 +69,7 @@ export function ArchivedToggle({ path, q, archived }: { path: string; q: string;
   );
 }
 
-export function ListPagination(props: { path: string; q: string; archived: boolean; page: number; total: number }) {
+export function ListPagination(props: { path: string; q: string; archived: boolean; page: number; total: number; params?: Record<string, string> }) {
   const { path, page, total } = props;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (pages === 1) return null;
