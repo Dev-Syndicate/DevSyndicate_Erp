@@ -5,14 +5,15 @@ import { navRoutes } from "@/config/navigation";
 export const instant = false;
 
 export function generateStaticParams() {
-  return navRoutes.filter((r) => r.href !== "/").map((r) => ({ slug: r.href.slice(1).split("/") }));
+  return navRoutes.filter((r) => r.href !== "/" && !r.children).map((r) => ({ slug: r.href.slice(1).split("/") }));
 }
 
 // shortcut: one placeholder for every nav route not built yet; delete as each feature gets its own page.
 export default async function PlaceholderPage({ params }: PageProps<"/[...slug]">) {
   const href = "/" + (await params).slug.join("/");
   const route = navRoutes.find((r) => r.href === href);
-  if (!route) notFound();
+  // Menu groups (Finance, Settings) are not pages.
+  if (!route || route.children) notFound();
 
   return (
     <>

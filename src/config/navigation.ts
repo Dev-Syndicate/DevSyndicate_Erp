@@ -27,7 +27,6 @@ export const navigation: NavItem[] = [
     icon: Landmark,
     permission: "reports.view",
     children: [
-      { title: "Overview", href: "/finance", permission: "reports.view" },
       { title: "Quotations", href: "/finance/quotations", permission: "quotations.view" },
       { title: "Invoices", href: "/finance/invoices", permission: "invoices.view" },
       { title: "Credit Notes", href: "/finance/credit-notes", permission: "credit_notes.view" },
