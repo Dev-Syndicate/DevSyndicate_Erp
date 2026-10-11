@@ -4,10 +4,10 @@ import { useActionState } from "react";
 import { ImageIcon, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmButton } from "@/components/confirm-button";
+import { FilePicker } from "@/components/file-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { removeBranding, uploadBranding } from "@/features/settings/actions";
 import type { FormState } from "@/lib/forms";
 
@@ -34,7 +34,7 @@ function ImageField({ kind, label, hint, url, canEdit }: { kind: Kind; label: st
       </div>
       {canEdit && (
         <form action={action} className="flex flex-wrap items-center gap-2">
-          <Input id={`branding-${kind}`} name="file" type="file" accept="image/png,image/jpeg" required className="flex-1" />
+          <FilePicker key={url ?? "none"} id={`branding-${kind}`} name="file" accept="image/png,image/jpeg" required placeholder="PNG or JPG" className="flex-1" />
           <Button type="submit" variant="outline" disabled={pending}>
             <Upload /> {pending ? "Uploading…" : "Upload"}
           </Button>

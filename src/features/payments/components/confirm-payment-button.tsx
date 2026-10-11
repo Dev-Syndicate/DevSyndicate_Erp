@@ -15,6 +15,7 @@ import {
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/date-picker";
+import { FilePicker } from "@/components/file-picker";
 import { paymentAction } from "@/features/payments/actions";
 import { referenceLabel } from "@/lib/payment-methods";
 import { uploadDocument } from "@/lib/documents/upload";
@@ -75,12 +76,7 @@ export function ConfirmPaymentButton(props: { id: string; organizationId: string
           )}
           <Field>
             <FieldLabel htmlFor="confirm-proof">Proof of payment received (optional)</FieldLabel>
-            <Input
-              id="confirm-proof"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              onChange={(e) => setProof(e.target.files?.[0] ?? null)}
-            />
+            <FilePicker id="confirm-proof" accept="image/jpeg,image/png,image/webp,application/pdf" placeholder="Screenshot or PDF" onChange={setProof} />
             <FieldDescription>Screenshot of the credit in your bank or UPI app. JPG, PNG, WEBP or PDF, up to 5 MB.</FieldDescription>
           </Field>
         </FieldGroup>
