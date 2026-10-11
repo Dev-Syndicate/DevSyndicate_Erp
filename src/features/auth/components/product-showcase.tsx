@@ -49,6 +49,15 @@ const OUTSTANDING = [
 
 const BARS = [40, 55, 48, 70, 62, 88];
 
+// Fixed pseudo-random spread so server and client render the same particles.
+const PARTICLES = Array.from({ length: 60 }, (_, i) => ({
+  left: (i * 37) % 100,
+  top: (i * 61 + 7) % 100,
+  size: [1, 1.5, 2][i % 3],
+  duration: 6 + (i % 5) * 1.5,
+  delay: -i * 0.7,
+}));
+
 /** Fades in after `delay` ms, then bobs up and down. */
 function Floating({ className, delay, children }: { className: string; delay: number; children: React.ReactNode }) {
   return (
@@ -63,6 +72,16 @@ function Floating({ className, delay, children }: { className: string; delay: nu
 export function ProductShowcase() {
   return (
     <div aria-hidden className="relative hidden flex-col items-center justify-center gap-14 overflow-hidden border-l bg-muted px-14 py-12 select-none lg:flex">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--foreground),transparent_65%)] opacity-15" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,var(--foreground),transparent_55%)] opacity-5" />
+      {PARTICLES.map((p, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full bg-foreground opacity-20 motion-safe:animate-drift"
+          style={{ left: `${p.left}%`, top: `${p.top}%`, width: `${p.size * 2}px`, height: `${p.size * 2}px`, animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s` }}
+        />
+      ))}
+
       <div className="relative max-w-lg text-center duration-700 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4">
         <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5" />

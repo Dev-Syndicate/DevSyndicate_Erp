@@ -61,6 +61,11 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   --animate-float: float 6s ease-in-out infinite;
   --animate-grow: grow 1.2s ease-out both;
+  --animate-drift: drift 8s ease-in-out infinite;
+  @keyframes drift {
+    0%, 100% { transform: translateY(0); opacity: 0.2; }
+    50% { transform: translateY(-28px); opacity: 0.9; }
+  }
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
