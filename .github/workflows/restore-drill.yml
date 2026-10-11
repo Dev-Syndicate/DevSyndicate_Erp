@@ -1,0 +1,67 @@
+# Restore drill (PRD §34): restores the latest Google Drive backup into a throwaway local Supabase on the runner
+# and prints row counts and dashboard totals to compare with the live app. Never touches the live project.
+name: Restore drill
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LOCAL_DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Download and decrypt the latest backup
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          sudo -v && curl -fsSL https://rclone.org/install.sh | sudo bash > /dev/null
+          mkdir -p ~/.config/rclone
+          printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+          rclone copy "gdrive:DevSyndicate Backups/devsyndicate-erp-backup.tar.gz.gpg" .
+          gpg --batch --quiet --pinentry-mode loopback --passphrase-file <(printf '%s' "$BACKUP_PASSPHRASE") \
+            -d devsyndicate-erp-backup.tar.gz.gpg | tar -xz
+          echo "Backup taken at $(cat backup/created_at.txt)"
+
+      - name: Start an empty local Supabase
+        run: |
+          mkdir -p /tmp/drill && cd /tmp/drill && supabase init > /dev/null
+          supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Restore the database
+        run: |
+          psql --single-transaction --variable ON_ERROR_STOP=1 --quiet \
+            --file backup/roles.sql --file backup/schema.sql \
+            --command 'SET session_replication_role = replica' \
+            --file backup/data.sql --dbname "$LOCAL_DB" > /dev/null
+
+      - name: Restore the files
+        run: |
+          eval "$(cd /tmp/drill && supabase status -o env)"
+          SUPABASE_URL="$API_URL" SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" node scripts/restore-storage.mjs
+
+      - name: Compare with the live app
+        run: |
+          psql "$LOCAL_DB" -c "
+            select 'clients' as t, count(*) from public.clients union all
+            select 'quotations', count(*) from public.quotations union all
+            select 'invoices', count(*) from public.invoices union all
+            select 'credit_notes', count(*) from public.credit_notes union all
+            select 'payments', count(*) from public.payments union all
+            select 'expenses', count(*) from public.expenses union all
+            select 'documents', count(*) from public.documents union all
+            select 'audit_logs', count(*) from public.audit_logs union all
+            select 'users', count(*) from auth.users union all
+            select 'stored files', count(*) from storage.objects;"
+          psql "$LOCAL_DB" -c "select public.dashboard('2026-04-01', '2027-03-31') - 'monthly' as dashboard;"
