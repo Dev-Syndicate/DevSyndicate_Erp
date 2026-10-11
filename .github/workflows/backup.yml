@@ -30,6 +30,11 @@ jobs:
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
+          # GitHub runners have no IPv6, so always use the IPv4 session pooler, whichever string was saved.
+          PASS=$(python3 -c "import os, urllib.parse as u; print(u.urlparse(os.environ['DB_URL']).password or '')")
+          test -n "$PASS"
+          echo "::add-mask::$PASS"
+          DB_URL="postgresql://postgres.hnwmgeplzdyhdjfqhymo:${PASS}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
           mkdir -p backup
           supabase db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
           supabase db dump --db-url "$DB_URL" -f backup/schema.sql
