@@ -56,7 +56,7 @@ export function AppSidebar({ user }: { user: CurrentUser | null }) {
                 <BrandLogo />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{brand.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">{brand.product}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">{brand.product}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -114,7 +114,7 @@ export function AppSidebar({ user }: { user: CurrentUser | null }) {
       {user && (
         <SidebarFooter>
           {!user.isActive && (
-            <p className="px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            <p className="px-2 text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
               Your account has no access yet. Ask an administrator.
             </p>
           )}
@@ -128,7 +128,7 @@ export function AppSidebar({ user }: { user: CurrentUser | null }) {
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-medium">{user.fullName || user.email}</span>
-                      {user.fullName && <span className="truncate text-xs text-muted-foreground">{user.email}</span>}
+                      {user.fullName && <span className="truncate text-xs text-sidebar-foreground/70">{user.email}</span>}
                     </div>
                     <ChevronsUpDown className="ml-auto size-4" />
                   </SidebarMenuButton>
