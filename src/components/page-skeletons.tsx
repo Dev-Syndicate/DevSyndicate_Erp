@@ -158,15 +158,15 @@ export function SidebarSkeleton() {
   return (
     <div aria-hidden className="hidden w-(--sidebar-width) shrink-0 flex-col gap-2 border-r bg-sidebar p-3 md:flex">
       <div className="flex items-center gap-2 p-1">
-        <Skeleton className="bg-sidebar-accent size-8 rounded-lg" />
+        <Skeleton className="size-8 rounded-lg" />
         <div className="flex flex-1 flex-col gap-1.5">
-          <Skeleton className="bg-sidebar-accent h-3.5 w-24" />
-          <Skeleton className="bg-sidebar-accent h-3 w-10" />
+          <Skeleton className="h-3.5 w-24" />
+          <Skeleton className="h-3 w-10" />
         </div>
       </div>
       <div className="mt-3 flex flex-col gap-2">
         {Array.from({ length: 6 }, (_, i) => (
-          <Skeleton key={i} className="h-8 w-full bg-sidebar-accent" />
+          <Skeleton key={i} className="h-8 w-full" />
         ))}
       </div>
     </div>
