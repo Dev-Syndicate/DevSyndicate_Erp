@@ -31,6 +31,7 @@ export const navigation: NavItem[] = [
       { title: "Credit Notes", href: "/finance/credit-notes", permission: "credit_notes.view" },
       { title: "Payments", href: "/finance/payments", permission: "payments.view" },
       { title: "Expenses", href: "/finance/expenses", permission: "expenses.view" },
+      { title: "Owner's Account", href: "/finance/owner", permission: "owner.view" },
       { title: "Reports", href: "/finance/reports", permission: "reports.view" },
     ],
   },

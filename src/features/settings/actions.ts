@@ -31,7 +31,8 @@ export async function updateCompanySettings(_prev: FormState, formData: FormData
   // RLS also requires settings.update; zero updated rows means no permission.
   const { data, error } = await supabase
     .from("company_settings")
-    .update(parsed.data)
+    // Money stays a string (no JS floats); PostgREST accepts numeric as text.
+    .update({ ...parsed.data, opening_balance: parsed.data.opening_balance as unknown as number })
     .eq("organization_id", organizationId)
     .select("organization_id");
   if (error) return { error: error.message };

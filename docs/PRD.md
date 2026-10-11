@@ -1,7 +1,7 @@
 # DevSyndicate ERP
 
 **Product Requirements Document (PRD)**  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Initial Development  
 **Product:** DevSyndicate ERP  
 **Primary Module:** Finance  
@@ -11,6 +11,10 @@
 ---
 
 ## Changelog
+
+### v1.5 (2026-10-11)
+
+- **Owner's Account researched:** DevSyndicate is a sole proprietorship, so the owner's pay is drawings, not salary or an expense. Drawings and capital introduced are recorded separately with proof; the dashboard shows a **Company Balance** (opening balance + money in − money out − drawings) and drawings for the period (§9.2, §21.1).
 
 ### v1.4 (2026-10-11)
 
@@ -398,6 +402,8 @@ All revenue figures are **gross (including GST collected)**. GST collected on is
 | **Revenue** (period) | Σ settled value of confirmed receipts (amount received + TDS deducted by the client) − Σ confirmed refunds, by payment date |
 | **Expenses** (period) | Σ expenses, by expense date |
 | **Net Profit** (period) | Revenue − Expenses (cash basis; v1.4: renamed from "Net Cash Position" because Revenue and Expenses include TDS, which is not cash) |
+| **Company Balance** (as of today, v1.5) | Opening balance + Σ confirmed receipts (amount received, excl. TDS) − Σ confirmed refunds − Σ expenses (full bill: TDS withheld is owed to the government) − Σ drawings + Σ capital introduced, all from the opening balance date (§21.1) |
+| **Drawings** (period, v1.5) | Σ owner drawings; never part of Expenses or Net Profit (§21.1) |
 | **Total Invoiced** (period) | Σ totals of issued, non-cancelled invoices − Σ issued credit notes, by document date |
 | **Invoice Balance** | Invoice total − Σ issued credit notes against it − Σ confirmed payment allocations to it (allocations settle with cash and TDS) |
 | **Outstanding** (as of date) | Σ balances of all issued, non-cancelled invoices |
@@ -901,7 +907,17 @@ Notes
 - **TDS on vendor payments:** a company, firm or LLP (or an audited proprietor) withholds income tax: professional fees 10% / technical services 2% once a vendor passes ₹50,000 in the year (old §194J); contractors 1% (individuals) / 2% (others) above ₹30,000 per payment or ₹1,00,000 a year (old §194C). From 1 April 2026 these are under §393 of the Income-tax Act 2025 with the same rates. The vendor receives the bill total minus TDS; the TDS is deposited by the 7th of the next month.
 - **Do not double count:** depositing TDS you already withheld is **not** a new expense (the expense already counts the full bill). GST paid to the government with your return is recorded as an expense in the *Taxes* category.
 - **Not GST-registered:** GST, input tax credit and reverse charge are hidden and stored as zero.
-- **Owner's drawings are not expenses:** DevSyndicate is a sole proprietorship, so money the owner pays himself is drawings (a reduction of capital), not salary. It is not deductible and must not reduce Net Profit, so it is not recorded as an expense. Staff salaries are expenses (*Salary* category).
+- **Owner's drawings are not expenses:** DevSyndicate is a sole proprietorship, so money the owner pays himself is drawings (a reduction of capital), not salary, whatever his title (Founder & CEO). It is not deductible and must not reduce Net Profit; record it in the Owner's Account (§21.1). Staff salaries are expenses (*Salary* category). Salary to the owner becomes an expense only if the business becomes a company (director's salary) or a firm/LLP (partner remuneration per the deed).
+
+## 21.1 Owner's Account and Company Balance (v1.5, researched)
+
+- **Drawings** (money the owner takes out) and **capital introduced** (the owner's own money put in) are recorded under Finance → Owner's Account: date, type, amount, method, reference, notes, proof files. Not numbered (Zoho Books records them as banking transactions without a voucher series).
+- They change the owner's **capital** and the **company balance**, never Revenue, Expenses or Net Profit. At year end: closing capital = opening capital + net profit + capital introduced − drawings. Income tax is charged on the full profit, including what the owner took out.
+- **Opening balance** (Settings → Company): the business money held on a start date (default ₹0 on 1 April 2026). The dashboard's **Company Balance** (§9.2) starts from it.
+- shortcut: business payments run through the owner's personal account, so the company balance is the business's share of the money, not a bank balance; add bank accounts and reconciliation if the business gets its own current account.
+- Permissions: `owner.view / create / update / delete` (Super Admin and Admin). Without `owner.view` the dashboard hides the balance and drawings instead of showing a partial figure.
+
+Sources: [AccountingCoach: drawing account](https://www.accountingcoach.com/blog/drawing-account), [Zoho Books: owner equity](https://www.zoho.com/en-ng/books/kb/banking/owner-equity.html), [Chron: no salary deduction for a sole proprietor](https://smallbusiness.chron.com/sole-proprietor-not-entitled-tax-deduction-salary-payments-himself-11191.html), [Kanakkupillai: sole proprietorship taxation](https://www.kanakkupillai.com/learn/taxation-for-sole-proprietorship-in-india/).
 
 Sources: [CGST §16 conditions](https://taxguru.in/goods-and-service-tax/eligible-gst-itc-conditions-timelines-post-ims-reality-fy-2025-26.html), [§17(5) blocked credits](https://tallysolutions.com/gst/blocked-credits-under-gst-section-175-what-you-cannot-claim/), [RCM on imported SaaS](https://taxgarden.in/blog/gst-itc-startups-saas-cloud-digital-marketing-india-2026), [Zoho: expense or bill](https://www.zoho.com/uk/books/kb/bills/expense-or-bill.md), [Zoho: ITC on expenses](https://aaxonix.com/resources/glossary/input-tax-credit-itc-zoho-books/), [TDS rates FY 2026-27](https://taxgarden.in/blog/tds-rate-chart-2026-to-2027).
 

@@ -238,6 +238,8 @@ export type Database = {
           logo_path: string | null
           lut_number: string
           lut_valid_until: string | null
+          opening_balance: number
+          opening_balance_date: string
           organization_id: string
           payment_terms_days: number
           phone: string
@@ -273,6 +275,8 @@ export type Database = {
           logo_path?: string | null
           lut_number?: string
           lut_valid_until?: string | null
+          opening_balance?: number
+          opening_balance_date?: string
           organization_id: string
           payment_terms_days?: number
           phone?: string
@@ -308,6 +312,8 @@ export type Database = {
           logo_path?: string | null
           lut_number?: string
           lut_valid_until?: string | null
+          opening_balance?: number
+          opening_balance_date?: string
           organization_id?: string
           payment_terms_days?: number
           phone?: string
@@ -1052,6 +1058,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      owner_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          method: string
+          notes: string
+          organization_id: string
+          reference: string
+          txn_date: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          method: string
+          notes?: string
+          organization_id: string
+          reference?: string
+          txn_date?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          method?: string
+          notes?: string
+          organization_id?: string
+          reference?: string
+          txn_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_allocations: {
         Row: {
@@ -1835,6 +1891,10 @@ export type Database = {
       }
       save_expense: { Args: { p_data: Json; p_id: string }; Returns: string }
       save_invoice: { Args: { p_data: Json; p_id: string }; Returns: string }
+      save_owner_transaction: {
+        Args: { p_data: Json; p_id: string }
+        Returns: string
+      }
       save_payment: { Args: { p_data: Json; p_id: string }; Returns: string }
       save_quotation: { Args: { p_data: Json; p_id: string }; Returns: string }
       set_document_numbering: {

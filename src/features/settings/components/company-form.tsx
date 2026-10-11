@@ -154,6 +154,22 @@ export function CompanyForm({ settings: s, taxRates, numbering, canEdit }: Props
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Opening balance</CardTitle>
+            <CardDescription>
+              Business money you had on this date. The dashboard&apos;s company balance adds payments received and capital you put in, and
+              subtracts expenses and drawings from then on.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {text("opening_balance", "Opening balance (₹)", { inputMode: "decimal", className: "tabular-nums" })}
+              {text("opening_balance_date", "As of", { type: "date" })}
+            </FieldGroup>
+          </CardContent>
+        </Card>
+
         <NumberingCard rows={numbering} errors={err} />
 
         <Card>

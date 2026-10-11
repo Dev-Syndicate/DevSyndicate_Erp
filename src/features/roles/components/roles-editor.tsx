@@ -16,7 +16,7 @@ type Role = { id: string; key: string; name: string; is_system: boolean; permiss
 
 const MODULES: Record<string, string> = {
   dashboard: "Dashboard", clients: "Clients", vendors: "Vendors", quotations: "Quotations", invoices: "Invoices",
-  credit_notes: "Credit notes", payments: "Payments", expenses: "Expenses", documents: "Documents", reports: "Reports",
+  credit_notes: "Credit notes", payments: "Payments", expenses: "Expenses", owner: "Owner's account", documents: "Documents", reports: "Reports",
   data: "Data import", users: "Users", roles: "Roles", settings: "Settings", audit_logs: "Audit logs",
 };
 const ACTIONS: Record<string, string> = { create: "Create", update: "Edit", delete: "Delete", deactivate: "Deactivate", manage: "Manage", import: "Import" };

@@ -5,12 +5,12 @@ import { z } from "zod";
 import type { FormState } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
 
-export type DocumentEntity = "payment" | "expense";
+export type DocumentEntity = "payment" | "expense" | "owner";
 
 const id = z.uuid();
-const entity = z.enum(["payment", "expense"]);
+const entity = z.enum(["payment", "expense", "owner"]);
 const MAX_BYTES = 5 * 1024 * 1024;
-const PAGES: Record<DocumentEntity, string> = { payment: "/finance/payments", expense: "/finance/expenses" };
+const PAGES: Record<DocumentEntity, string> = { payment: "/finance/payments", expense: "/finance/expenses", owner: "/finance/owner" };
 
 /** JPG, PNG, WEBP or PDF by file signature, not by name or browser-reported type (PRD §26). */
 function fileType(b: Uint8Array): string | null {

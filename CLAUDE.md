@@ -2,7 +2,7 @@
 
 # DevSyndicate ERP
 
-Internal finance ERP. Requirements: [docs/PRD.md](docs/PRD.md) (v1.4). The PRD is the spec; follow its definitions (§9 money rules, §5 permissions, §30 numbering).
+Internal finance ERP. Requirements: [docs/PRD.md](docs/PRD.md) (v1.5). The PRD is the spec; follow its definitions (§9 money rules, §5 permissions, §30 numbering).
 
 Stack: Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS v4, shadcn/ui (Radix base, `radix-nova` style), Supabase (Postgres, Auth, Storage), pnpm.
 
@@ -46,7 +46,7 @@ src/
 └── lib/                    # Shared, feature-agnostic code (utils, supabase client, money)
 ```
 
-- Feature names match PRD modules: `dashboard`, `clients`, `vendors`, `quotations`, `invoices`, `credit-notes`, `payments`, `expenses`, `reports`, `documents`, `settings`, `users`, `roles`, `audit-logs`.
+- Feature names match PRD modules: `dashboard`, `clients`, `vendors`, `quotations`, `invoices`, `credit-notes`, `payments`, `expenses`, `owner`, `reports`, `documents`, `settings`, `users`, `roles`, `audit-logs`.
 - Create only the files a feature actually needs.
 - Code used by one feature stays inside that feature. Move it to `lib/` or `components/` only when a second feature needs it.
 - Features may import from `lib/`, `components/`, `config/`, `hooks/`. Avoid importing deep into another feature's internals.

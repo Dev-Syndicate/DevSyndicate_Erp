@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { GSTIN_RE, optionalCode, PIN_RE } from "@/lib/forms";
 import { INDIAN_STATES } from "@/lib/india";
+import { moneyString } from "@/lib/line-items";
 import { DOC_TYPES, numberingError } from "./numbering";
 
 const text = z.string().trim().max(500);
@@ -30,6 +31,9 @@ export const companySettingsSchema = z
     bank_account_number: z.string().trim().refine((v) => v === "" || /^[0-9]{6,18}$/.test(v), "6–18 digits"),
     bank_ifsc: optionalCode(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC"),
     upi_id: z.string().trim().refine((v) => v === "" || /^[\w.-]+@[\w]+$/.test(v), "Invalid UPI ID"),
+
+    opening_balance: moneyString,
+    opening_balance_date: z.iso.date("Pick a date"),
 
     quotation_validity_days: z.coerce.number().int().min(1).max(365),
     payment_terms_days: z.coerce.number().int().min(0).max(365),

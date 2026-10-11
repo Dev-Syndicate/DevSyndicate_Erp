@@ -14,6 +14,11 @@ export type DashboardFigures = {
   client_credit: string;
   pending_payments: string;
   pending_payments_count: number;
+  /** Null without owner.view (PRD §21.1). */
+  drawings: string | null;
+  capital: string | null;
+  balance: string | null;
+  opening_balance_date: string;
   ageing: { "0_30": string; "31_60": string; "61_90": string; "90_plus": string };
   monthly: { month: string; revenue: string; expenses: string }[];
 };
