@@ -16,6 +16,8 @@ do $$ begin
   assert (select is_active from public.profiles where email = 'finance@test.local'), 'invited user should be active';
   assert not (select is_active from public.profiles where email = 'stranger@test.local'), 'sign-up without role must be inactive';
   assert (select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.key = 'staff') = 4, 'staff has 4 permissions';
+  assert (select bool_and(rp.permission like '%.view') and count(*) = 11
+          from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.key = 'viewer'), 'viewer has only 11 view permissions';
 end $$;
 
 -- As Staff

@@ -220,6 +220,10 @@ quotations.create
 
 A staff member only sees modules and actions they have permission to access. Staff do not have access to payments, expenses, reports, or financial KPIs by default.
 
+## 4.5 Viewer
+
+Read-only. Sees everything Finance sees (dashboard, clients, vendors, quotations, invoices, credit notes, payments, expenses, documents, reports, settings) but cannot create, change, issue, cancel, upload or export anything. No access to users, roles, audit logs or the Owner's Account. Built-in role (cannot be deleted); a Super Admin can still tick more view permissions.
+
 ---
 
 # 5. Permission System
@@ -295,25 +299,25 @@ audit_logs.view
 
 ## 5.1 Default Role Matrix
 
-| Permission group | Super Admin | Admin | Finance | Staff |
-|---|---|---|---|---|
-| dashboard.view | ✅ | ✅ | ✅ | ✅ |
-| clients.* | ✅ | ✅ | ✅ | view |
-| vendors.* | ✅ | ✅ | ✅ | — |
-| quotations.* | ✅ | ✅ | ✅ | view, create |
-| invoices.* | ✅ | ✅ | ✅ | — |
-| credit_notes.* | ✅ | ✅ | ✅ | — |
-| payments.* | ✅ | ✅ | ✅ | — |
-| expenses.* | ✅ | ✅ | ✅ | — |
-| documents.* | ✅ | ✅ | ✅ | — |
-| reports.* | ✅ | ✅ | ✅ | — |
-| data.import | ✅ | ✅ | — | — |
-| users.* | ✅ | ✅ (non-Super-Admin only) | — | — |
-| roles.view | ✅ | ✅ | — | — |
-| roles.manage | ✅ | — | — | — |
-| settings.view | ✅ | ✅ | ✅ | — |
-| settings.update | ✅ | — | — | — |
-| audit_logs.view | ✅ | — | — | — |
+| Permission group | Super Admin | Admin | Finance | Staff | Viewer |
+|---|---|---|---|---|---|
+| dashboard.view | ✅ | ✅ | ✅ | ✅ | ✅ |
+| clients.* | ✅ | ✅ | ✅ | view | view |
+| vendors.* | ✅ | ✅ | ✅ | — | view |
+| quotations.* | ✅ | ✅ | ✅ | view, create | view |
+| invoices.* | ✅ | ✅ | ✅ | — | view |
+| credit_notes.* | ✅ | ✅ | ✅ | — | view |
+| payments.* | ✅ | ✅ | ✅ | — | view |
+| expenses.* | ✅ | ✅ | ✅ | — | view |
+| documents.* | ✅ | ✅ | ✅ | — | view |
+| reports.* | ✅ | ✅ | ✅ | — | view |
+| data.import | ✅ | ✅ | — | — | — |
+| users.* | ✅ | ✅ (non-Super-Admin only) | — | — | — |
+| roles.view | ✅ | ✅ | — | — | — |
+| roles.manage | ✅ | — | — | — | — |
+| settings.view | ✅ | ✅ | ✅ | — | ✅ |
+| settings.update | ✅ | — | — | — | — |
+| audit_logs.view | ✅ | — | — | — | — |
 
 Permissions are stored as data (seeded), so this matrix can be changed without code changes. Only the Super Admin protections in §32 are hard rules.
 
