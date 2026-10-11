@@ -38,7 +38,9 @@ jobs:
           mkdir -p backup
           supabase db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
           supabase db dump --db-url "$DB_URL" -f backup/schema.sql
-          supabase db dump --db-url "$DB_URL" -f backup/data.sql --use-copy --data-only
+          # Vector-bucket tables are platform-internal (not restorable, unused here), as in Supabase's restore guide.
+          supabase db dump --db-url "$DB_URL" -f backup/data.sql --use-copy --data-only \
+            -x storage.buckets_vectors -x storage.vector_indexes
           # Fail loudly rather than upload an empty or partial backup.
           grep -Eq 'COPY "?public"?\."?invoices"?' backup/data.sql
           grep -Eq 'CREATE TABLE .*"?public"?\."?invoices"?' backup/schema.sql
