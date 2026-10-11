@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./database.types";
 
 const PUBLIC_PATHS = ["/login"];
+// Invite / password links: open whether or not someone is signed in (the link signs its owner in).
+const LINK_PATHS = ["/auth/confirm"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -29,6 +31,7 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const signedIn = Boolean(data?.claims);
   const isPublic = PUBLIC_PATHS.includes(request.nextUrl.pathname);
+  if (LINK_PATHS.includes(request.nextUrl.pathname)) return response;
 
   if (!signedIn && !isPublic) return redirectTo(request, response, "/login");
   if (signedIn && isPublic) return redirectTo(request, response, "/");

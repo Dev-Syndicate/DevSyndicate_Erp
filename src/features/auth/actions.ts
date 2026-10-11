@@ -23,3 +23,17 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+export type PasswordState = { error?: string };
+
+/** After an invite or password link (PRD §6): the link already signed the user in; now they choose a password. */
+export async function setPassword(_prev: PasswordState, formData: FormData): Promise<PasswordState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) return { error: "Use at least 8 characters." };
+  if (password !== String(formData.get("confirm") ?? "")) return { error: "The passwords don't match." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.code === "same_password" ? "Choose a password you haven't used before." : error.message };
+  redirect("/");
+}

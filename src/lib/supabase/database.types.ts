@@ -1653,6 +1653,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_invited_user: {
+        Args: { p_full_name: string; p_id: string; p_role_id: string }
+        Returns: undefined
+      }
       amount_credited: {
         Args: { "": Database["public"]["Tables"]["invoices"]["Row"] }
         Returns: {
@@ -1676,6 +1680,11 @@ export type Database = {
           error: true
         } & "the function public.balance_due with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
+      check_invite: {
+        Args: { p_email: string; p_role_id: string }
+        Returns: undefined
+      }
+      check_user_link: { Args: { p_id: string }; Returns: string }
       client_credit: {
         Args: { "": Database["public"]["Tables"]["clients"]["Row"] }
         Returns: {
@@ -1692,6 +1701,7 @@ export type Database = {
         }
         Returns: string
       }
+      create_role: { Args: { p_name: string }; Returns: string }
       credit_note_action: {
         Args: { p_action: string; p_id: string }
         Returns: string
@@ -1729,6 +1739,21 @@ export type Database = {
       }
       is_super_admin: { Args: { uid: string }; Returns: boolean }
       ist_today: { Args: never; Returns: string }
+      list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invited_at: string
+          is_active: boolean
+          last_sign_in_at: string
+          role_id: string
+          role_key: string
+          role_name: string
+        }[]
+      }
       my_permissions: { Args: never; Returns: string[] }
       next_document_number: {
         Args: { p_date?: string; p_doc_type: string }
@@ -1829,6 +1854,10 @@ export type Database = {
         } & "the function public.unallocated with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
       unapply_payment: { Args: { p_allocation_id: string }; Returns: undefined }
+      update_user: {
+        Args: { p_id: string; p_is_active: boolean; p_role_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

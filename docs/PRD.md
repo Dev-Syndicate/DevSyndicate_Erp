@@ -14,6 +14,7 @@
 
 ### v1.4 (2026-10-11)
 
+- **Users & roles:** invite by shareable one-time link (Supabase email only reaches the account owner), set-password page, Invited / Active / Inactive, role and permission editor; Super Admin role locked (§6.1).
 - **Reports researched:** Revenue, Expenses, Profit, Outstanding, plus a Sales register and TDS report (what a CA needs for GSTR-1 and Form 26AS), GST summary when registered; Excel-friendly CSV (§27).
 - **Backups:** nightly encrypted backup to Google Drive, one file replaced each night with 30 days of Drive versions (§34).
 - **Dashboard researched:** "Net Cash Position" renamed **Net Profit (cash basis)**: it includes TDS, which never reaches the bank, so it is profit, not cash. Unpaid invoices are aged by days since the invoice date (due dates are optional). Period filter, monthly chart, TDS payable (§9.2, §10, §36).
@@ -330,6 +331,19 @@ Authentication uses **Supabase Auth**.
 Each authenticated user has a corresponding `profiles` record holding name, role, organization and active flag.
 
 **Email delivery:** Supabase's built-in email service is heavily rate-limited and meant for development only. Production must use a custom SMTP provider with a free tier (e.g. Resend, Brevo) for invites and password resets.
+
+## 6.1 Invites and password links (v1.4, researched)
+
+Supabase's built-in email only delivers to members of the Supabase organization, at about 2 emails an hour ([Supabase SMTP](https://supabase.com/docs/guides/auth/auth-smtp)), so emailed invites and resets would not reach the team. Until custom SMTP is set up, links are **shared by the admin** instead (as in Zoho, the user then sets their own password — [Zoho users](https://www.zoho.com/en-de/books/help/settings/users.html)):
+
+1. Settings → Users → **Invite user** (name, email, role). The database checks the inviter first (`check_invite`: `users.create`, the role exists, only a Super Admin invites a Super Admin, the email is new).
+2. The server creates the account and a **one-time link** with the service role (`generateLink`, no email sent, §32.3), then gives the role with the inviter's session (`activate_invited_user`).
+3. The admin copies the link and sends it (WhatsApp / email). Opening it verifies the token on `/auth/confirm` (`verifyOtp`), signs the user in and asks for a password (`/set-password`).
+4. Lost or expired link, or a forgotten password: **Manage → New invite link / Password link** makes a fresh one-time link (`check_user_link`, `users.update`). Links expire after the project's email OTP expiry (1 hour by default; Supabase → Authentication → Email allows up to 24 hours).
+
+Statuses: **Invited** (never signed in), **Active**, **Inactive**. Changing role or active status uses `update_user` (`users.update` / `users.deactivate`); the profile guard keeps the §32.4 rules (no changes to yourself, Super Admin only by a Super Admin, one active Super Admin). Admins do not see Super Admins in the list (§4.2).
+
+**Roles** (Settings → Roles & Permissions): permissions as checkboxes per module, saved immediately; custom roles can be added (`create_role`) and deleted when no user has them. The Super Admin role always has every permission (database trigger).
 
 ---
 
