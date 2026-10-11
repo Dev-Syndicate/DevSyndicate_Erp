@@ -57,7 +57,6 @@ src/
 - Components use semantic token classes only: `bg-background`, `text-foreground`, `bg-primary`, `text-muted-foreground`, `border-border`, `bg-destructive`, `bg-success`, `bg-warning`, `bg-info`, `chart-1…5`, `sidebar-*`.
 - **Never** hard-code colors in components: no hex/rgb/oklch values, no Tailwind palette classes (`bg-blue-500`, `text-gray-600`), no inline `style={{ color }}`.
 - Need a new color? Add the variable to both `:root` and `.dark`, map it in `@theme inline`, then use the class.
-- Palette follows 60-30-10: **60%** neutral base (`background`), **30%** navy structure (sidebar, `foreground` ink, `muted`/`secondary`/`border` tints), **10%** emerald accent (`primary`). Keep `primary` for the main action on a screen (one filled button); other actions use `outline`/`ghost`.
 - Status colors: paid/success → `success`, overdue/error → `destructive`, pending/partial → `warning`, informational → `info`.
 - Branding text and logo come from `src/config/navigation.ts` (`brand`); the logo files (favicon, `public/logo.png`) are made from `DevSyndicateLogoRounded.png`.
 
