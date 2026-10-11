@@ -2,7 +2,7 @@
 
 // Form parts shared by quotations and invoices: party fields, line items and the live summary.
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -239,6 +239,8 @@ export function LineItemsCard(props: {
 }) {
   const { items, setItems, totals, showTax, showSac, showTimeline, taxRates, errors } = props;
   const setItem = (k: string, patch: Partial<LineItem>) => setItems((list) => list.map((i) => (i.key === k ? { ...i, ...patch } : i)));
+  // Services are billed per line (qty 1), like the PDF; Qty shows only for documents that already use it (e.g. partial-line invoices).
+  const [showQty] = useState(() => items.some((i) => Number(i.quantity) !== 1));
 
   return (
     <Card>
@@ -258,7 +260,7 @@ export function LineItemsCard(props: {
               <TableHead>Description</TableHead>
               {showTimeline && <TableHead className="w-28">Timeline</TableHead>}
               {showSac && <TableHead className="w-24">SAC</TableHead>}
-              <TableHead className="w-24">Qty</TableHead>
+              {showQty && <TableHead className="w-24">Qty</TableHead>}
               <TableHead className="w-32">Unit price</TableHead>
               <TableHead className="w-44">Discount</TableHead>
               {showTax && <TableHead className="w-32">Tax</TableHead>}
@@ -286,10 +288,12 @@ export function LineItemsCard(props: {
                       <Input aria-label={`Line ${i + 1} SAC code`} value={item.sac_code} onChange={(ev) => setItem(item.key, { sac_code: ev.target.value })} inputMode="numeric" />
                     </TableCell>
                   )}
-                  <TableCell>
-                    <Input aria-label={`Line ${i + 1} quantity`} value={item.quantity} onChange={(ev) => setItem(item.key, { quantity: ev.target.value })} inputMode="decimal" className="text-right tabular-nums" aria-invalid={!!e("quantity")} />
-                    <FieldError className="mt-1">{e("quantity")}</FieldError>
-                  </TableCell>
+                  {showQty && (
+                    <TableCell>
+                      <Input aria-label={`Line ${i + 1} quantity`} value={item.quantity} onChange={(ev) => setItem(item.key, { quantity: ev.target.value })} inputMode="decimal" className="text-right tabular-nums" aria-invalid={!!e("quantity")} />
+                      <FieldError className="mt-1">{e("quantity")}</FieldError>
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Input aria-label={`Line ${i + 1} unit price`} value={item.unit_price} onChange={(ev) => setItem(item.key, { unit_price: ev.target.value })} inputMode="decimal" placeholder="0.00" className="text-right tabular-nums" aria-invalid={!!e("unit_price")} />
                     <FieldError className="mt-1">{e("unit_price")}</FieldError>
