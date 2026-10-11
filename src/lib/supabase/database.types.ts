@@ -1659,6 +1659,7 @@ export type Database = {
         Returns: string
       }
       current_org_id: { Args: never; Returns: string }
+      dashboard: { Args: { p_from: string; p_to: string }; Returns: Json }
       document_numbering_settings: {
         Args: never
         Returns: {

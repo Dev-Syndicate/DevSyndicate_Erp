@@ -14,6 +14,7 @@
 
 ### v1.4 (2026-10-11)
 
+- **Dashboard researched:** "Net Cash Position" renamed **Net Profit (cash basis)**: it includes TDS, which never reaches the bank, so it is profit, not cash. Unpaid invoices are aged by days since the invoice date (due dates are optional). Period filter, monthly chart, TDS payable (§9.2, §10, §36).
 - **Expenses researched:** recorded when paid (no bills in V1); the vendor's bill number; GST on the bill with an input-tax-credit flag; reverse charge; TDS withheld from vendors; receipts attached. GST fields only when GST-registered (§21).
 - **Credit notes:** no discount fields; the credit note itself is the post-sale discount (§18).
 - **Invoices:** due date optional and off by default; place of supply defaults to the client's state and prints only on GST documents (§15, §16).
@@ -97,7 +98,7 @@ The system must be designed so additional modules can be added without restructu
 4. Track invoice payments.
 5. Store payment proof documents.
 6. Track company expenses.
-7. Calculate revenue, expenses, outstanding payments, and net cash position.
+7. Calculate revenue, expenses, outstanding payments, and net profit.
 8. Provide role-based access control.
 9. Maintain an audit trail for important actions.
 10. Keep the initial infrastructure cost at ₹0 using available free tiers.
@@ -380,7 +381,7 @@ All revenue figures are **gross (including GST collected)**. GST collected on is
 |---|---|
 | **Revenue** (period) | Σ settled value of confirmed receipts (amount received + TDS deducted by the client) − Σ confirmed refunds, by payment date |
 | **Expenses** (period) | Σ expenses, by expense date |
-| **Net Cash Position** (period) | Revenue − Expenses |
+| **Net Profit** (period) | Revenue − Expenses (cash basis; v1.4: renamed from "Net Cash Position" because Revenue and Expenses include TDS, which is not cash) |
 | **Total Invoiced** (period) | Σ totals of issued, non-cancelled invoices − Σ issued credit notes, by document date |
 | **Invoice Balance** | Invoice total − Σ issued credit notes against it − Σ confirmed payment allocations to it (allocations settle with cash and TDS) |
 | **Outstanding** (as of date) | Σ balances of all issued, non-cancelled invoices |
@@ -392,6 +393,8 @@ All revenue figures are **gross (including GST collected)**. GST collected on is
 | **Overdue Invoices** | Count of issued invoices with balance > 0 and due date before today (IST) |
 
 The dashboard has one KPI per definition above. There is no separate "Net Revenue" or "Amount Received"; Revenue is the amount received.
+
+**GST in Revenue and Expenses (v1.4):** both are gross (incl. GST), and GST paid to the government is an expense in *Taxes*, so the two stay consistent. Accounting practice reports revenue **net of GST** (GST collected is owed to the government). shortcut: gross figures are exact for a company that is not GST-registered; when GST registration is switched on, Revenue should exclude the GST share of receipts, Expenses should exclude claimable input GST, and GST payments should leave Expenses. Source: [TheMunim](https://themunim.com/blog/what-is-income-statement/).
 
 **TDS (v1.2):** business clients often deduct income-tax TDS (e.g. 10% under §194J for professional/technical services) and pay the rest. The TDS is our income, paid to the government on our behalf, so it counts toward Revenue and settles the invoice, but it never reaches the bank; it is reported separately as TDS Receivable. Clients compute TDS on the value **excluding GST** when GST is shown separately (CBDT Circular 23/2017).
 
@@ -432,23 +435,21 @@ If the company is not GST-registered, steps 6 and 10 are zero and tax fields are
 
 # 10. Finance Dashboard
 
-KPIs (definitions in §9.2), filterable by period (default: current financial year):
+KPIs (definitions in §9.2), filterable by period: this month, this quarter, **this financial year (default)**, last financial year. Quarters are the FY quarters (Apr–Jun, Jul–Sep, Oct–Dec, Jan–Mar).
 
-- Revenue
-- Expenses
-- Net Cash Position
-- Total Invoiced
-- Outstanding
-- Client Credit (unapplied advances)
-- Pending Invoices (count + amount)
-- Overdue Invoices (count + amount)
+- Revenue, Expenses, Net Profit (period)
+- Outstanding (count + amount, as of today; overdue part shown when invoices have due dates)
+- Total Invoiced, Client Credit, Pending Payments (count + amount), TDS Receivable / Payable
+- **Unpaid by age** (v1.4): open balances by days since the invoice date — 0–30, 31–60, 61–90, over 90 — the standard receivables ageing buckets. Ageing uses the invoice date because due dates are optional (§15). Sources: [Zoho Books dashboard](https://zoho.com/in/books/help/dashboard), [Sage receivables ageing](https://www.cleverence.com/articles/sage-documentation/about-receivables-aging-on-the-dashboard-sage-5279/).
+
+All figures come from one database function (`public.dashboard`) that runs with the user's permissions (RLS).
 
 Example:
 
 ```text
 Revenue              ₹1,25,000
 Expenses             ₹32,500
-Net Cash Position    ₹92,500
+Net Profit           ₹92,500
 Outstanding          ₹45,000
 ```
 
@@ -1067,7 +1068,7 @@ Month | Category | Expenses
 ```text
 Revenue
 - Expenses
-= Net Cash Position
+= Net Profit
 ```
 
 ### Outstanding (Receivables Ageing) Report
@@ -1454,22 +1455,20 @@ Navigation items are hidden when the user lacks the matching `.view` permission.
 Top (KPIs, §10):
 
 ```text
-Revenue | Expenses | Net Cash Position | Outstanding
+Revenue | Expenses | Net Profit | Outstanding
+Total Invoiced | Client Credit | Pending Payments | TDS
 ```
 
 Middle:
 
 ```text
-Revenue vs Expenses (monthly, current FY)
+Revenue vs Expenses (monthly, financial year of the period) | Unpaid by age
 ```
 
 Bottom:
 
 ```text
-Recent Payments
-Recent Invoices
-Pending Payments (unconfirmed)
-Overdue Invoices
+Oldest Unpaid Invoices | Pending Payments (unconfirmed) | Recent Payments
 ```
 
 ---
@@ -1626,7 +1625,7 @@ The first release is considered successful when:
 
 ### Dashboard & Reports
 
-- Revenue, Expenses, Net Cash Position, Outstanding and Client Credit match the definitions in §9.2.
+- Revenue, Expenses, Net Profit, Outstanding and Client Credit match the definitions in §9.2.
 - Recent payments and invoices displayed.
 - Revenue, Expense, Profit, Outstanding (ageing) and Tax Summary reports with filters and CSV export.
 
