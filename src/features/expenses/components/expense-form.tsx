@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { issuesByPath } from "@/components/document-form";
 import { Button } from "@/components/ui/button";
@@ -14,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { saveExpense } from "@/features/expenses/actions";
 import { expenseSchema, type ExpenseInput } from "@/features/expenses/schema";
 import { istToday } from "@/lib/dates";
+import { uploadDocument } from "@/lib/documents/upload";
 import { formatINR, toScaled } from "@/lib/money";
 import { METHODS, referenceLabel } from "@/lib/payment-methods";
 import type { Tables } from "@/lib/supabase/database.types";
@@ -25,13 +28,18 @@ type Props = {
   categories: Category[];
   vendors: Vendor[];
   gstRegistered: boolean;
+  organizationId: string;
   expense?: Tables<"expenses">;
+  /** Files already attached (edit). */
+  receipts?: { id: string; file_name: string; size_bytes: number; url: string | null }[];
 };
 
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const NO_VENDOR = "none"; // Select items can't have an empty value
 const scaled = (v: string) => toScaled(v || "0", 2) ?? 0n;
 
-export function ExpenseForm({ categories, vendors, gstRegistered, expense }: Props) {
+export function ExpenseForm({ categories, vendors, gstRegistered, organizationId, expense, receipts = [] }: Props) {
+  const router = useRouter();
   const [form, setForm] = useState<ExpenseInput>(() => ({
     expense_date: expense?.expense_date ?? istToday(),
     category_id: expense?.category_id ?? "",
@@ -49,6 +57,9 @@ export function ExpenseForm({ categories, vendors, gstRegistered, expense }: Pro
   }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
+  // Bill / receipt files picked here; uploaded once the expense is saved (they need its id).
+  const [files, setFiles] = useState<File[]>([]);
+  const picker = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof ExpenseInput>(name: K, value: ExpenseInput[K]) => setForm((f) => ({ ...f, [name]: value }));
   const err = (k: string) => errors[k];
@@ -80,7 +91,15 @@ export function ExpenseForm({ categories, vendors, gstRegistered, expense }: Pro
     setErrors({});
     startTransition(async () => {
       const result = await saveExpense(expense?.id ?? null, input);
-      if (result?.error) toast.error(result.error);
+      if (!result.id) {
+        toast.error(result.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      for (const file of files) {
+        const upload = await uploadDocument("expense", result.id, organizationId, file);
+        if (upload.error) toast.error(`${file.name}: ${upload.error}`);
+      }
+      router.push(`/finance/expenses/${result.id}`);
     });
   }
 
@@ -96,7 +115,7 @@ export function ExpenseForm({ categories, vendors, gstRegistered, expense }: Pro
         <Card>
           <CardHeader>
             <CardTitle>Expense</CardTitle>
-            <CardDescription>Record it when the money is paid. Attach the bill or receipt after saving.</CardDescription>
+            <CardDescription>Record it when the money is paid.</CardDescription>
           </CardHeader>
           <CardContent>
             <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -244,6 +263,59 @@ export function ExpenseForm({ categories, vendors, gstRegistered, expense }: Pro
                 <Textarea id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} />
               </Field>
             </FieldGroup>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Bill / receipt</CardTitle>
+            <CardDescription>The vendor&apos;s invoice, a receipt or a payment screenshot. JPG, PNG, WEBP or PDF, up to 5 MB each.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {receipts.map((r) => (
+              <div key={r.id} className="flex items-center gap-3 text-sm">
+                <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                {r.url ? (
+                  <a href={r.url} target="_blank" rel="noreferrer" className="truncate hover:underline">
+                    {r.file_name}
+                  </a>
+                ) : (
+                  <span className="truncate">{r.file_name}</span>
+                )}
+                <span className="shrink-0 text-muted-foreground tabular-nums">{Math.ceil(r.size_bytes / 1024)} KB</span>
+              </div>
+            ))}
+            {files.map((f, i) => (
+              <div key={`${f.name}-${i}`} className="flex items-center gap-3 text-sm">
+                <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="truncate">{f.name}</span>
+                <span className="shrink-0 text-muted-foreground tabular-nums">{Math.ceil(f.size / 1024)} KB · uploads on save</span>
+                <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${f.name}`} onClick={() => setFiles((l) => l.filter((_, j) => j !== i))}>
+                  <X />
+                </Button>
+              </div>
+            ))}
+            <div>
+              {/* Hidden picker; the button opens it. */}
+              <input
+                ref={picker}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                aria-label="Bill or receipt file"
+                className="hidden"
+                onChange={(e) => {
+                  const picked = Array.from(e.target.files ?? []);
+                  const tooBig = picked.filter((f) => f.size > MAX_FILE_BYTES);
+                  if (tooBig.length) toast.error(`Files can be up to 5 MB: ${tooBig.map((f) => f.name).join(", ")}`);
+                  setFiles((l) => [...l, ...picked.filter((f) => f.size <= MAX_FILE_BYTES)]);
+                  e.target.value = "";
+                }}
+              />
+              <Button type="button" variant="outline" onClick={() => picker.current?.click()}>
+                <Upload /> Add file
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

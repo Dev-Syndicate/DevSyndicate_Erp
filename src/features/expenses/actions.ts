@@ -10,8 +10,11 @@ import { expenseSchema, type ExpenseInput } from "./schema";
 
 const id = z.uuid();
 
-/** Records an expense, or edits it when `expenseId` is given. The database checks every amount. */
-export async function saveExpense(expenseId: string | null, input: ExpenseInput): Promise<FormState> {
+/**
+ * Records an expense, or edits it when `expenseId` is given. The database checks every amount.
+ * Returns the id so the form can upload the chosen files before opening the expense.
+ */
+export async function saveExpense(expenseId: string | null, input: ExpenseInput): Promise<FormState & { id?: string }> {
   if (expenseId && !id.safeParse(expenseId).success) return { error: "Invalid request." };
   const parsed = expenseSchema.safeParse(input);
   if (!parsed.success) return { error: "Please fix the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
@@ -22,7 +25,7 @@ export async function saveExpense(expenseId: string | null, input: ExpenseInput)
   if (error) return { error: dbErrorMessage(error) };
 
   revalidatePath("/finance", "layout");
-  redirect(`/finance/expenses/${data}`);
+  return { ok: true, id: data };
 }
 
 /** Deletes the expense, then its receipts (rows and files). */

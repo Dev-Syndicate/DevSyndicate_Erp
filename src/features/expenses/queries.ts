@@ -32,10 +32,11 @@ export async function getExpense(id: string) {
 /** Categories and vendors for the form; archived ones only when the expense already uses them. */
 export async function getExpenseFormData(current?: { category_id: string; vendor_id: string | null }) {
   const supabase = await createClient();
-  const [categories, vendors, settings] = await Promise.all([
+  const [categories, vendors, settings, org] = await Promise.all([
     supabase.from("expense_categories").select("id, name, is_active").order("name"),
     supabase.from("vendors").select("id, name, gstin, default_expense_category_id, deleted_at").order("name"),
     supabase.from("company_settings").select("gst_registered").maybeSingle(),
+    supabase.rpc("current_org_id"),
   ]);
   if (categories.error) throw categories.error;
   if (vendors.error) throw vendors.error;
@@ -43,5 +44,6 @@ export async function getExpenseFormData(current?: { category_id: string; vendor
     categories: categories.data.filter((c) => c.is_active || c.id === current?.category_id),
     vendors: vendors.data.filter((v) => !v.deleted_at || v.id === current?.vendor_id),
     gstRegistered: settings.data?.gst_registered ?? false,
+    organizationId: org.data ?? "",
   };
 }
