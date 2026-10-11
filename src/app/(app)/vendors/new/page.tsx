@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { getExpenseCategories } from "@/features/settings/queries";
 import { VendorForm } from "@/features/vendors/components/vendor-form";
 
@@ -12,7 +12,7 @@ export default function NewVendorPage() {
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">New vendor</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<FormSkeleton />}>
         <NewVendor />
       </Suspense>
     </>

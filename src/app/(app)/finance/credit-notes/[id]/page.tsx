@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/page-skeletons";
 import { getCurrentUser } from "@/features/auth/queries";
 import { CreditNoteActions } from "@/features/credit-notes/components/credit-note-actions";
 import { CreditNoteStatusBadge } from "@/features/credit-notes/components/credit-note-status-badge";
@@ -36,7 +36,7 @@ async function CreditNoteDetail({ params }: { params: PageProps<"/finance/credit
 
 export default function CreditNotePage({ params }: PageProps<"/finance/credit-notes/[id]">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <CreditNoteDetail params={params} />
     </Suspense>
   );

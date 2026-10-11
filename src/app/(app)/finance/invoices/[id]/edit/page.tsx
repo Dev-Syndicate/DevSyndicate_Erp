@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { InvoiceForm } from "@/features/invoices/components/invoice-form";
 import { getInvoice, getInvoiceFormData } from "@/features/invoices/queries";
 
@@ -20,7 +20,7 @@ async function EditInvoice({ params }: { params: PageProps<"/finance/invoices/[i
 
 export default function EditInvoicePage({ params }: PageProps<"/finance/invoices/[id]/edit">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<FormSkeleton />}>
       <EditInvoice params={params} />
     </Suspense>
   );

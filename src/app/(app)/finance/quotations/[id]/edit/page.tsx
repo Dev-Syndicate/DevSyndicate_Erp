@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { QuotationForm } from "@/features/quotations/components/quotation-form";
 import { quotationLabel } from "@/features/quotations/components/quotations-table";
 import { getQuotation, getQuotationFormData } from "@/features/quotations/queries";
@@ -21,7 +21,7 @@ async function EditQuotation({ params }: { params: PageProps<"/finance/quotation
 
 export default function EditQuotationPage({ params }: PageProps<"/finance/quotations/[id]/edit">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<FormSkeleton />}>
       <EditQuotation params={params} />
     </Suspense>
   );

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { getCurrentUser } from "@/features/auth/queries";
 import { PaymentForm } from "@/features/payments/components/payment-form";
 import { getOpenInvoices, getPayment, getPaymentClients } from "@/features/payments/queries";
@@ -26,7 +26,7 @@ async function EditPayment({ params }: { params: PageProps<"/finance/payments/[i
 
 export default function EditPaymentPage({ params }: PageProps<"/finance/payments/[id]/edit">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<FormSkeleton />}>
       <EditPayment params={params} />
     </Suspense>
   );

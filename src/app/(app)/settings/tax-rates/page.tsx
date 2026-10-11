@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/page-skeletons";
 import { getCurrentUser } from "@/features/auth/queries";
 import { SettingsList } from "@/features/settings/components/settings-list";
 import { getTaxRates } from "@/features/settings/queries";
@@ -13,7 +13,7 @@ export default function TaxRatesPage() {
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Tax Rates</h1>
-      <Suspense fallback={<Skeleton className="h-64" />}>
+      <Suspense fallback={<ListSkeleton />}>
         <TaxRates />
       </Suspense>
     </>

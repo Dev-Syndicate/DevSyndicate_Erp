@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { CreditNoteForm } from "@/features/credit-notes/components/credit-note-form";
 import { getCreditNoteFormData } from "@/features/credit-notes/queries";
 
@@ -16,7 +16,7 @@ export default function NewCreditNotePage({ searchParams }: PageProps<"/finance/
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">New credit note</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<FormSkeleton />}>
         <NewCreditNote searchParams={searchParams} />
       </Suspense>
     </>

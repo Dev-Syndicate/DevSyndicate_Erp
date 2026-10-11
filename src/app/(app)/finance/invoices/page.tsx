@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { ListSkeleton } from "@/components/page-skeletons";
 import { ListPagination, parseListParams, SearchForm } from "@/components/list-controls";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/queries";
 import { InvoicesTable } from "@/features/invoices/components/invoices-table";
 import { listInvoices } from "@/features/invoices/queries";
@@ -34,7 +34,7 @@ export default function InvoicesPage({ searchParams }: PageProps<"/finance/invoi
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Invoices</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<ListSkeleton />}>
         <Invoices searchParams={searchParams} />
       </Suspense>
     </>

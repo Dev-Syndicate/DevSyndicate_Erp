@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardSkeleton } from "@/components/page-skeletons";
 import { getCurrentUser } from "@/features/auth/queries";
 import { AgeingCard } from "@/features/dashboard/components/ageing-card";
 import { DashboardLists, RecentQuotations } from "@/features/dashboard/components/dashboard-lists";
@@ -50,7 +50,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/">) {
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Dashboard</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<DashboardSkeleton />}>
         <Dashboard searchParams={searchParams} />
       </Suspense>
     </>

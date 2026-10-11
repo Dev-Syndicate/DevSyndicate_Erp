@@ -1,6 +1,6 @@
 import { Suspense } from "react";
+import { ListSkeleton } from "@/components/page-skeletons";
 import { ListPagination, parseListParams, SearchForm } from "@/components/list-controls";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CreditNotesTable } from "@/features/credit-notes/components/credit-notes-table";
 import { listCreditNotes } from "@/features/credit-notes/queries";
 
@@ -24,7 +24,7 @@ export default function CreditNotesPage({ searchParams }: PageProps<"/finance/cr
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Credit notes</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<ListSkeleton />}>
         <CreditNotes searchParams={searchParams} />
       </Suspense>
     </>

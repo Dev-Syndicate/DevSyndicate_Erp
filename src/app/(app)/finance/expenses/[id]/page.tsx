@@ -2,10 +2,10 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
+import { DetailSkeleton } from "@/components/page-skeletons";
 import { ConfirmButton } from "@/components/confirm-button";
 import { ProofsCard } from "@/components/proofs-card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/queries";
 import { deleteExpense } from "@/features/expenses/actions";
 import { ExpenseView } from "@/features/expenses/components/expense-view";
@@ -73,7 +73,7 @@ async function ExpenseDetail({ params }: { params: PageProps<"/finance/expenses/
 
 export default function ExpensePage({ params }: PageProps<"/finance/expenses/[id]">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <ExpenseDetail params={params} />
     </Suspense>
   );

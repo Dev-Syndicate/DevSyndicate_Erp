@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { Users } from "lucide-react";
+import { ListSkeleton } from "@/components/page-skeletons";
 import { EmptyRow } from "@/components/list-controls";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCurrentUser } from "@/features/auth/queries";
 import { EditUserDialog } from "@/features/users/components/edit-user-dialog";
@@ -80,7 +80,7 @@ export default function UsersPage() {
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Users</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<ListSkeleton />}>
         <UsersList />
       </Suspense>
     </>

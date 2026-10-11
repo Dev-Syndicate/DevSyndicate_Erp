@@ -2,12 +2,12 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
+import { DetailSkeleton } from "@/components/page-skeletons";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/queries";
 import { setClientArchived } from "@/features/clients/actions";
 import { ContactsCard } from "@/features/clients/components/contacts-card";
@@ -83,7 +83,7 @@ async function ClientDetail({ params, searchParams }: PageProps<"/clients/[id]">
 
 export default function ClientPage(props: PageProps<"/clients/[id]">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <ClientDetail {...props} />
     </Suspense>
   );

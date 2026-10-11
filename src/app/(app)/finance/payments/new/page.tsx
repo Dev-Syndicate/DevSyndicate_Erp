@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { getCurrentUser } from "@/features/auth/queries";
 import { PaymentForm } from "@/features/payments/components/payment-form";
 import { getOpenInvoices, getPaymentClients } from "@/features/payments/queries";
@@ -24,7 +24,7 @@ export default function NewPaymentPage({ searchParams }: PageProps<"/finance/pay
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Record payment</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<FormSkeleton />}>
         <NewPayment searchParams={searchParams} />
       </Suspense>
     </>

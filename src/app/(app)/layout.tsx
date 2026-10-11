@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { SidebarSkeleton } from "@/components/page-skeletons";
 import { AppBreadcrumb } from "@/components/layout/app-breadcrumb";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -17,7 +18,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
     <SidebarProvider>
       {/* Fallback reserves the sidebar's space. It must not read the URL (dynamic routes prerender it)
           or use sidebar context (unavailable when the fallback is prerendered). */}
-      <Suspense fallback={<div aria-hidden className="hidden w-(--sidebar-width) shrink-0 border-r bg-sidebar md:block" />}>
+      <Suspense fallback={<SidebarSkeleton />}>
         <UserSidebar />
       </Suspense>
       <SidebarInset>

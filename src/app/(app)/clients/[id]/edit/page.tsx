@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { ClientForm } from "@/features/clients/components/client-form";
 import { getClient } from "@/features/clients/queries";
 
@@ -14,7 +14,7 @@ export default function EditClientPage({ params }: PageProps<"/clients/[id]/edit
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Edit client</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<FormSkeleton />}>
         <EditClient params={params} />
       </Suspense>
     </>

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/page-skeletons";
 import { getCurrentUser } from "@/features/auth/queries";
 import { InvoiceActions } from "@/features/invoices/components/invoice-actions";
 import { InvoiceStatusBadge } from "@/features/invoices/components/invoice-status-badge";
@@ -40,7 +40,7 @@ async function InvoiceDetail({ params }: { params: PageProps<"/finance/invoices/
 
 export default function InvoicePage({ params }: PageProps<"/finance/invoices/[id]">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <InvoiceDetail params={params} />
     </Suspense>
   );

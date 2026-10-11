@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { ExpenseForm } from "@/features/expenses/components/expense-form";
 import { getExpense, getExpenseFormData } from "@/features/expenses/queries";
 import { getDocuments } from "@/lib/documents/queries";
@@ -21,7 +21,7 @@ async function EditExpense({ params }: { params: PageProps<"/finance/expenses/[i
 
 export default function EditExpensePage({ params }: PageProps<"/finance/expenses/[id]/edit">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<FormSkeleton />}>
       <EditExpense params={params} />
     </Suspense>
   );

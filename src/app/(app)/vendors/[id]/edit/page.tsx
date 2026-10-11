@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/queries";
 import { getExpenseCategories } from "@/features/settings/queries";
 import { setVendorArchived } from "@/features/vendors/actions";
@@ -51,7 +51,7 @@ async function EditVendor({ params }: { params: PageProps<"/vendors/[id]/edit">[
 
 export default function EditVendorPage({ params }: PageProps<"/vendors/[id]/edit">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<FormSkeleton />}>
       <EditVendor params={params} />
     </Suspense>
   );

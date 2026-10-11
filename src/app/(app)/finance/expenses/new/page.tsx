@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { ExpenseForm } from "@/features/expenses/components/expense-form";
 import { getExpenseFormData } from "@/features/expenses/queries";
 
@@ -12,7 +12,7 @@ export default function NewExpensePage() {
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Record expense</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<FormSkeleton />}>
         <NewExpense />
       </Suspense>
     </>

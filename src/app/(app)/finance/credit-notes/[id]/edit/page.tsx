@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton } from "@/components/page-skeletons";
 import { CreditNoteForm } from "@/features/credit-notes/components/credit-note-form";
 import { getCreditNote, getCreditNoteFormData } from "@/features/credit-notes/queries";
 
@@ -22,7 +22,7 @@ async function EditCreditNote({ params }: { params: PageProps<"/finance/credit-n
 
 export default function EditCreditNotePage({ params }: PageProps<"/finance/credit-notes/[id]/edit">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<FormSkeleton />}>
       <EditCreditNote params={params} />
     </Suspense>
   );

@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { ListSkeleton } from "@/components/page-skeletons";
 import { ListPagination, parseListParams, SearchForm } from "@/components/list-controls";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/queries";
 import { QuotationsTable } from "@/features/quotations/components/quotations-table";
 import { listQuotations } from "@/features/quotations/queries";
@@ -34,7 +34,7 @@ export default function QuotationsPage({ searchParams }: PageProps<"/finance/quo
   return (
     <>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Quotations</h1>
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense fallback={<ListSkeleton />}>
         <Quotations searchParams={searchParams} />
       </Suspense>
     </>

@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DetailSkeleton } from "@/components/page-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCurrentUser } from "@/features/auth/queries";
 import { QuotationActions } from "@/features/quotations/components/quotation-actions";
@@ -94,7 +94,7 @@ async function QuotationDetail({ params }: { params: PageProps<"/finance/quotati
 
 export default function QuotationPage({ params }: PageProps<"/finance/quotations/[id]">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <QuotationDetail params={params} />
     </Suspense>
   );

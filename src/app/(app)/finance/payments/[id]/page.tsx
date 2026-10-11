@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { DetailSkeleton } from "@/components/page-skeletons";
 import { ProofsCard } from "@/components/proofs-card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/queries";
 import { PaymentActions } from "@/features/payments/components/payment-actions";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
@@ -64,7 +64,7 @@ async function PaymentDetail({ params }: { params: PageProps<"/finance/payments/
 
 export default function PaymentPage({ params }: PageProps<"/finance/payments/[id]">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96" />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <PaymentDetail params={params} />
     </Suspense>
   );
