@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Download, IndianRupee, Pencil } from "lucide-react";
+import { Copy, Download, FileMinus, IndianRupee, Pencil } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { deleteInvoice, invoiceAction } from "@/features/invoices/actions";
@@ -56,6 +56,13 @@ export function InvoiceActions({ id, status, hasPayments, credit, can }: Props) 
         </ConfirmButton>
       )}
       {status === "draft" && can("invoices.issue") && <IssueInvoiceButton id={id} credit={credit && can("payments.update") ? credit : undefined} />}
+      {(issued || status === "paid") && can("credit_notes.create") && (
+        <Button variant="outline" asChild>
+          <Link href={`/finance/credit-notes/new?invoice=${id}`}>
+            <FileMinus /> Credit note
+          </Link>
+        </Button>
+      )}
       {issued && can("payments.create") && (
         <Button asChild>
           <Link href={`/finance/payments/new?invoice=${id}`}>

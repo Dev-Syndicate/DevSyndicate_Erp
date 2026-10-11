@@ -88,8 +88,8 @@ export type PdfDoc = {
     round_off: number;
     grand_total: number;
   };
-  /** Issued invoices with payments: "Less: paid" and "Balance due" under the total. */
-  payments?: { paid: number; balance: number };
+  /** Issued invoices with payments or credit notes: "Less: …" lines and "Balance due" under the total. */
+  payments?: { paid: number; credited: number; balance: number };
   /** Invoices print the amount in words (PRD §15). */
   amountInWords?: boolean;
   /** Blocks after the totals, e.g. bank details and terms. Empty ones are skipped. */
@@ -263,6 +263,12 @@ function DocumentPdf({ doc }: { doc: PdfDoc }) {
           </View>
           {doc.payments && (
             <>
+              {doc.payments.credited > 0 && (
+                <View style={[s.between, { paddingVertical: 2, paddingHorizontal: 6 }]}>
+                  <Text style={s.bold}>Less: credit notes</Text>
+                  <Text>{formatINR(-doc.payments.credited)}</Text>
+                </View>
+              )}
               <View style={[s.between, { paddingVertical: 2, paddingHorizontal: 6 }]}>
                 <Text style={s.bold}>Less: paid</Text>
                 <Text>{formatINR(-doc.payments.paid)}</Text>

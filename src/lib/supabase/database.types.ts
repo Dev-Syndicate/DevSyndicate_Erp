@@ -305,6 +305,218 @@ export type Database = {
           },
         ]
       }
+      credit_note_items: {
+        Row: {
+          allocated_discount: number
+          cgst: number
+          credit_note_id: string
+          description: string
+          discount_type: string
+          discount_value: number
+          id: string
+          igst: number
+          line_discount: number
+          line_gross: number
+          line_net: number
+          line_total: number
+          organization_id: string
+          position: number
+          quantity: number
+          sac_code: string
+          sgst: number
+          tax_rate: number
+          taxable: number
+          unit_price: number
+        }
+        Insert: {
+          allocated_discount?: number
+          cgst?: number
+          credit_note_id: string
+          description: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          igst?: number
+          line_discount?: number
+          line_gross?: number
+          line_net?: number
+          line_total?: number
+          organization_id: string
+          position: number
+          quantity: number
+          sac_code?: string
+          sgst?: number
+          tax_rate?: number
+          taxable?: number
+          unit_price: number
+        }
+        Update: {
+          allocated_discount?: number
+          cgst?: number
+          credit_note_id?: string
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          igst?: number
+          line_discount?: number
+          line_gross?: number
+          line_net?: number
+          line_total?: number
+          organization_id?: string
+          position?: number
+          quantity?: number
+          sac_code?: string
+          sgst?: number
+          tax_rate?: number
+          taxable?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_note_items_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "credit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_note_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_notes: {
+        Row: {
+          billing_address: string
+          billing_gstin: string
+          billing_name: string
+          cgst_total: number
+          client_id: string
+          created_at: string
+          created_by: string | null
+          credit_note_date: string
+          discount_total: number
+          discount_type: string
+          discount_value: number
+          grand_total: number
+          gst_applicable: boolean
+          id: string
+          igst_total: number
+          invoice_id: string
+          issued_at: string | null
+          issued_by: string | null
+          notes: string
+          number: string | null
+          organization_id: string
+          place_of_supply: string
+          reason: string
+          round_off: number
+          sgst_total: number
+          status: string
+          subtotal: number
+          supply_type: string
+          taxable_total: number
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: string
+          billing_gstin?: string
+          billing_name?: string
+          cgst_total?: number
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          credit_note_date?: string
+          discount_total?: number
+          discount_type?: string
+          discount_value?: number
+          grand_total?: number
+          gst_applicable?: boolean
+          id?: string
+          igst_total?: number
+          invoice_id: string
+          issued_at?: string | null
+          issued_by?: string | null
+          notes?: string
+          number?: string | null
+          organization_id: string
+          place_of_supply?: string
+          reason: string
+          round_off?: number
+          sgst_total?: number
+          status?: string
+          subtotal?: number
+          supply_type?: string
+          taxable_total?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: string
+          billing_gstin?: string
+          billing_name?: string
+          cgst_total?: number
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          credit_note_date?: string
+          discount_total?: number
+          discount_type?: string
+          discount_value?: number
+          grand_total?: number
+          gst_applicable?: boolean
+          id?: string
+          igst_total?: number
+          invoice_id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          notes?: string
+          number?: string | null
+          organization_id?: string
+          place_of_supply?: string
+          reason?: string
+          round_off?: number
+          sgst_total?: number
+          status?: string
+          subtotal?: number
+          supply_type?: string
+          taxable_total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_numbering: {
         Row: {
           doc_type: string
@@ -581,6 +793,7 @@ export type Database = {
           taxable_total: number
           terms: string
           updated_at: string
+          amount_credited: number | null
           amount_paid: number | null
           balance_due: number | null
         }
@@ -1315,6 +1528,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      amount_credited: {
+        Args: { "": Database["public"]["Tables"]["invoices"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.amount_credited with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
       amount_paid: {
         Args: { "": Database["public"]["Tables"]["invoices"]["Row"] }
         Returns: {
@@ -1346,6 +1565,10 @@ export type Database = {
           p_mode: string
           p_percent?: number
         }
+        Returns: string
+      }
+      credit_note_action: {
+        Args: { p_action: string; p_id: string }
         Returns: string
       }
       current_org_id: { Args: never; Returns: string }
@@ -1411,6 +1634,10 @@ export type Database = {
           p_pattern: string
           p_seq: number
         }
+        Returns: string
+      }
+      save_credit_note: {
+        Args: { p_data: Json; p_id: string }
         Returns: string
       }
       save_invoice: { Args: { p_data: Json; p_id: string }; Returns: string }

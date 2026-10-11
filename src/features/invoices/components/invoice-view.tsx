@@ -95,6 +95,12 @@ export function InvoiceView({ inv, showSac }: { inv: Invoice; showSac: boolean }
         <DocumentTotalsCard doc={inv} showTax={showTax}>
           {inv.status !== "draft" && (
             <>
+              {(inv.amount_credited ?? 0) > 0 && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Credit notes</span>
+                  <span className="tabular-nums">{formatINR(-(inv.amount_credited ?? 0))}</span>
+                </div>
+              )}
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">Paid</span>
                 <span className="tabular-nums">{formatINR(-(inv.amount_paid ?? 0))}</span>
@@ -107,6 +113,42 @@ export function InvoiceView({ inv, showSac }: { inv: Invoice; showSac: boolean }
           )}
         </DocumentTotalsCard>
       </div>
+
+      {inv.credit_notes.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Credit notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Number</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="w-[40%]">Reason</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="pl-6">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {inv.credit_notes.map((cn) => (
+                  <TableRow key={cn.id}>
+                    <TableCell className="font-mono text-sm">
+                      <Link href={`/finance/credit-notes/${cn.id}`} className="hover:underline">
+                        {cn.number ?? "Draft"}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="tabular-nums">{formatDate(cn.credit_note_date)}</TableCell>
+                    <TableCell className="max-w-64 truncate">{cn.reason}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatINR(cn.grand_total)}</TableCell>
+                    <TableCell className="pl-6 capitalize">{cn.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {inv.payment_allocations.length > 0 && (
         <Card>

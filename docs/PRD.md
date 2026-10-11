@@ -1,7 +1,7 @@
 # DevSyndicate ERP
 
 **Product Requirements Document (PRD)**  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Initial Development  
 **Product:** DevSyndicate ERP  
 **Primary Module:** Finance  
@@ -11,6 +11,12 @@
 ---
 
 ## Changelog
+
+### v1.3 (2026-10-11)
+
+- **Credit notes researched:** tax follows the original invoice, the GST 30-November time limit, Rule 53(1A) contents, overpayment released to client credit, cancel rules (§18).
+- **Payments:** the date received and bank reference (UTR / UPI ID) are entered when confirming; proof of payment received can be attached there (§19).
+- **Quotations:** Send = assign number + download PDF in one step (§13).
 
 ### v1.2 (2026-10-10)
 
@@ -708,7 +714,15 @@ Created By / At
 
 - Σ credit notes on an invoice cannot exceed its grand total.
 - Issued credit notes reduce the invoice balance and Total Invoiced (§9.2).
-- If the client already paid more than the new balance, the excess becomes Client Credit, which can be applied to another invoice or refunded.
+- If the client already paid more than the new balance, the excess becomes Client Credit, which can be applied to another invoice or refunded. In practice the overpaid part of the invoice's payments is released (latest payments first) back to client credit when the credit note is issued.
+- **Tax follows the original invoice (v1.3):** the credit note copies the invoice's place of supply, supply type and GST applicability, and reverses tax at those rates (CGST + SGST or IGST). It never re-derives them from the client's current details.
+- **GST time limit (v1.3):** for a GST invoice, the credit note must be issued no later than **30 November following the end of the financial year** of the invoice (Section 34(2) CGST Act; the annual-return date if earlier). After that, tax cannot be reduced, so the app refuses to issue it.
+- **Contents (v1.3, CGST Rule 53(1A)):** "Credit Note" title; number ≤ 16 characters, unique per financial year; date; supplier and recipient name, address and GSTIN; the original invoice number **and date**; taxable value, tax rate and tax amount; signature. The recipient details are copied from the invoice's billing snapshot.
+- **Dates:** the credit note date cannot be before the invoice date.
+- **Cancelling:** an issued credit note can be cancelled (the invoice balance goes back up); an invoice with issued credit notes cannot be cancelled until they are.
+- One credit note references one invoice in V1. (GST allows one credit note for several invoices since 01-01-2021; add if needed.)
+
+Sources: Section 34 CGST Act; CGST Rule 53(1A); Tally and TaxGuru guides on GST credit notes; Zoho Books (credit notes applied to invoices or refunded).
 
 ---
 
