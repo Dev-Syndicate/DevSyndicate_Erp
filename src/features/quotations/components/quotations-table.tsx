@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import { EmptyRow } from "@/components/list-controls";
+import { StatusTile } from "@/components/status-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listQuotations } from "@/features/quotations/queries";
 import { displayStatus } from "@/features/quotations/schema";
 import { formatDate, istToday } from "@/lib/dates";
 import { formatINR } from "@/lib/money";
-import { QuotationStatusBadge } from "./quotation-status-badge";
+import { QuotationStatusBadge, quotationStatusClass } from "./quotation-status-badge";
 
 type Rows = Awaited<ReturnType<typeof listQuotations>>["rows"];
 
@@ -40,9 +41,12 @@ export function QuotationsTable({ rows }: { rows: Rows }) {
             {rows.map((q) => (
               <TableRow key={q.id}>
                 <TableCell className="font-mono text-sm">
-                  <Link href={`/finance/quotations/${q.id}`} className="hover:underline">
-                    {quotationLabel(q)}
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <StatusTile icon={FileText} className={quotationStatusClass(displayStatus(q, today))} />
+                    <Link href={`/finance/quotations/${q.id}`} className="hover:underline">
+                      {quotationLabel(q)}
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell className="font-medium">
                   <Link href={`/finance/quotations/${q.id}`} className="hover:underline">

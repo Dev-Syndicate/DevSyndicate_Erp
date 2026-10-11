@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ReceiptText } from "lucide-react";
 import { EmptyRow } from "@/components/list-controls";
+import { StatusTile } from "@/components/status-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listInvoices } from "@/features/invoices/queries";
 import { displayStatus, invoiceLabel } from "@/features/invoices/schema";
 import { formatDate, istToday } from "@/lib/dates";
 import { formatINR } from "@/lib/money";
-import { InvoiceStatusBadge } from "./invoice-status-badge";
+import { InvoiceStatusBadge, invoiceStatusClass } from "./invoice-status-badge";
 
 type Rows = Awaited<ReturnType<typeof listInvoices>>["rows"];
 
@@ -35,9 +36,12 @@ export function InvoicesTable({ rows }: { rows: Rows }) {
             {rows.map((inv) => (
               <TableRow key={inv.id}>
                 <TableCell className="font-mono text-sm">
-                  <Link href={`/finance/invoices/${inv.id}`} className="hover:underline">
-                    {invoiceLabel(inv)}
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <StatusTile icon={ReceiptText} className={invoiceStatusClass(displayStatus(inv, today))} />
+                    <Link href={`/finance/invoices/${inv.id}`} className="hover:underline">
+                      {invoiceLabel(inv)}
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell className="font-medium">
                   <Link href={`/finance/invoices/${inv.id}`} className="hover:underline">

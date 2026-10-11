@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ReceiptText } from "lucide-react";
 import { EmptyRow } from "@/components/list-controls";
+import { StatusTile } from "@/components/status-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listCreditNotes } from "@/features/credit-notes/queries";
 import { creditNoteLabel, type CreditNoteStatus } from "@/features/credit-notes/schema";
 import { formatDate } from "@/lib/dates";
 import { formatINR } from "@/lib/money";
-import { CreditNoteStatusBadge } from "./credit-note-status-badge";
+import { CreditNoteStatusBadge, creditNoteStatusClass } from "./credit-note-status-badge";
 
 type Rows = Awaited<ReturnType<typeof listCreditNotes>>["rows"];
 
@@ -34,9 +35,12 @@ export function CreditNotesTable({ rows }: { rows: Rows }) {
             {rows.map((cn) => (
               <TableRow key={cn.id}>
                 <TableCell className="font-mono text-sm">
-                  <Link href={`/finance/credit-notes/${cn.id}`} className="hover:underline">
-                    {creditNoteLabel(cn)}
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <StatusTile icon={ReceiptText} className={creditNoteStatusClass(cn.status as CreditNoteStatus)} />
+                    <Link href={`/finance/credit-notes/${cn.id}`} className="hover:underline">
+                      {creditNoteLabel(cn)}
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell className="font-medium">{cn.clients?.company_name}</TableCell>
                 <TableCell className="font-mono text-sm">

@@ -8,6 +8,9 @@ const STYLES: Record<PaymentStatus, { label: string; className: string }> = {
   cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground" },
 };
 
+/** Badge colours for a status, reused by the list row icon. */
+export const paymentStatusClass = (status: PaymentStatus) => STYLES[status].className;
+
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   const { label, className } = STYLES[status];
   return <Badge className={className}>{label}</Badge>;

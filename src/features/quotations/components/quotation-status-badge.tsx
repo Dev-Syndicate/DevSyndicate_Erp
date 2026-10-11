@@ -14,6 +14,9 @@ const STYLES: Record<QuotationStatus, { label: string; className: string }> = {
   superseded: { label: "Superseded", className: "bg-muted text-muted-foreground" },
 };
 
+/** Badge colours for a status, reused by the list row icon. */
+export const quotationStatusClass = (status: QuotationStatus) => STYLES[status].className;
+
 export function QuotationStatusBadge({ status }: { status: QuotationStatus }) {
   const { label, className } = STYLES[status];
   return <Badge className={className}>{label}</Badge>;

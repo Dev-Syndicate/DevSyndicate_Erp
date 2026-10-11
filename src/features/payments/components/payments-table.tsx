@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { IndianRupee } from "lucide-react";
 import { EmptyRow } from "@/components/list-controls";
+import { StatusTile } from "@/components/status-tile";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +10,7 @@ import { paymentLabel, type PaymentStatus } from "@/features/payments/schema";
 import { methodLabel } from "@/lib/payment-methods";
 import { formatDate } from "@/lib/dates";
 import { formatINR, paise } from "@/lib/money";
-import { PaymentStatusBadge } from "./payment-status-badge";
+import { PaymentStatusBadge, paymentStatusClass } from "./payment-status-badge";
 
 type Rows = Awaited<ReturnType<typeof listPayments>>["rows"];
 
@@ -36,9 +37,12 @@ export function PaymentsTable({ rows }: { rows: Rows }) {
             {rows.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-mono text-sm">
-                  <Link href={`/finance/payments/${p.id}`} className="hover:underline">
-                    {paymentLabel(p)}
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <StatusTile icon={IndianRupee} className={paymentStatusClass(p.status as PaymentStatus)} />
+                    <Link href={`/finance/payments/${p.id}`} className="hover:underline">
+                      {paymentLabel(p)}
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell className="font-medium">
                   <Link href={`/finance/payments/${p.id}`} className="hover:underline">
