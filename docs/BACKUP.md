@@ -41,7 +41,9 @@ GitHub → **Actions → Nightly backup → Run workflow** (or `gh workflow run 
 
 ## Restore
 
-Do this once as a drill before relying on the app (PRD §34), into a **new, empty** Supabase project so the live data is untouched.
+**Drill:** GitHub → Actions → **Restore drill** → Run workflow restores the latest backup into a throwaway Supabase on GitHub's server and prints row counts and dashboard totals to compare with the live app. Run it after big database changes.
+
+A real restore goes into a **new, empty** Supabase project (or the same one after a disaster):
 
 1. **Download** the backup file from Google Drive (or an older version via Manage versions).
 2. **Decrypt and unpack** (Git Bash has `gpg` and `tar`):
@@ -51,8 +53,11 @@ Do this once as a drill before relying on the app (PRD §34), into a **new, empt
    This creates a `backup/` folder: `roles.sql`, `schema.sql`, `data.sql`, `storage/`, `created_at.txt`.
 3. **Restore the database** into the target project (its Session pooler connection string), with `psql` from PostgreSQL 17:
    ```bash
+   # Supabase's own role settings; a "permission denied" line here is expected and harmless.
+   psql --file backup/roles.sql --dbname "<target connection string>"
+   # Your schema and data, all or nothing.
    psql --single-transaction --variable ON_ERROR_STOP=1 \
-     --file backup/roles.sql --file backup/schema.sql \
+     --file backup/schema.sql \
      --command 'SET session_replication_role = replica' \
      --file backup/data.sql --dbname "<target connection string>"
    ```

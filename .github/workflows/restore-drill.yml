@@ -41,8 +41,10 @@ jobs:
 
       - name: Restore the database
         run: |
+          # roles.sql holds only Supabase's own role settings; some are reserved to the platform, so best effort.
+          psql --quiet --file backup/roles.sql --dbname "$LOCAL_DB" > /dev/null
           psql --single-transaction --variable ON_ERROR_STOP=1 --quiet \
-            --file backup/roles.sql --file backup/schema.sql \
+            --file backup/schema.sql \
             --command 'SET session_replication_role = replica' \
             --file backup/data.sql --dbname "$LOCAL_DB" > /dev/null
 
