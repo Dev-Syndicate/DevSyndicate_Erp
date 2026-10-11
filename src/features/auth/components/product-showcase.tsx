@@ -63,12 +63,9 @@ function Floating({ className, delay, children }: { className: string; delay: nu
 export function ProductShowcase() {
   return (
     <div aria-hidden className="relative hidden flex-col items-center justify-center gap-14 overflow-hidden border-l bg-muted px-14 py-12 select-none lg:flex">
-      <div className="absolute -top-32 -right-32 size-112 rounded-full bg-success/10 blur-3xl motion-safe:animate-pulse" />
-      <div className="absolute -bottom-40 -left-32 size-112 rounded-full bg-info/10 blur-3xl motion-safe:animate-pulse" />
-
       <div className="relative max-w-lg text-center duration-700 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4">
         <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-success" />
+          <ShieldCheck className="size-3.5" />
           Built for Indian GST
         </span>
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-balance">From quotation to payment, in one place.</h2>
@@ -103,16 +100,16 @@ export function ProductShowcase() {
               ))}
             </div>
 
-            <div className="relative flex flex-col items-center justify-center gap-2 bg-linear-to-b from-success/10 to-transparent">
+            <div className="relative flex flex-col items-center justify-center gap-2">
               <span className="absolute top-2.5 left-3 flex items-center gap-1 rounded-full border bg-background px-2 py-0.5 text-[10px] text-muted-foreground">
                 <ShieldCheck className="size-3" />
                 GST ready · Audit logged
               </span>
 
-              <div className="relative rounded-full bg-success/10 p-2.5">
-                <span className="absolute inset-0 rounded-full bg-success/10 motion-safe:animate-ping animation-duration-[2.5s]" />
-                <div className="relative rounded-full bg-success/15 p-2.5">
-                  <div className="flex size-14 items-center justify-center rounded-full border bg-background text-success">
+              <div className="relative rounded-full bg-foreground/5 p-2.5">
+                <span className="absolute inset-0 rounded-full bg-foreground/5 motion-safe:animate-ping animation-duration-[2.5s]" />
+                <div className="relative rounded-full bg-foreground/10 p-2.5">
+                  <div className="flex size-14 items-center justify-center rounded-full border bg-background">
                     <ReceiptText className="size-6" />
                   </div>
                 </div>
@@ -185,7 +182,7 @@ export function ProductShowcase() {
             <p className="font-semibold tabular-nums">₹4,82,000</p>
             <div className="mt-2 flex h-10 items-end gap-1">
               {BARS.map((h, i) => (
-                <div key={i} className="flex-1 origin-bottom rounded-t-sm bg-chart-1 motion-safe:animate-grow" style={{ height: `${h}%`, animationDelay: `${1400 + i * 100}ms` }} />
+                <div key={i} className="flex-1 origin-bottom rounded-t-sm bg-foreground/80 motion-safe:animate-grow" style={{ height: `${h}%`, animationDelay: `${1400 + i * 100}ms` }} />
               ))}
             </div>
           </div>
