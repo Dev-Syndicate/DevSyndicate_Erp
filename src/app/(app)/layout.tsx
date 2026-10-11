@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/features/auth/queries";
+import { BackupStatus } from "@/features/settings/components/backup-status";
 
 async function UserSidebar() {
   return <AppSidebar user={await getCurrentUser()} />;
@@ -27,7 +28,10 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           <Suspense>
             <AppBreadcrumb />
           </Suspense>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <Suspense>
+              <BackupStatus />
+            </Suspense>
             <ThemeToggle />
           </div>
         </header>

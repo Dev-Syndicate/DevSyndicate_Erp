@@ -36,3 +36,16 @@ export async function getBrandingUrls(settings: { logo_path: string | null; sign
   const [logo, signature] = await Promise.all([sign(settings.logo_path), sign(settings.signature_path)]);
   return { logo, signature };
 }
+
+/** Latest nightly backup run (PRD §34); null when none is visible (no settings.view, or never ran). */
+export async function getLastBackup() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("backup_runs")
+    .select("status, finished_at, size_bytes, files, run_url")
+    .order("finished_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data && { ...data, ageHours: (Date.now() - Date.parse(data.finished_at)) / 3_600_000 };
+}

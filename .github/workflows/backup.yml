@@ -35,6 +35,7 @@ jobs:
           test -n "$PASS"
           echo "::add-mask::$PASS"
           DB_URL="postgresql://postgres.hnwmgeplzdyhdjfqhymo:${PASS}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
+          echo "POOLER_URL=$DB_URL" >> "$GITHUB_ENV" # for the status step; the password stays masked
           mkdir -p backup
           supabase db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
           supabase db dump --db-url "$DB_URL" -f backup/schema.sql
@@ -69,3 +70,15 @@ jobs:
           printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
           rclone copyto "$BACKUP_FILE" "gdrive:DevSyndicate Backups/$BACKUP_FILE"
           rclone lsl "gdrive:DevSyndicate Backups"
+
+      # Shown in the app's top bar (backup indicator). Runs even when an earlier step failed.
+      - name: Record the result in the app
+        if: always() && env.POOLER_URL != ''
+        env:
+          STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          SIZE=$(stat -c %s "$BACKUP_FILE" 2>/dev/null || echo 0)
+          FILES=$(find backup/storage -type f 2>/dev/null | wc -l)
+          psql "$POOLER_URL" -v ON_ERROR_STOP=1 -q -c "insert into public.backup_runs (organization_id, status, size_bytes, files, run_url)
+            select id, '$STATUS', $SIZE, $FILES, '$RUN_URL' from public.organizations"

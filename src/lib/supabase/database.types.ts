@@ -61,6 +61,44 @@ export type Database = {
           },
         ]
       }
+      backup_runs: {
+        Row: {
+          files: number
+          finished_at: string
+          id: string
+          organization_id: string
+          run_url: string
+          size_bytes: number
+          status: string
+        }
+        Insert: {
+          files?: number
+          finished_at?: string
+          id?: string
+          organization_id: string
+          run_url?: string
+          size_bytes?: number
+          status: string
+        }
+        Update: {
+          files?: number
+          finished_at?: string
+          id?: string
+          organization_id?: string
+          run_url?: string
+          size_bytes?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backup_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_contacts: {
         Row: {
           client_id: string
