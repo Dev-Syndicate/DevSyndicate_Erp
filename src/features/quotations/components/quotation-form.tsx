@@ -162,11 +162,13 @@ export function QuotationForm({ clients, taxRates, settings, quotation }: Props)
             totals={totals}
             supplyType={supplyType}
             showTax={showTax}
-            discountType={form.discount_type}
-            discountValue={form.discount_value}
-            discountError={err("discount_value")}
-            onDiscountValue={(v) => set("discount_value", v)}
-            onDiscountType={(t) => set("discount_type", t)}
+            discount={{
+              type: form.discount_type,
+              value: form.discount_value,
+              error: err("discount_value"),
+              onValue: (v) => set("discount_value", v),
+              onType: (t) => set("discount_type", t),
+            }}
           />
         </div>
 

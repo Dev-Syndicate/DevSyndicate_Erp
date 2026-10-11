@@ -254,11 +254,13 @@ export function LineItemsCard(props: {
   showSac: boolean;
   /** Quotations: optional "Timeline" column (e.g. "2 days"). */
   showTimeline?: boolean;
+  /** Credit notes: no discounts (the credit note itself is the reduction, PRD §18). */
+  showDiscount?: boolean;
   taxRates: TaxRate[];
   /** Errors keyed like "items.0.quantity". */
   errors: Record<string, string>;
 }) {
-  const { items, setItems, totals, showTax, showSac, showTimeline, taxRates, errors } = props;
+  const { items, setItems, totals, showTax, showSac, showTimeline, showDiscount = true, taxRates, errors } = props;
   const setItem = (k: string, patch: Partial<LineItem>) => setItems((list) => list.map((i) => (i.key === k ? { ...i, ...patch } : i)));
   // Services are billed per line (qty 1), like the PDF; Qty shows only for documents that already use it (e.g. partial-line invoices).
   const [showQty] = useState(() => items.some((i) => Number(i.quantity) !== 1));
@@ -283,7 +285,7 @@ export function LineItemsCard(props: {
               {showSac && <TableHead className="w-24">SAC</TableHead>}
               {showQty && <TableHead className="w-24">Qty</TableHead>}
               <TableHead className="w-32">Unit price</TableHead>
-              <TableHead className="w-44">Discount</TableHead>
+              {showDiscount && <TableHead className="w-44">Discount</TableHead>}
               {showTax && <TableHead className="w-32">Tax</TableHead>}
               <TableHead className="w-32 text-right">Amount</TableHead>
               <TableHead className="w-12" />
@@ -319,19 +321,21 @@ export function LineItemsCard(props: {
                     <Input aria-label={`Line ${i + 1} unit price`} value={item.unit_price} onChange={(ev) => setItem(item.key, { unit_price: ev.target.value })} inputMode="decimal" placeholder="0.00" className="text-right tabular-nums" aria-invalid={!!e("unit_price")} />
                     <FieldError className="mt-1">{e("unit_price")}</FieldError>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <DiscountInput
-                        label={`Line ${i + 1} discount`}
-                        value={item.discount_value}
-                        type={item.discount_type}
-                        invalid={!!e("discount_value")}
-                        onValue={(v) => setItem(item.key, { discount_value: v })}
-                        onType={(t) => setItem(item.key, { discount_type: t })}
-                      />
-                    </div>
-                    <FieldError className="mt-1">{e("discount_value")}</FieldError>
-                  </TableCell>
+                  {showDiscount && (
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <DiscountInput
+                          label={`Line ${i + 1} discount`}
+                          value={item.discount_value}
+                          type={item.discount_type}
+                          invalid={!!e("discount_value")}
+                          onValue={(v) => setItem(item.key, { discount_value: v })}
+                          onType={(t) => setItem(item.key, { discount_type: t })}
+                        />
+                      </div>
+                      <FieldError className="mt-1">{e("discount_value")}</FieldError>
+                    </TableCell>
+                  )}
                   {showTax && (
                     <TableCell>
                       <Select value={item.tax_rate} onValueChange={(v) => setItem(item.key, { tax_rate: v })}>
@@ -375,33 +379,27 @@ export function SummaryCard(props: {
   totals: DocumentTotals;
   supplyType: SupplyType;
   showTax: boolean;
-  discountType: DiscountType;
-  discountValue: string;
-  discountError?: string;
-  onDiscountValue: (value: string) => void;
-  onDiscountType: (type: DiscountType) => void;
+  /** Document discount input; omitted on credit notes. */
+  discount?: { type: DiscountType; value: string; error?: string; onValue: (value: string) => void; onType: (type: DiscountType) => void };
 }) {
-  const { totals, supplyType, showTax } = props;
+  const { totals, supplyType, showTax, discount } = props;
   return (
     <Card>
       <CardHeader>
         <CardTitle>Summary</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 text-sm">
-        <Row label="Subtotal" value={totals.subtotal} />
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-muted-foreground">Discount</span>
-          <div className="flex w-40 gap-1">
-            <DiscountInput
-              label="Document discount"
-              value={props.discountValue}
-              type={props.discountType}
-              invalid={!!props.discountError}
-              onValue={props.onDiscountValue}
-              onType={props.onDiscountType}
-            />
-          </div>
-        </div>
+        {discount && (
+          <>
+            <Row label="Subtotal" value={totals.subtotal} />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Discount</span>
+              <div className="flex w-40 gap-1">
+                <DiscountInput label="Document discount" value={discount.value} type={discount.type} invalid={!!discount.error} onValue={discount.onValue} onType={discount.onType} />
+              </div>
+            </div>
+          </>
+        )}
         {totals.discount > 0n && <Row label="Discount amount" value={-totals.discount} />}
         <Row label="Taxable value" value={totals.taxable} />
         {supplyType === "intra" && showTax && (

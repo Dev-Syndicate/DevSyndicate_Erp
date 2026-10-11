@@ -131,6 +131,7 @@ export function CreditNoteForm({ invoice, taxRates, settings, creditNote }: Prop
           totals={totals}
           showTax={showTax}
           showSac={settings?.show_sac ?? false}
+          showDiscount={false}
           taxRates={taxRates}
           errors={errors}
         />
@@ -151,11 +152,6 @@ export function CreditNoteForm({ invoice, taxRates, settings, creditNote }: Prop
             totals={totals}
             supplyType={supplyType}
             showTax={showTax}
-            discountType={form.discount_type}
-            discountValue={form.discount_value}
-            discountError={err("discount_value")}
-            onDiscountValue={(v) => set("discount_value", v)}
-            onDiscountType={(t) => set("discount_type", t)}
           />
         </div>
 

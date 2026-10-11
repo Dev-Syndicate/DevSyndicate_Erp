@@ -70,7 +70,13 @@ src/
 - **Do not add `Co-Authored-By` lines or any AI/Claude attribution** to commit messages or PR descriptions.
 - Do not add "Generated with Claude Code" footers.
 
-### 5. Code style
+### 5. Business logic first
+
+- Before building or changing any feature, field or column, research how it works in practice: Indian GST law (CGST Act / Rules) and how Zoho Books, Tally or QuickBooks handle it.
+- Share a short plan with the findings and sources, update `docs/PRD.md` if the logic differs, then build.
+- Answer "do we need X?" with researched facts and sources, not opinion.
+
+### 6. Code style
 
 - Keep changes minimal (ponytail): no unrequested abstractions, options or "for later" code.
 - Money: never use JS floats for amounts. Follow PRD §8–§9 (numeric(14,2) in DB, decimal/paise in code).

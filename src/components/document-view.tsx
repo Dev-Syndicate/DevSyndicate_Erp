@@ -41,7 +41,9 @@ const discount = (type: string, value: number) => (value > 0 ? (type === "percen
 /** `showSac`: company setting "Show SAC codes". */
 export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[]; showTax: boolean; showSac: boolean }) {
   const showTimeline = items.some((i) => i.timeline);
+  // Columns appear only when used, as on the PDF.
   const showQty = items.some((i) => i.quantity !== 1);
+  const showDiscount = items.some((i) => i.discount_value > 0);
   return (
     <Card>
       <CardContent>
@@ -53,9 +55,9 @@ export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[];
               {showTimeline && <TableHead>Timeline</TableHead>}
               {showSac && <TableHead>SAC</TableHead>}
               {showQty && <TableHead className="text-right">Qty</TableHead>}
-              <TableHead className="text-right">Unit price</TableHead>
-              <TableHead className="text-right">Discount</TableHead>
-              <TableHead className="text-right">Taxable</TableHead>
+              {showQty && <TableHead className="text-right">Unit price</TableHead>}
+              {showDiscount && <TableHead className="text-right">Discount</TableHead>}
+              {showTax && <TableHead className="text-right">Taxable</TableHead>}
               {showTax && <TableHead className="text-right">Tax</TableHead>}
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
@@ -68,9 +70,9 @@ export function DocumentItemsTable({ items, showTax, showSac }: { items: Item[];
                 {showTimeline && <TableCell>{i.timeline}</TableCell>}
                 {showSac && <TableCell className="font-mono text-xs">{i.sac_code}</TableCell>}
                 {showQty && <TableCell className="text-right tabular-nums">{i.quantity}</TableCell>}
-                <TableCell className="text-right tabular-nums">{formatINR(i.unit_price)}</TableCell>
-                <TableCell className="text-right tabular-nums">{discount(i.discount_type, i.discount_value)}</TableCell>
-                <TableCell className="text-right tabular-nums">{formatINR(i.taxable)}</TableCell>
+                {showQty && <TableCell className="text-right tabular-nums">{formatINR(i.unit_price)}</TableCell>}
+                {showDiscount && <TableCell className="text-right tabular-nums">{discount(i.discount_type, i.discount_value)}</TableCell>}
+                {showTax && <TableCell className="text-right tabular-nums">{formatINR(i.taxable)}</TableCell>}
                 {showTax && (
                   <TableCell className="text-right tabular-nums">
                     {formatINR(paise(i.cgst) + paise(i.sgst) + paise(i.igst))}
