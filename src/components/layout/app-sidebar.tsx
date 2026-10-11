@@ -113,11 +113,6 @@ export function AppSidebar({ user }: { user: CurrentUser | null }) {
 
       {user && (
         <SidebarFooter>
-          {!user.isActive && (
-            <p className="px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-              Your account has no access yet. Ask an administrator.
-            </p>
-          )}
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>

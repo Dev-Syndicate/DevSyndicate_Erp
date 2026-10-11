@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { SidebarSkeleton } from "@/components/page-skeletons";
 import { AppBreadcrumb } from "@/components/layout/app-breadcrumb";
 import { AppSidebar } from "@/components/layout/app-sidebar";
@@ -9,7 +10,10 @@ import { getCurrentUser } from "@/features/auth/queries";
 import { BackupStatus } from "@/features/settings/components/backup-status";
 
 async function UserSidebar() {
-  return <AppSidebar user={await getCurrentUser()} />;
+  const user = await getCurrentUser();
+  // Deactivated while signed in: sign out and explain on the login page.
+  if (user && !user.isActive) redirect("/auth/inactive");
+  return <AppSidebar user={user} />;
 }
 
 // shortcut: sidebar always starts open; read the "sidebar_state" cookie (inside <Suspense>) if users want it remembered.

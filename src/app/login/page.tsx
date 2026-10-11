@@ -8,9 +8,16 @@ import { ProductShowcase } from "@/features/auth/components/product-showcase";
 
 export const metadata: Metadata = { title: "Sign in · DevSyndicate ERP" };
 
-/** Shown when an invite / password link was already used or has expired (from /auth/confirm). */
+/** Expired invite / password link (from /auth/confirm) or an account deactivated while signed in (from /auth/inactive). */
 async function LinkNotice({ searchParams }: { searchParams: PageProps<"/login">["searchParams"] }) {
-  const { link } = await searchParams;
+  const { link, account } = await searchParams;
+  if (account === "inactive") {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Your account is inactive. Ask your administrator to reactivate it.</AlertDescription>
+      </Alert>
+    );
+  }
   if (link !== "expired") return null;
   return (
     <Alert>

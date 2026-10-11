@@ -6,15 +6,24 @@ import { createClient } from "@/lib/supabase/server";
 
 export type SignInState = { error?: string; email?: string };
 
+const INACTIVE_MESSAGE = "Your account is inactive. Ask your administrator to reactivate it.";
+
 export async function signIn(_prev: SignInState, formData: FormData): Promise<SignInState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   if (!email || !password) return { error: "Enter your email and password.", email };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   // One message for every failure, so the form doesn't reveal which emails exist.
   if (error) return { error: "Invalid email or password.", email };
+
+  // Deactivated users (PRD §6) keep their login but lose access; say so instead of opening an empty app.
+  const { data: profile } = await supabase.from("profiles").select("is_active").eq("id", data.user.id).single();
+  if (!profile?.is_active) {
+    await supabase.auth.signOut();
+    return { error: INACTIVE_MESSAGE, email };
+  }
 
   redirect("/");
 }
