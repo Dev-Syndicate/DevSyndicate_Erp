@@ -65,6 +65,7 @@ src/
 
 - Build all UI from shadcn/ui components (`src/components/ui`). Add missing ones with the shadcn CLI; do not hand-roll a button, dialog, table, form, etc.
 - Icons: `lucide-react`.
+- Dates: `DatePicker` from `@/components/date-picker` (shadcn Calendar in a Popover), never `<Input type="date">`.
 - Check the current shadcn docs (https://ui.shadcn.com/docs) before adding or upgrading components.
 
 ### 4. Git commits

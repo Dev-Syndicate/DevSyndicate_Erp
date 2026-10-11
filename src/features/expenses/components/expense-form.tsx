@@ -13,6 +13,7 @@ import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLab
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { saveExpense } from "@/features/expenses/actions";
 import { expenseSchema, type ExpenseInput } from "@/features/expenses/schema";
 import { istToday } from "@/lib/dates";
@@ -121,7 +122,7 @@ export function ExpenseForm({ categories, vendors, gstRegistered, organizationId
             <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Field data-invalid={!!err("expense_date")}>
                 <FieldLabel htmlFor="expense_date">Date paid</FieldLabel>
-                <Input id="expense_date" type="date" value={form.expense_date} max={istToday()} onChange={(e) => set("expense_date", e.target.value)} aria-invalid={!!err("expense_date")} />
+                <DatePicker id="expense_date" value={form.expense_date} max={istToday()} onChange={(v) => set("expense_date", v)} aria-invalid={!!err("expense_date")} />
                 <FieldError>{err("expense_date")}</FieldError>
               </Field>
               <Field data-invalid={!!err("category_id")}>

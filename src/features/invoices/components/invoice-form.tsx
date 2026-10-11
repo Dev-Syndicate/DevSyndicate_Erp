@@ -22,9 +22,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { saveInvoice } from "@/features/invoices/actions";
 import { invoiceSchema, type InvoiceInput } from "@/features/invoices/schema";
 import { addDays, istToday } from "@/lib/dates";
@@ -123,11 +123,10 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
               />
               <Field>
                 <FieldLabel htmlFor="invoice_date">Invoice date</FieldLabel>
-                <Input
+                <DatePicker
                   id="invoice_date"
-                  type="date"
                   value={form.invoice_date}
-                  onChange={(e) => setForm((f) => ({ ...f, invoice_date: e.target.value, due_date: e.target.value && f.due_date ? addDays(e.target.value, termsDays(client)) : f.due_date }))}
+                  onChange={(v) => setForm((f) => ({ ...f, invoice_date: v, due_date: v && f.due_date ? addDays(v, termsDays(client)) : f.due_date }))}
                 />
               </Field>
               <Field data-invalid={!!err("due_date")}>
@@ -140,7 +139,7 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
                   />
                 </div>
                 {form.due_date !== "" ? (
-                  <Input id="due_date" type="date" value={form.due_date} onChange={(e) => set("due_date", e.target.value)} aria-invalid={!!err("due_date")} />
+                  <DatePicker id="due_date" value={form.due_date} min={form.invoice_date} onChange={(v) => set("due_date", v)} aria-invalid={!!err("due_date")} />
                 ) : (
                   <FieldDescription>No due date: not printed and never shown as overdue.</FieldDescription>
                 )}

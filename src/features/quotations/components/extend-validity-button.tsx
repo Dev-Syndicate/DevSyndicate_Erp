@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/date-picker";
 import { extendQuotationValidity } from "@/features/quotations/actions";
 import type { FormState } from "@/lib/forms";
 
@@ -44,7 +44,7 @@ export function ExtendValidityButton({ id, validUntil }: { id: string; validUnti
         <form action={action}>
           <Field data-invalid={!!state.error}>
             <FieldLabel htmlFor="valid_until">Valid until</FieldLabel>
-            <Input id="valid_until" name="valid_until" type="date" defaultValue={validUntil} required aria-invalid={!!state.error} />
+            <DatePicker id="valid_until" name="valid_until" defaultValue={validUntil} aria-invalid={!!state.error} />
             <FieldError>{state.error}</FieldError>
           </Field>
           <DialogFooter className="mt-6">

@@ -12,6 +12,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { saveOwnerTransaction } from "@/features/owner/actions";
 import { OWNER_KINDS, ownerTransactionSchema, type OwnerTransactionInput } from "@/features/owner/schema";
 import { istToday } from "@/lib/dates";
@@ -104,7 +105,7 @@ export function OwnerForm({ organizationId, transaction, proofs = [] }: Props) {
               </Field>
               <Field data-invalid={!!err("txn_date")}>
                 <FieldLabel htmlFor="txn_date">Date</FieldLabel>
-                <Input id="txn_date" type="date" value={form.txn_date} max={istToday()} onChange={(e) => set("txn_date", e.target.value)} aria-invalid={!!err("txn_date")} />
+                <DatePicker id="txn_date" value={form.txn_date} max={istToday()} onChange={(v) => set("txn_date", v)} aria-invalid={!!err("txn_date")} />
                 <FieldError>{err("txn_date")}</FieldError>
               </Field>
               <Field data-invalid={!!err("amount")}>

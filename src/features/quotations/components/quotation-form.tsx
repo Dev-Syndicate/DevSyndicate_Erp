@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { saveQuotation } from "@/features/quotations/actions";
 import { quotationSchema, type QuotationInput } from "@/features/quotations/schema";
 import { addDays, istToday } from "@/lib/dates";
@@ -119,11 +120,11 @@ export function QuotationForm({ clients, taxRates, settings, quotation }: Props)
               </Field>
               <Field>
                 <FieldLabel htmlFor="quotation_date">Quotation date</FieldLabel>
-                <Input id="quotation_date" type="date" value={form.quotation_date} onChange={(e) => set("quotation_date", e.target.value)} />
+                <DatePicker id="quotation_date" value={form.quotation_date} onChange={(v) => set("quotation_date", v)} />
               </Field>
               <Field data-invalid={!!err("valid_until")}>
                 <FieldLabel htmlFor="valid_until">Valid until</FieldLabel>
-                <Input id="valid_until" type="date" value={form.valid_until} onChange={(e) => set("valid_until", e.target.value)} aria-invalid={!!err("valid_until")} />
+                <DatePicker id="valid_until" value={form.valid_until} min={form.quotation_date} onChange={(v) => set("valid_until", v)} aria-invalid={!!err("valid_until")} />
                 <FieldError>{err("valid_until")}</FieldError>
               </Field>
               <PlaceOfSupplyField client={client} value={placeOfSupply} supplyType={supplyType} gst={gst} custom={form.place_of_supply !== ""} onChange={(v) => set("place_of_supply", v)} />

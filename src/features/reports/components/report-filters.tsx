@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/date-picker";
 import type { ReportName } from "@/features/reports/utils";
 import { istToday } from "@/lib/dates";
 import { PERIODS, periodRange } from "@/lib/periods";
@@ -27,11 +27,11 @@ export function ReportFilters({ params, clients, categories }: { params: Params;
             <>
               <Field className="w-40">
                 <FieldLabel htmlFor="from">From</FieldLabel>
-                <Input id="from" name="from" type="date" defaultValue={params.from} />
+                <DatePicker id="from" name="from" defaultValue={params.from} />
               </Field>
               <Field className="w-40">
                 <FieldLabel htmlFor="to">To</FieldLabel>
-                <Input id="to" name="to" type="date" defaultValue={params.to} />
+                <DatePicker id="to" name="to" defaultValue={params.to} />
               </Field>
             </>
           )}

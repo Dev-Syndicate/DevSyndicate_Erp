@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/date-picker";
 import { paymentAction } from "@/features/payments/actions";
 import { referenceLabel } from "@/lib/payment-methods";
 import { uploadDocument } from "@/lib/documents/upload";
@@ -63,7 +64,7 @@ export function ConfirmPaymentButton(props: { id: string; organizationId: string
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="confirm-date">Date received</FieldLabel>
-            <Input id="confirm-date" type="date" value={date} max={istToday()} onChange={(e) => setDate(e.target.value)} className="w-48" />
+            <DatePicker id="confirm-date" value={date} max={istToday()} onChange={setDate} className="w-48" />
           </Field>
           {label && (
             <Field>

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { savePayment } from "@/features/payments/actions";
 import { paymentSchema, type PaymentInput } from "@/features/payments/schema";
 import { METHODS } from "@/lib/payment-methods";
@@ -195,7 +196,7 @@ export function PaymentForm({ clients, invoices, canRefund, payment, presetInvoi
               </Field>
               <Field>
                 <FieldLabel htmlFor="payment_date">Date</FieldLabel>
-                <Input id="payment_date" type="date" value={form.payment_date} onChange={(e) => set("payment_date", e.target.value)} />
+                <DatePicker id="payment_date" value={form.payment_date} max={istToday()} onChange={(v) => set("payment_date", v)} />
               </Field>
               <Field data-invalid={!!err("amount")}>
                 <FieldLabel htmlFor="amount">{receipt ? "Amount received (₹)" : "Amount refunded (₹)"}</FieldLabel>

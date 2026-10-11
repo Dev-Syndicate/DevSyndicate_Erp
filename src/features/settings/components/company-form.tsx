@@ -18,6 +18,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { updateCompanySettings } from "@/features/settings/actions";
 import { NumberingCard } from "@/features/settings/components/numbering-card";
 import type { FormState } from "@/lib/forms";
@@ -133,7 +134,11 @@ export function CompanyForm({ settings: s, taxRates, numbering, canEdit }: Props
                 </Select>
               </Field>
               {text("lut_number", "LUT number", { placeholder: "For export invoices" })}
-              {text("lut_valid_until", "LUT valid until", { type: "date" })}
+              <Field data-invalid={!!err.lut_valid_until}>
+                <FieldLabel htmlFor="lut_valid_until">LUT valid until</FieldLabel>
+                <DatePicker id="lut_valid_until" name="lut_valid_until" defaultValue={s.lut_valid_until ?? ""} clearable aria-invalid={!!err.lut_valid_until} />
+                <FieldError>{err.lut_valid_until}</FieldError>
+              </Field>
             </FieldGroup>
           </CardContent>
         </Card>
@@ -165,7 +170,11 @@ export function CompanyForm({ settings: s, taxRates, numbering, canEdit }: Props
           <CardContent>
             <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {text("opening_balance", "Opening balance (₹)", { inputMode: "decimal", className: "tabular-nums" })}
-              {text("opening_balance_date", "As of", { type: "date" })}
+              <Field data-invalid={!!err.opening_balance_date}>
+                <FieldLabel htmlFor="opening_balance_date">As of</FieldLabel>
+                <DatePicker id="opening_balance_date" name="opening_balance_date" defaultValue={s.opening_balance_date} aria-invalid={!!err.opening_balance_date} />
+                <FieldError>{err.opening_balance_date}</FieldError>
+              </Field>
             </FieldGroup>
           </CardContent>
         </Card>

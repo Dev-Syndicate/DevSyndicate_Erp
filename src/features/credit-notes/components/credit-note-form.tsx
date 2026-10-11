@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { saveCreditNote } from "@/features/credit-notes/actions";
 import { creditNoteSchema, type CreditNoteInput } from "@/features/credit-notes/schema";
 import { formatDate, istToday } from "@/lib/dates";
@@ -113,7 +114,7 @@ export function CreditNoteForm({ invoice, taxRates, settings, creditNote }: Prop
             <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Field>
                 <FieldLabel htmlFor="credit_note_date">Credit note date</FieldLabel>
-                <Input id="credit_note_date" type="date" value={form.credit_note_date} min={invoice.invoice_date} onChange={(e) => set("credit_note_date", e.target.value)} />
+                <DatePicker id="credit_note_date" value={form.credit_note_date} min={invoice.invoice_date} onChange={(v) => set("credit_note_date", v)} />
               </Field>
               <Field data-invalid={!!err("reason")} className="sm:col-span-2 lg:col-span-3">
                 <FieldLabel htmlFor="reason">Reason</FieldLabel>
