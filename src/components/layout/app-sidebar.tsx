@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, ChevronsUpDown, LogOut } from "lucide-react";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
@@ -52,9 +53,7 @@ export function AppSidebar({ user }: { user: CurrentUser | null }) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <brand.icon className="size-4" />
-                </div>
+                <BrandLogo />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{brand.name}</span>
                   <span className="truncate text-xs text-muted-foreground">{brand.product}</span>

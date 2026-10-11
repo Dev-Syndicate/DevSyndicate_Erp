@@ -1,5 +1,4 @@
 import {
-  Banknote,
   Building2,
   FolderOpen,
   LayoutDashboard,
@@ -55,7 +54,7 @@ export const navigation: NavItem[] = [
   },
 ];
 
-export const brand = { name: "DevSyndicate", product: "ERP", icon: Banknote };
+export const brand = { name: "DevSyndicate", product: "ERP", logo: "/logo.png" };
 
 /** Flat list of every routable nav entry, used to resolve page titles. */
 export const navRoutes = navigation.flatMap((item) => [item, ...(item.children ?? [])]);

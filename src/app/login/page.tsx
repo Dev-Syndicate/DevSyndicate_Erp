@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { brand } from "@/config/navigation";
 import { LoginForm } from "@/features/auth/components/login-form";
 
@@ -21,9 +22,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6">
       <div className="flex items-center gap-2 font-semibold">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <brand.icon className="size-4" />
-        </div>
+        <BrandLogo />
         {brand.name} {brand.product}
       </div>
       <Suspense>

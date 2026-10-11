@@ -58,7 +58,7 @@ src/
 - **Never** hard-code colors in components: no hex/rgb/oklch values, no Tailwind palette classes (`bg-blue-500`, `text-gray-600`), no inline `style={{ color }}`.
 - Need a new color? Add the variable to both `:root` and `.dark`, map it in `@theme inline`, then use the class.
 - Status colors: paid/success → `success`, overdue/error → `destructive`, pending/partial → `warning`, informational → `info`.
-- Branding text and icon come from `src/config/navigation.ts` (`brand`).
+- Branding text and logo come from `src/config/navigation.ts` (`brand`); the logo files (favicon, `public/logo.png`) are made from `DevSyndicateLogoRounded.png`.
 
 ### 3. UI: shadcn components only
 
