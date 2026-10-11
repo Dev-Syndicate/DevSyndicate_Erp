@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -24,7 +25,12 @@ export function LoginForm() {
               <Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required />
             </Field>
             <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <Link href="/forgot-password" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <Input id="password" name="password" type="password" autoComplete="current-password" required />
             </Field>
             {state.error && <FieldError>{state.error}</FieldError>}

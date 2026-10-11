@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./database.types";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/forgot-password"];
 // Invite / password links: open whether or not someone is signed in (the link signs its owner in).
 const LINK_PATHS = ["/auth/confirm"];
 

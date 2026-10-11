@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-/** One-time sign-in link to send by WhatsApp or email (Supabase's own email only reaches the account owner, PRD §6). */
+/** One-time sign-in link to copy and send by WhatsApp or email (PRD §6.1). */
 export function LinkResult({ link, email }: { link: string; email: string }) {
   return (
     <Field>
@@ -27,8 +27,7 @@ export function LinkResult({ link, email }: { link: string; email: string }) {
         </Button>
       </div>
       <FieldDescription>
-        Send it to them on WhatsApp or by email. It opens a page to set their password, works once and expires (1 hour unless changed in
-        Supabase). You can make a new one any time.
+        It opens a page to set their password, works once and expires in 24 hours. You can make a new one any time.
       </FieldDescription>
     </Field>
   );

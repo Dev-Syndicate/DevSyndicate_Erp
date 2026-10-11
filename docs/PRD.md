@@ -14,7 +14,7 @@
 
 ### v1.4 (2026-10-11)
 
-- **Users & roles:** invite by shareable one-time link (Supabase email only reaches the account owner), set-password page, Invited / Active / Inactive, role and permission editor; Super Admin role locked (§6.1).
+- **Users & roles:** invites emailed through Resend (devsyndicate.in) with a copyable one-time link, "Forgot password?", public sign-up disabled, set-password page, Invited / Active / Inactive, role and permission editor; Super Admin role locked (§6.1).
 - **Reports researched:** Revenue, Expenses, Profit, Outstanding, plus a Sales register and TDS report (what a CA needs for GSTR-1 and Form 26AS), GST summary when registered; Excel-friendly CSV (§27).
 - **Backups:** nightly encrypted backup to Google Drive, one file replaced each night with 30 days of Drive versions (§34).
 - **Dashboard researched:** "Net Cash Position" renamed **Net Profit (cash basis)**: it includes TDS, which never reaches the bank, so it is profit, not cash. Unpaid invoices are aged by days since the invoice date (due dates are optional). Period filter, monthly chart, TDS payable (§9.2, §10, §36).
@@ -334,12 +334,12 @@ Each authenticated user has a corresponding `profiles` record holding name, role
 
 ## 6.1 Invites and password links (v1.4, researched)
 
-Supabase's built-in email only delivers to members of the Supabase organization, at about 2 emails an hour ([Supabase SMTP](https://supabase.com/docs/guides/auth/auth-smtp)), so emailed invites and resets would not reach the team. Until custom SMTP is set up, links are **shared by the admin** instead (as in Zoho, the user then sets their own password — [Zoho users](https://www.zoho.com/en-de/books/help/settings/users.html)):
+Supabase's built-in email only delivers to members of the Supabase organization, at about 2 emails an hour ([Supabase SMTP](https://supabase.com/docs/guides/auth/auth-smtp)), so email goes through **Resend** from the verified domain `devsyndicate.in` (free: 3,000 emails a month, 100 a day). Supabase Auth uses Resend as its SMTP server (`smtp.resend.com`, sender `noreply@devsyndicate.in`, 30 emails an hour); the app sends invite emails through the Resend API (`RESEND_API_KEY`, server-only). Auth settings: site URL `https://erp.devsyndicate.in`, redirects allowed to it and `http://localhost:3000`, **public sign-up disabled**, links valid 24 hours. As in Zoho, the user sets their own password ([Zoho users](https://www.zoho.com/en-de/books/help/settings/users.html)):
 
 1. Settings → Users → **Invite user** (name, email, role). The database checks the inviter first (`check_invite`: `users.create`, the role exists, only a Super Admin invites a Super Admin, the email is new).
 2. The server creates the account and a **one-time link** with the service role (`generateLink`, no email sent, §32.3), then gives the role with the inviter's session (`activate_invited_user`).
-3. The admin copies the link and sends it (WhatsApp / email). Opening it verifies the token on `/auth/confirm` (`verifyOtp`), signs the user in and asks for a password (`/set-password`).
-4. Lost or expired link, or a forgotten password: **Manage → New invite link / Password link** makes a fresh one-time link (`check_user_link`, `users.update`). Links expire after the project's email OTP expiry (1 hour by default; Supabase → Authentication → Email allows up to 24 hours).
+3. The invite is **emailed** to the user, and the same link is shown to the admin to copy (e.g. for WhatsApp, or if the email fails). Opening it verifies the token on `/auth/confirm` (`verifyOtp`), signs the user in and asks for a password (`/set-password`).
+4. **Forgot password?** on the login page emails a reset link (Supabase recovery email, branded template, link to `/auth/confirm`); the page never says whether an email has an account. An admin can also make one: **Manage → New invite link / Password link** (`check_user_link`, `users.update`). Links work once and expire in 24 hours.
 
 Statuses: **Invited** (never signed in), **Active**, **Inactive**. Changing role or active status uses `update_user` (`users.update` / `users.deactivate`); the profile guard keeps the §32.4 rules (no changes to yourself, Super Admin only by a Super Admin, one active Super Admin). Admins do not see Super Admins in the list (§4.2).
 

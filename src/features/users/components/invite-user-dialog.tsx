@@ -17,6 +17,7 @@ export function InviteUserDialog({ roles }: { roles: Role[] }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ full_name: "", email: "", role_id: "" });
   const [link, setLink] = useState<string | null>(null);
+  const [emailed, setEmailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function reset(next: boolean) {
@@ -24,6 +25,7 @@ export function InviteUserDialog({ roles }: { roles: Role[] }) {
     if (!next) {
       setForm({ full_name: "", email: "", role_id: "" });
       setLink(null);
+      setEmailed(false);
     }
   }
 
@@ -36,9 +38,13 @@ export function InviteUserDialog({ roles }: { roles: Role[] }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{link ? "Invite created" : "Invite user"}</DialogTitle>
+          <DialogTitle>{link ? (emailed ? "Invite sent" : "Invite created") : "Invite user"}</DialogTitle>
           <DialogDescription>
-            {link ? `${form.full_name} can sign in once they open this link and set a password.` : "They get a one-time link to set their password."}
+            {link
+              ? emailed
+                ? `We emailed the invite to ${form.email}. You can also send them this link yourself.`
+                : `The email couldn't be sent, so send ${form.full_name} this link yourself.`
+              : "They get an email with a one-time link to set their password."}
           </DialogDescription>
         </DialogHeader>
         {link ? (
@@ -51,7 +57,10 @@ export function InviteUserDialog({ roles }: { roles: Role[] }) {
               startTransition(async () => {
                 const result = await inviteUser(form);
                 if (result.error) toast.error(result.error);
-                else setLink(result.link ?? null);
+                else {
+                  setLink(result.link ?? null);
+                  setEmailed(!!result.emailed);
+                }
               });
             }}
           >

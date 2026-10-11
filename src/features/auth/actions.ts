@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,4 +37,20 @@ export async function setPassword(_prev: PasswordState, formData: FormData): Pro
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.code === "same_password" ? "Choose a password you haven't used before." : error.message };
   redirect("/");
+}
+
+export type ResetState = { sent?: boolean; error?: string };
+
+/**
+ * "Forgot password?" (PRD §6): Supabase emails a one-time link through Resend; it opens /auth/confirm → /set-password.
+ * Always reports success so the form doesn't reveal which emails have accounts.
+ */
+export async function requestPasswordReset(_prev: ResetState, formData: FormData): Promise<ResetState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter your email." };
+  const origin = (await headers()).get("origin") ?? "";
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/confirm` });
+  if (error?.status === 429) return { error: "Too many requests. Try again in a few minutes." };
+  return { sent: true };
 }

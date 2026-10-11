@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { escapeHtml, sendEmail } from "@/lib/email";
 import type { FormState } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/line-items";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,7 +16,7 @@ const inviteSchema = z.object({
   role_id: z.uuid("Choose a role"),
 });
 
-type LinkState = FormState & { link?: string };
+type LinkState = FormState & { link?: string; emailed?: boolean };
 
 /** Our own confirm route, so the link works without Supabase's email (PRD §6). */
 async function confirmLink(tokenHash: string, type: "invite" | "recovery") {
@@ -46,7 +47,19 @@ export async function inviteUser(input: z.input<typeof inviteSchema>): Promise<L
     return { error: dbErrorMessage(activated.error) };
   }
   revalidatePath("/settings/users");
-  return { ok: true, link: await confirmLink(data.properties.hashed_token, "invite") };
+  const link = await confirmLink(data.properties.hashed_token, "invite");
+  // The link is also shown to the inviter, so a failed email only means sending it by hand.
+  const sent = await sendEmail(
+    email,
+    "You're invited to DevSyndicate ERP",
+    `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;color:#111">
+      <h2 style="margin:0 0 16px">Hi ${escapeHtml(full_name)}, you're invited to DevSyndicate ERP</h2>
+      <p>Set a password to sign in as ${escapeHtml(email)}:</p>
+      <p><a href="${escapeHtml(link)}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Accept invite</a></p>
+      <p style="color:#666;font-size:13px">The link works once and expires in 24 hours.</p>
+    </div>`,
+  );
+  return { ok: true, link, emailed: !sent.error };
 }
 
 /** A fresh one-time link to set a password: for invitees whose link expired, or users who forgot their password. */
