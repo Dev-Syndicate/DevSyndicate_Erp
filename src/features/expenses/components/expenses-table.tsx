@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Wallet } from "lucide-react";
 import { EmptyRow } from "@/components/list-controls";
+import { StatusTile } from "@/components/status-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listExpenses } from "@/features/expenses/queries";
@@ -31,9 +32,12 @@ export function ExpensesTable({ rows }: { rows: Rows }) {
             {rows.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-mono text-sm">
-                  <Link href={`/finance/expenses/${e.id}`} className="hover:underline">
-                    {e.number}
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <StatusTile icon={Wallet} />
+                    <Link href={`/finance/expenses/${e.id}`} className="hover:underline">
+                      {e.number}
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell className="tabular-nums">{formatDate(e.expense_date)}</TableCell>
                 <TableCell className="max-w-72 truncate font-medium">{e.description}</TableCell>

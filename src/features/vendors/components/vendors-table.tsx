@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Truck } from "lucide-react";
 import { EmptyRow } from "@/components/list-controls";
+import { StatusTile } from "@/components/status-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listVendors } from "@/features/vendors/queries";
@@ -27,9 +28,12 @@ export function VendorsTable({ rows }: { rows: Rows }) {
             {rows.map((v) => (
               <TableRow key={v.id}>
                 <TableCell className="font-medium">
-                  <Link href={`/vendors/${v.id}/edit`} className="hover:underline">
-                    {v.name}
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <StatusTile icon={Truck} />
+                    <Link href={`/vendors/${v.id}/edit`} className="hover:underline">
+                      {v.name}
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col">

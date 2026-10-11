@@ -51,8 +51,15 @@ async function UsersList() {
                 return (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">
-                      {u.full_name || "—"}
-                      {self && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}
+                      <div className="flex items-center gap-3">
+                        <span aria-hidden className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm uppercase ${status.className}`}>
+                          {(u.full_name || u.email).charAt(0)}
+                        </span>
+                        <span>
+                          {u.full_name || "—"}
+                          {self && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>{u.role_name ?? <span className="text-muted-foreground">No role</span>}</TableCell>

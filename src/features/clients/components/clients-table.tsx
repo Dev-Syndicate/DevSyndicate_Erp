@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Building2 } from "lucide-react";
 import { EmptyRow } from "@/components/list-controls";
+import { StatusTile } from "@/components/status-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { listClients } from "@/features/clients/queries";
@@ -29,9 +30,12 @@ export function ClientsTable({ rows }: { rows: Rows }) {
               return (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">
-                    <Link href={`/clients/${c.id}`} className="hover:underline">
-                      {c.company_name}
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <StatusTile icon={Building2} />
+                      <Link href={`/clients/${c.id}`} className="hover:underline">
+                        {c.company_name}
+                      </Link>
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{[c.city, c.state].filter(Boolean).join(", ")}</TableCell>
                   <TableCell className="font-mono text-xs">{c.gstin}</TableCell>
