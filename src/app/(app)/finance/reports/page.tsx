@@ -11,8 +11,9 @@ import { parseReportParams, REPORTS } from "@/features/reports/utils";
 
 async function Reports({ searchParams }: { searchParams: PageProps<"/finance/reports">["searchParams"] }) {
   const sp = await searchParams;
-  const params = parseReportParams(sp);
+  // Data first: it waits for the request (connection()), and only then may the date defaults read the clock.
   const [user, options] = await Promise.all([getCurrentUser(), getReportOptions()]);
+  const params = parseReportParams(sp);
   const report = await buildReport(params.name, params);
   const query = (extra: Record<string, string>) => {
     const q = new URLSearchParams({ report: params.name, from: params.from, to: params.to, ...extra });
