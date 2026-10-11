@@ -55,7 +55,7 @@ export async function inviteUser(input: z.input<typeof inviteSchema>): Promise<L
     `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;color:#111">
       <h2 style="margin:0 0 16px">Hi ${escapeHtml(full_name)}, you're invited to DevSyndicate ERP</h2>
       <p>Set a password to sign in as ${escapeHtml(email)}:</p>
-      <p><a href="${escapeHtml(link)}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Accept invite</a></p>
+      <p><a href="${escapeHtml(link)}" style="display:inline-block;background:#047857;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Accept invite</a></p>
       <p style="color:#666;font-size:13px">The link works once and expires in 24 hours.</p>
     </div>`,
   );
