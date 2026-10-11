@@ -1,0 +1,64 @@
+# Nightly encrypted backup to Google Drive (PRD §34). One file, replaced each night like WhatsApp's backup;
+# Google Drive keeps the replaced versions for 30 days (Manage versions). Setup and restore: docs/BACKUP.md.
+name: Nightly backup
+
+on:
+  schedule:
+    - cron: "30 20 * * *" # 02:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: backup
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_URL: https://hnwmgeplzdyhdjfqhymo.supabase.co
+      BACKUP_FILE: devsyndicate-erp-backup.tar.gz.gpg
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Dump the database (roles, schema, data)
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backup
+          supabase db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$DB_URL" -f backup/data.sql --use-copy --data-only
+          # Fail loudly rather than upload an empty or partial backup.
+          grep -Eq 'COPY "?public"?\."?invoices"?' backup/data.sql
+          grep -Eq 'CREATE TABLE .*"?public"?\."?invoices"?' backup/schema.sql
+
+      - name: Download Storage files
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/backup-storage.mjs
+
+      - name: Encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          test -n "$BACKUP_PASSPHRASE"
+          date -u +%FT%TZ > backup/created_at.txt
+          tar -czf - backup | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase-file <(printf '%s' "$BACKUP_PASSPHRASE") -o "$BACKUP_FILE"
+          ls -lh "$BACKUP_FILE"
+
+      - name: Upload to Google Drive (replaces the previous backup)
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+        run: |
+          sudo -v && curl -fsSL https://rclone.org/install.sh | sudo bash > /dev/null
+          mkdir -p ~/.config/rclone
+          printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+          rclone copyto "$BACKUP_FILE" "gdrive:DevSyndicate Backups/$BACKUP_FILE"
+          rclone lsl "gdrive:DevSyndicate Backups"

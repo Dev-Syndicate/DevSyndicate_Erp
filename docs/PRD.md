@@ -14,6 +14,7 @@
 
 ### v1.4 (2026-10-11)
 
+- **Backups:** nightly encrypted backup to Google Drive, one file replaced each night with 30 days of Drive versions (§34).
 - **Dashboard researched:** "Net Cash Position" renamed **Net Profit (cash basis)**: it includes TDS, which never reaches the bank, so it is profit, not cash. Unpaid invoices are aged by days since the invoice date (due dates are optional). Period filter, monthly chart, TDS payable (§9.2, §10, §36).
 - **Expenses researched:** recorded when paid (no bills in V1); the vendor's bill number; GST on the bill with an input-tax-credit flag; reverse charge; TDS withheld from vendors; receipts attached. GST fields only when GST-registered (§21).
 - **Credit notes:** no discount fields; the credit note itself is the post-sale discount (§18).
@@ -1405,7 +1406,7 @@ Recharts         → Free
 
 | Risk | Mitigation |
 |---|---|
-| **No automated backups** on the Supabase free tier. Financial data loss would be critical. | Nightly GitHub Actions job runs `pg_dump`, encrypts the dump, and stores it in a private location (e.g. Cloudflare R2 or Google Drive free tier). Do a restore drill before go-live. Storage files are backed up the same way. |
+| **No automated backups** on the Supabase free tier. Financial data loss would be critical. | Nightly GitHub Actions job (02:00 IST) dumps roles, schema and data with the Supabase CLI, downloads all Storage files, encrypts them (AES-256) and uploads **one file to Google Drive, replaced each night** (WhatsApp-style, v1.4). Drive keeps replaced versions for 30 days, so any of the last 30 nights can be restored. Setup and restore: [docs/BACKUP.md](BACKUP.md). Do a restore drill before go-live. |
 | **Supabase pauses free projects after a period of inactivity.** | Accept a manual restore on pause, or upgrade to a paid plan once the system is business-critical. Monitor via the backup job's success or failure. |
 | **Vercel Hobby plan is limited to personal, non-commercial use.** An internal company tool may not qualify. | Check Vercel's current terms before production. Alternatives: Netlify, Cloudflare Pages / Workers, or a low-cost VPS. |
 | **Built-in Supabase email is rate-limited.** | Custom SMTP provider (§6). |
@@ -1836,4 +1837,4 @@ That gives DevSyndicate a genuinely usable internal system from V1, while keepin
 | 4 | How much historical data needs importing, and from which spreadsheets? | Import supports the entities in §39. |
 | 5 | Is one role per user sufficient for V1? | Yes; multiple roles per user later if needed. |
 | 6 | Who may override "invoiced total exceeds quotation total"? | Anyone with `quotations.convert`, with a mandatory reason (logged). |
-| 7 | Where should encrypted backups be stored? | A free-tier object storage bucket owned by the company. |
+| 7 | Where should encrypted backups be stored? | Decided (v1.4): the company Google Drive, one file replaced nightly with 30 days of versions (§34). |

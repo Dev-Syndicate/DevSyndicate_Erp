@@ -43,3 +43,6 @@ next-env.d.ts
 
 # supabase cli
 supabase/.temp/
+
+# backup restore working folder (docs/BACKUP.md)
+/backup/
