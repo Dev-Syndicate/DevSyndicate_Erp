@@ -27,7 +27,10 @@ export async function invoicePdf(id: string) {
     meta: [
       ["Date", pdfDate(inv.invoice_date)],
       ...(inv.due_date ? ([["Due Date", pdfDate(inv.due_date)]] as [string, string][]) : []),
-      ["Place of Supply", inv.supply_type === "export" ? "Outside India" : inv.place_of_supply || "—"],
+      // Place of supply decides CGST/SGST vs IGST, so it only matters on GST documents.
+      ...(inv.gst_applicable
+        ? ([["Place of Supply", inv.supply_type === "export" ? "Outside India" : inv.place_of_supply || inv.clients?.state || "—"]] as [string, string][])
+        : []),
       ...(inv.quotations?.number ? ([["Quotation", inv.quotations.number]] as [string, string][]) : []),
       ...(inv.lut_number ? ([["LUT", inv.lut_number]] as [string, string][]) : []),
     ],

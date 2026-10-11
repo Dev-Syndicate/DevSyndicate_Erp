@@ -126,7 +126,7 @@ export function QuotationForm({ clients, taxRates, settings, quotation }: Props)
                 <Input id="valid_until" type="date" value={form.valid_until} onChange={(e) => set("valid_until", e.target.value)} aria-invalid={!!err("valid_until")} />
                 <FieldError>{err("valid_until")}</FieldError>
               </Field>
-              <PlaceOfSupplyField client={client} value={placeOfSupply} supplyType={supplyType} gst={gst} onChange={(v) => set("place_of_supply", v)} />
+              <PlaceOfSupplyField client={client} value={placeOfSupply} supplyType={supplyType} gst={gst} custom={form.place_of_supply !== ""} onChange={(v) => set("place_of_supply", v)} />
               <Field className="sm:col-span-2 lg:col-span-4">
                 <FieldLabel htmlFor="description">Description</FieldLabel>
                 <Textarea id="description" value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} placeholder="Scope summary shown under the title" />

@@ -52,7 +52,7 @@ export function InvoiceView({ inv, showSac }: { inv: Invoice; showSac: boolean }
               <dt className="text-muted-foreground">Due date</dt>
               <dd className="tabular-nums">{formatDate(inv.due_date)}</dd>
               <dt className="text-muted-foreground">Place of supply</dt>
-              <dd>{inv.supply_type === "export" ? "Outside India" : inv.place_of_supply || "—"}</dd>
+              <dd>{inv.supply_type === "export" ? "Outside India" : inv.place_of_supply || inv.clients?.state || "—"}</dd>
               {inv.lut_number && (
                 <>
                   <dt className="text-muted-foreground">LUT</dt>

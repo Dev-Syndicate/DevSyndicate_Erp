@@ -19,7 +19,7 @@ export async function quotationPdf(id: string) {
       ["Valid Until", pdfDate(q.valid_until)],
       // Place of supply decides CGST/SGST vs IGST, so it only matters on GST quotations.
       ...(q.gst_applicable
-        ? ([["Place of Supply", q.supply_type === "export" ? "Outside India" : q.place_of_supply || "—"]] as [string, string][])
+        ? ([["Place of Supply", q.supply_type === "export" ? "Outside India" : q.place_of_supply || q.clients?.state || "—"]] as [string, string][])
         : []),
     ],
     project: { title: q.title, description: q.description },

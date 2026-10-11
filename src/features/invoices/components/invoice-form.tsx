@@ -48,7 +48,7 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
     client_id: invoice?.client_id ?? "",
     contact_id: invoice?.contact_id ?? "",
     invoice_date: invoice?.invoice_date ?? today,
-    due_date: invoice ? (invoice.due_date ?? "") : addDays(today, termsDays(undefined)),
+    due_date: invoice?.due_date ?? "", // off by default (PRD §15)
     place_of_supply: invoice?.place_of_supply ?? "",
     discount_type: (invoice?.discount_type as DiscountType) ?? "amount",
     discount_value: String(invoice?.discount_value ?? 0),
@@ -146,7 +146,7 @@ export function InvoiceForm({ clients, taxRates, settings, invoice }: Props) {
                 )}
                 <FieldError>{err("due_date")}</FieldError>
               </Field>
-              <PlaceOfSupplyField client={client} value={placeOfSupply} supplyType={supplyType} gst={gst} onChange={(v) => set("place_of_supply", v)} />
+              <PlaceOfSupplyField client={client} value={placeOfSupply} supplyType={supplyType} gst={gst} custom={form.place_of_supply !== ""} onChange={(v) => set("place_of_supply", v)} />
             </FieldGroup>
           </CardContent>
         </Card>

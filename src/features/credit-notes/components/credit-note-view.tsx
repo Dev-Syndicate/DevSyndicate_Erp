@@ -48,7 +48,7 @@ export function CreditNoteView({ cn, showSac }: { cn: CreditNote; showSac: boole
               <dt className="text-muted-foreground">Invoice date</dt>
               <dd className="tabular-nums">{formatDate(inv?.invoice_date)}</dd>
               <dt className="text-muted-foreground">Place of supply</dt>
-              <dd>{cn.supply_type === "export" ? "Outside India" : cn.place_of_supply || "—"}</dd>
+              <dd>{cn.supply_type === "export" ? "Outside India" : cn.place_of_supply || cn.clients?.state || "—"}</dd>
             </dl>
           </CardContent>
         </Card>

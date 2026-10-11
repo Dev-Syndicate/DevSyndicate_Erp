@@ -11,6 +11,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { INDIAN_STATES } from "@/lib/india";
 import type { LineItemInput } from "@/lib/line-items";
@@ -171,24 +172,44 @@ export function PlaceOfSupplyField(props: {
   value: string;
   supplyType: SupplyType;
   gst: boolean;
+  /** A state was chosen instead of the client's. */
+  custom: boolean;
   onChange: (state: string) => void;
 }) {
   const { client, value, supplyType, gst } = props;
+  // Off (default) = the client's state, stored as ""; on = pick another state.
+  const [custom, setCustom] = useState(props.custom);
   return (
     <Field className="sm:col-span-2">
-      <FieldLabel htmlFor="place_of_supply">Place of supply</FieldLabel>
-      <Select value={value || undefined} onValueChange={props.onChange} disabled={client?.country !== "India"}>
-        <SelectTrigger id="place_of_supply" className="w-full">
-          <SelectValue placeholder={client && client.country !== "India" ? "Outside India (export)" : "Client's state"} />
-        </SelectTrigger>
-        <SelectContent>
-          {INDIAN_STATES.map((s) => (
-            <SelectItem key={s.code} value={s.name}>
-              {s.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex items-center justify-between gap-2">
+        <FieldLabel htmlFor="place_of_supply">Place of supply</FieldLabel>
+        <Switch
+          aria-label="Choose a different place of supply"
+          checked={custom}
+          onCheckedChange={(on) => {
+            setCustom(on);
+            if (!on) props.onChange("");
+          }}
+        />
+      </div>
+      {custom ? (
+        <Select value={value || undefined} onValueChange={props.onChange} disabled={client?.country !== "India"}>
+          <SelectTrigger id="place_of_supply" className="w-full">
+            <SelectValue placeholder={client && client.country !== "India" ? "Outside India (export)" : "Client's state"} />
+          </SelectTrigger>
+          <SelectContent>
+            {INDIAN_STATES.map((s) => (
+              <SelectItem key={s.code} value={s.name}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <FieldDescription>
+          Client&apos;s state{value ? ` (${value})` : ""}. {gst ? "Printed on the document." : "Not printed (only needed for GST)."}
+        </FieldDescription>
+      )}
       {gst && client && (
         <FieldDescription>
           {supplyType === "intra" && "Same state as your company: CGST + SGST."}

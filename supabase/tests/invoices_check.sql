@@ -66,7 +66,7 @@ begin
 
   b := public.convert_quotation(qid, 'percent', 50);
   select * into inv from public.invoices where id = b;
-  assert inv.quotation_id = qid and inv.due_date = public.ist_today() + 30, 'conversion links quotation, client terms';
+  assert inv.quotation_id = qid and inv.due_date is null, 'conversion links quotation, no due date by default';
   assert inv.taxable_total = 13749.94 and inv.grand_total = 16225.00, 'half of the quotation';
   assert (select description from public.invoice_items where invoice_id = b and position = 1) = '50% — Website design', '% line label';
   perform public.invoice_action(b, 'issue');

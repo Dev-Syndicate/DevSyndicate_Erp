@@ -43,7 +43,7 @@ export function QuotationView({ q, showSac }: { q: Quotation; showSac: boolean }
               <dt className="text-muted-foreground">Valid until</dt>
               <dd className="tabular-nums">{formatDate(q.valid_until)}</dd>
               <dt className="text-muted-foreground">Place of supply</dt>
-              <dd>{q.supply_type === "export" ? "Outside India" : q.place_of_supply || "—"}</dd>
+              <dd>{q.supply_type === "export" ? "Outside India" : q.place_of_supply || q.clients?.state || "—"}</dd>
             </dl>
           </CardContent>
         </Card>

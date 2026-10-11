@@ -18,7 +18,10 @@ export async function creditNotePdf(id: string) {
       ["Date", pdfDate(cn.credit_note_date)],
       ["Invoice No", inv?.number ?? ""],
       ["Invoice Date", inv ? pdfDate(inv.invoice_date) : ""],
-      ["Place of Supply", cn.supply_type === "export" ? "Outside India" : cn.place_of_supply || "—"],
+      // Place of supply decides CGST/SGST vs IGST, so it only matters on GST documents.
+      ...(cn.gst_applicable
+        ? ([["Place of Supply", cn.supply_type === "export" ? "Outside India" : cn.place_of_supply || cn.clients?.state || "—"]] as [string, string][])
+        : []),
     ],
     ...(await pdfCompany(supabase, settings)),
     billTo: {
