@@ -55,18 +55,3 @@ export async function getPaymentClients() {
   if (error) throw error;
   return data;
 }
-
-/** Proof files of a payment with short-lived signed URLs (private `documents` bucket). */
-export async function getPaymentProofs(paymentId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("documents")
-    .select("id, path, file_name, mime_type, size_bytes, created_at")
-    .eq("entity_type", "payment")
-    .eq("entity_id", paymentId)
-    .order("created_at");
-  if (error) throw error;
-  if (!data.length) return [];
-  const { data: urls } = await supabase.storage.from("documents").createSignedUrls(data.map((d) => d.path), 3600);
-  return data.map((d, i) => ({ ...d, url: urls?.[i]?.signedUrl ?? null }));
-}

@@ -1,7 +1,7 @@
 # DevSyndicate ERP
 
 **Product Requirements Document (PRD)**  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Initial Development  
 **Product:** DevSyndicate ERP  
 **Primary Module:** Finance  
@@ -12,12 +12,17 @@
 
 ## Changelog
 
+### v1.4 (2026-10-11)
+
+- **Expenses researched:** recorded when paid (no bills in V1); the vendor's bill number; GST on the bill with an input-tax-credit flag; reverse charge; TDS withheld from vendors; receipts attached. GST fields only when GST-registered (§21).
+- **Credit notes:** no discount fields; the credit note itself is the post-sale discount (§18).
+- **Invoices:** due date optional and off by default; place of supply defaults to the client's state and prints only on GST documents (§15, §16).
+
 ### v1.3 (2026-10-11)
 
 - **Credit notes researched:** tax follows the original invoice, the GST 30-November time limit, Rule 53(1A) contents, overpayment released to client credit, cancel rules (§18).
 - **Payments:** the date received and bank reference (UTR / UPI ID) are entered when confirming; proof of payment received can be attached there (§19).
 - **Quotations:** Send = assign number + download PDF in one step (§13).
-- **Invoices:** due date is optional and off by default; an invoice without one is never overdue. Place of supply defaults to the client's state and is printed only on GST documents (§15, §16).
 
 ### v1.2 (2026-10-10)
 
@@ -381,6 +386,8 @@ All revenue figures are **gross (including GST collected)**. GST collected on is
 | **Outstanding** (as of date) | Σ balances of all issued, non-cancelled invoices |
 | **Client Credit** | Σ settled value of confirmed receipts − Σ their allocations − Σ confirmed refunds for that client (money received but not yet applied to an invoice) |
 | **TDS Receivable** (period) | Σ TDS deducted on confirmed receipts, by payment date (claimed against Form 26AS) |
+| **TDS Payable** (period) | Σ TDS we withheld on expenses, by expense date (deposit by the 7th of the next month) |
+| **Input GST** (period) | Σ GST on expenses marked "claim input tax credit", by expense date (reverse-charge GST included) |
 | **Pending Invoices** | Count of issued invoices with balance > 0 and not overdue |
 | **Overdue Invoices** | Count of issued invoices with balance > 0 and due date before today (IST) |
 
@@ -716,7 +723,7 @@ Created By / At
 - Σ credit notes on an invoice cannot exceed its grand total.
 - Issued credit notes reduce the invoice balance and Total Invoiced (§9.2).
 - If the client already paid more than the new balance, the excess becomes Client Credit, which can be applied to another invoice or refunded. In practice the overpaid part of the invoice's payments is released (latest payments first) back to client credit when the credit note is issued.
-- **No discount fields (v1.3):** a credit note *is* the post-sale discount (Section 15(3)(b) with Section 34; Budget 2026 dropped the prior-agreement condition, the recipient reverses ITC). Its line amount is the reduction, e.g. "Post-sale discount on website development ₹1,000", as Zoho Books records it. Sources: [LKS](https://www.lkslaw.com/insights/news/gst-discount-schemes-and-credit-notes-changes-by-budget-2026), [Zoho](https://www.zoho.com/books/kb/invoices/raise-credit-note-for-post-sale-discount.html).
+- **No discount fields (v1.4):** a credit note *is* the post-sale discount (Section 15(3)(b) with Section 34; Budget 2026 dropped the prior-agreement condition, the recipient reverses ITC). Its line amount is the reduction, e.g. "Post-sale discount on website development ₹1,000", as Zoho Books records it. Sources: [LKS](https://www.lkslaw.com/insights/news/gst-discount-schemes-and-credit-notes-changes-by-budget-2026), [Zoho](https://www.zoho.com/books/kb/invoices/raise-credit-note-for-post-sale-discount.html).
 - **Tax follows the original invoice (v1.3):** the credit note copies the invoice's place of supply, supply type and GST applicability, and reverses tax at those rates (CGST + SGST or IGST). It never re-derives them from the client's current details.
 - **GST time limit (v1.3):** for a GST invoice, the credit note must be issued no later than **30 November following the end of the financial year** of the invoice (Section 34(2) CGST Act; the annual-return date if earlier). After that, tax cannot be reduced, so the app refuses to issue it.
 - **Contents (v1.3, CGST Rule 53(1A)):** "Credit Note" title; number ≤ 16 characters, unique per financial year; date; supplier and recipient name, address and GSTIN; the original invoice number **and date**; taxable value, tax rate and tax amount; signature. The recipient details are copied from the invoice's billing snapshot.
@@ -842,32 +849,43 @@ Files are stored in **Supabase Storage** (private bucket, §26). The database st
 
 # 21. Expenses
 
-Expenses represent **all money spent by DevSyndicate**. In V1 an expense is recorded when it is paid.
+Expenses represent **all money spent by DevSyndicate**. In V1 an expense is recorded when it is paid (cash basis, §9.1). There are no bills / payables in V1: Zoho Books separates *expenses* (paid on the spot) from *bills* (owed, paid later); V1 records only the first.
 
 Examples: hosting, domains, software subscriptions, marketing, equipment, office expenses, travel, salaries, professional services, taxes paid, and other business expenses.
 
 ## Expense Fields
 
 ```text
-Expense Number        (EXP/26-27/0001)
-Date
-Category
+Expense Number        (EXP/26-27/0001, assigned on save; deleting leaves a gap)
+Date Paid             (not in the future)
+Category              (archived categories stay on old expenses)
 Description
+Vendor                (from vendors; optional; picks the vendor's default category)
+Vendor Bill Number    (the vendor's invoice number; needed to claim input tax credit)
 
-Vendor                (from vendors; optional)
-Amount
-GST Paid              (optional, informational for V1)
+Bill Total            (incl. GST, before TDS) — this is the cost counted in Expenses (§9.2)
+GST                   (GST-registered only) on the bill, or the GST you pay under reverse charge
+Claim Input Tax Credit (GST-registered only; yes / no)
+Reverse Charge        (GST-registered only; yes / no)
+TDS Deducted          (income tax withheld from the vendor)
 
 Payment Method
-Reference / UTR Number
-
-Receipt / Proof       (documents)
+Reference             (UTR / UPI ID / cheque no.; optional)
+Receipt / Proof       (documents, §26)
 Notes
-
-Created By
-Created At
-Updated At
 ```
+
+## Expense Rules (v1.4, researched)
+
+- **Cost = bill total.** Expenses (§9.2) count the full bill including GST, as revenue counts receipts including GST (gross, cash basis). GST and TDS are reported separately.
+- **Input tax credit (CGST Act §16(2)):** GST on a bill can be set off against GST collected only if you hold the vendor's tax invoice in your GSTIN, received the service, the invoice appears in your **GSTR-2B**, and the vendor paid the tax (from April 2026 accepted via the Invoice Management System). The app records the intent ("claim input tax credit"); GSTR-2B matching happens in the GST portal.
+- **Blocked credits (§17(5)):** no input tax credit on food and beverages, motor vehicles up to 13 seats, club memberships, personal use, and similar. Leave "claim input tax credit" off for these.
+- **Reverse charge (RCM):** when the vendor does not charge GST and the recipient must pay it — mainly **imported services** (AWS, Google Workspace, foreign SaaS and ads once your GSTIN is given to them, usually 18% IGST), advocates' fees and goods transport. The GST is paid with the GST return and is usually claimable as input tax credit the same month. On the expense, the GST entered is **on top of** the bill total.
+- **TDS on vendor payments:** a company, firm or LLP (or an audited proprietor) withholds income tax: professional fees 10% / technical services 2% once a vendor passes ₹50,000 in the year (old §194J); contractors 1% (individuals) / 2% (others) above ₹30,000 per payment or ₹1,00,000 a year (old §194C). From 1 April 2026 these are under §393 of the Income-tax Act 2025 with the same rates. The vendor receives the bill total minus TDS; the TDS is deposited by the 7th of the next month.
+- **Do not double count:** depositing TDS you already withheld is **not** a new expense (the expense already counts the full bill). GST paid to the government with your return is recorded as an expense in the *Taxes* category.
+- **Not GST-registered:** GST, input tax credit and reverse charge are hidden and stored as zero.
+
+Sources: [CGST §16 conditions](https://taxguru.in/goods-and-service-tax/eligible-gst-itc-conditions-timelines-post-ims-reality-fy-2025-26.html), [§17(5) blocked credits](https://tallysolutions.com/gst/blocked-credits-under-gst-section-175-what-you-cannot-claim/), [RCM on imported SaaS](https://taxgarden.in/blog/gst-itc-startups-saas-cloud-digital-marketing-india-2026), [Zoho: expense or bill](https://www.zoho.com/uk/books/kb/bills/expense-or-bill.md), [Zoho: ITC on expenses](https://aaxonix.com/resources/glossary/input-tax-credit-itc-zoho-books/), [TDS rates FY 2026-27](https://taxgarden.in/blog/tds-rate-chart-2026-to-2027).
 
 ---
 
@@ -1503,15 +1521,17 @@ Balance reduced (excess becomes Client Credit → allocate or refund)
 # 38. Expense Workflow
 
 ```text
-Create Expense
+Record Expense (when paid)
       ↓
-Enter Amount & Date
+Date, Category, Vendor, Description, Vendor bill no.
       ↓
-Select Category (and Vendor)
+Bill total, GST + input tax credit / reverse charge (GST-registered), TDS deducted
       ↓
-Upload Receipt
+Payment method and reference
       ↓
-Save
+Save (number assigned)
+      ↓
+Attach the bill / receipt
       ↓
 Expense included in Reports
 ```

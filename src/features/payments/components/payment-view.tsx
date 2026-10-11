@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { unapplyPayment } from "@/features/payments/actions";
 import type { getPayment } from "@/features/payments/queries";
-import { methodLabel } from "@/features/payments/schema";
+import { methodLabel } from "@/lib/payment-methods";
 import { formatDate } from "@/lib/dates";
 import { formatINR, paise } from "@/lib/money";
 

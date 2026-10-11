@@ -3,7 +3,7 @@ import { DocumentItemsTable, DocumentTotalsCard } from "@/components/document-vi
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { getInvoice } from "@/features/invoices/queries";
-import { methodLabel } from "@/features/payments/schema";
+import { methodLabel } from "@/lib/payment-methods";
 import { formatDate } from "@/lib/dates";
 import { formatINR } from "@/lib/money";
 

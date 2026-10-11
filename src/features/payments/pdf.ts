@@ -1,6 +1,6 @@
 import { pdfCompany, pdfDate, renderReceiptPdf } from "@/components/pdf/document-pdf";
 import { getPayment } from "@/features/payments/queries";
-import { methodLabel } from "@/features/payments/schema";
+import { methodLabel } from "@/lib/payment-methods";
 import { getCompanySettings } from "@/features/settings/queries";
 import { gstInside, paise } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";

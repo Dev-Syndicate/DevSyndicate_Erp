@@ -114,8 +114,8 @@ begin
   values (public.current_org_id(), 'payment', p1, public.current_org_id() || '/payment/' || p1 || '/upi.png', 'upi.png', 'image/png', 1200);
   insert into storage.objects (bucket_id, name) values ('documents', public.current_org_id() || '/payment/' || p1 || '/upi.png');
   begin
-    insert into storage.objects (bucket_id, name) values ('documents', public.current_org_id() || '/expense/x/upi.png');
-    assert false, 'only payment folders for now';
+    insert into storage.objects (bucket_id, name) values ('documents', public.current_org_id() || '/quotation/x/upi.png');
+    assert false, 'only payment and expense folders';
   exception when insufficient_privilege then null; end;
 end $$;
 

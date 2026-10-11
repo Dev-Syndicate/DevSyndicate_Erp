@@ -15,8 +15,8 @@ import {
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { paymentAction } from "@/features/payments/actions";
-import { referenceLabel } from "@/features/payments/schema";
-import { uploadProof } from "@/features/payments/upload";
+import { referenceLabel } from "@/lib/payment-methods";
+import { uploadDocument } from "@/lib/documents/upload";
 import { istToday } from "@/lib/dates";
 
 /** Confirm once the money is in the bank: records the date it arrived and its bank reference (UTR / UPI ID). */
@@ -32,7 +32,7 @@ export function ConfirmPaymentButton(props: { id: string; organizationId: string
     startTransition(async () => {
       // Proof first: if it fails, nothing is confirmed and the user can retry or confirm without it.
       if (proof) {
-        const uploaded = await uploadProof(props.id, props.organizationId, proof);
+        const uploaded = await uploadDocument("payment", props.id, props.organizationId, proof);
         if (uploaded.error) {
           toast.error(uploaded.error);
           return;

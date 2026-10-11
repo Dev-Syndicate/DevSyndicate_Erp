@@ -2,7 +2,7 @@
 
 # DevSyndicate ERP
 
-Internal finance ERP. Requirements: [docs/PRD.md](docs/PRD.md) (v1.3). The PRD is the spec; follow its definitions (§9 money rules, §5 permissions, §30 numbering).
+Internal finance ERP. Requirements: [docs/PRD.md](docs/PRD.md) (v1.4). The PRD is the spec; follow its definitions (§9 money rules, §5 permissions, §30 numbering).
 
 Stack: Next.js 16 (App Router, `src/`), TypeScript, Tailwind CSS v4, shadcn/ui (Radix base, `radix-nova` style), Supabase (Postgres, Auth, Storage), pnpm.
 

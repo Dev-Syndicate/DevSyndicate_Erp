@@ -1,13 +1,14 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { ProofsCard } from "@/components/proofs-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/queries";
 import { PaymentActions } from "@/features/payments/components/payment-actions";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import { PaymentView } from "@/features/payments/components/payment-view";
-import { ProofsCard } from "@/features/payments/components/proofs-card";
-import { getOpenInvoices, getPayment, getPaymentProofs } from "@/features/payments/queries";
+import { getOpenInvoices, getPayment } from "@/features/payments/queries";
 import type { PaymentStatus } from "@/features/payments/schema";
+import { getDocuments } from "@/lib/documents/queries";
 import { formatINR, paise } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,7 +18,7 @@ async function PaymentDetail({ params }: { params: PageProps<"/finance/payments/
   const [p, user, proofs, org] = await Promise.all([
     getPayment(id).catch(() => null),
     getCurrentUser(),
-    getPaymentProofs(id).catch(() => []),
+    getDocuments("payment", id).catch(() => []),
     supabase.rpc("current_org_id"),
   ]);
   if (!p) notFound();
@@ -47,7 +48,10 @@ async function PaymentDetail({ params }: { params: PageProps<"/finance/payments/
       {/* Pending payments attach proof in the Confirm dialog. */}
       {org.data && (p.status === "confirmed" || proofs.length > 0) && (
         <ProofsCard
-          paymentId={p.id}
+          entityType="payment"
+          entityId={p.id}
+          title="Payment proof"
+          description="UPI screenshot, bank receipt or confirmation."
           organizationId={org.data}
           proofs={proofs}
           canAdd={p.status !== "cancelled" && (can("payments.create") || can("payments.update"))}

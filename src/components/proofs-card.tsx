@@ -6,31 +6,39 @@ import { toast } from "sonner";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { removeProof } from "@/features/payments/actions";
-import { uploadProof } from "@/features/payments/upload";
+import { removeDocument, type DocumentEntity } from "@/lib/documents/actions";
+import { uploadDocument } from "@/lib/documents/upload";
 
 type Proof = { id: string; file_name: string; size_bytes: number; url: string | null };
 
-
-/** UPI screenshots, bank receipts… (PRD §20). Files go straight to Storage; the server then verifies and records them. */
-export function ProofsCard(props: { paymentId: string; organizationId: string; proofs: Proof[]; canAdd: boolean; canRemove: boolean }) {
+/** Payment proofs, expense receipts… (PRD §20, §26). Files go straight to Storage; the server then verifies and records them. */
+export function ProofsCard(props: {
+  entityType: DocumentEntity;
+  entityId: string;
+  organizationId: string;
+  title: string;
+  description: string;
+  proofs: Proof[];
+  canAdd: boolean;
+  canRemove: boolean;
+}) {
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
   async function upload(file: File) {
     setBusy(true);
-    const result = await uploadProof(props.paymentId, props.organizationId, file);
+    const result = await uploadDocument(props.entityType, props.entityId, props.organizationId, file);
     setBusy(false);
     if (input.current) input.current.value = "";
     if (result.error) toast.error(result.error);
-    else toast.success("Proof added");
+    else toast.success("File added");
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Payment proof</CardTitle>
-        <CardDescription>UPI screenshot, bank receipt or confirmation. JPG, PNG, WEBP or PDF, up to 5 MB.</CardDescription>
+        <CardTitle>{props.title}</CardTitle>
+        <CardDescription>{props.description} JPG, PNG, WEBP or PDF, up to 5 MB.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {props.proofs.length === 0 && <p className="text-sm text-muted-foreground">No files yet.</p>}
@@ -47,7 +55,7 @@ export function ProofsCard(props: { paymentId: string; organizationId: string; p
             <span className="shrink-0 text-muted-foreground tabular-nums">{Math.ceil(p.size_bytes / 1024)} KB</span>
             {props.canRemove && (
               <ConfirmButton
-                action={removeProof.bind(null, props.paymentId, p.id)}
+                action={removeDocument.bind(null, props.entityType, props.entityId, p.id)}
                 title="Remove this file?"
                 description="The file is deleted from storage."
                 confirmLabel="Remove"
@@ -67,7 +75,7 @@ export function ProofsCard(props: { paymentId: string; organizationId: string; p
               ref={input}
               type="file"
               accept="image/jpeg,image/png,image/webp,application/pdf"
-              aria-label="Proof file"
+              aria-label={`${props.title} file`}
               className="hidden"
               disabled={busy}
               onChange={(e) => {

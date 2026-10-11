@@ -13,7 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { savePayment } from "@/features/payments/actions";
-import { METHODS, paymentSchema, type PaymentInput } from "@/features/payments/schema";
+import { paymentSchema, type PaymentInput } from "@/features/payments/schema";
+import { METHODS } from "@/lib/payment-methods";
 import { formatDate, istToday } from "@/lib/dates";
 import { formatINR, paise, toScaled } from "@/lib/money";
 

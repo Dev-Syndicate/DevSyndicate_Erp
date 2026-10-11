@@ -672,6 +672,94 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          expense_date: string
+          gst_amount: number
+          id: string
+          itc_eligible: boolean
+          method: string
+          notes: string
+          number: string
+          organization_id: string
+          reference: string
+          reverse_charge: boolean
+          tds_amount: number
+          updated_at: string
+          vendor_id: string | null
+          vendor_invoice_number: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expense_date?: string
+          gst_amount?: number
+          id?: string
+          itc_eligible?: boolean
+          method: string
+          notes?: string
+          number: string
+          organization_id: string
+          reference?: string
+          reverse_charge?: boolean
+          tds_amount?: number
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_invoice_number?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expense_date?: string
+          gst_amount?: number
+          id?: string
+          itc_eligible?: boolean
+          method?: string
+          notes?: string
+          number?: string
+          organization_id?: string
+          reference?: string
+          reverse_charge?: boolean
+          tds_amount?: number
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_invoice_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           allocated_discount: number
@@ -1639,6 +1727,7 @@ export type Database = {
         Args: { p_data: Json; p_id: string }
         Returns: string
       }
+      save_expense: { Args: { p_data: Json; p_id: string }; Returns: string }
       save_invoice: { Args: { p_data: Json; p_id: string }; Returns: string }
       save_payment: { Args: { p_data: Json; p_id: string }; Returns: string }
       save_quotation: { Args: { p_data: Json; p_id: string }; Returns: string }
