@@ -21,7 +21,7 @@ async function EditExpense({ params }: { params: PageProps<"/finance/expenses/[i
 
 export default function EditExpensePage({ params }: PageProps<"/finance/expenses/[id]/edit">) {
   return (
-    <Suspense fallback={<FormSkeleton />}>
+    <Suspense fallback={<FormSkeleton title />}>
       <EditExpense params={params} />
     </Suspense>
   );

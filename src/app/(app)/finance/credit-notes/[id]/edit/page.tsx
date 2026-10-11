@@ -22,7 +22,7 @@ async function EditCreditNote({ params }: { params: PageProps<"/finance/credit-n
 
 export default function EditCreditNotePage({ params }: PageProps<"/finance/credit-notes/[id]/edit">) {
   return (
-    <Suspense fallback={<FormSkeleton />}>
+    <Suspense fallback={<FormSkeleton title />}>
       <EditCreditNote params={params} />
     </Suspense>
   );

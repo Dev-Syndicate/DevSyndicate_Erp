@@ -51,7 +51,7 @@ async function EditVendor({ params }: { params: PageProps<"/vendors/[id]/edit">[
 
 export default function EditVendorPage({ params }: PageProps<"/vendors/[id]/edit">) {
   return (
-    <Suspense fallback={<FormSkeleton />}>
+    <Suspense fallback={<FormSkeleton title />}>
       <EditVendor params={params} />
     </Suspense>
   );

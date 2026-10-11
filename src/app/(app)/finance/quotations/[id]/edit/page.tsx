@@ -21,7 +21,7 @@ async function EditQuotation({ params }: { params: PageProps<"/finance/quotation
 
 export default function EditQuotationPage({ params }: PageProps<"/finance/quotations/[id]/edit">) {
   return (
-    <Suspense fallback={<FormSkeleton />}>
+    <Suspense fallback={<FormSkeleton title />}>
       <EditQuotation params={params} />
     </Suspense>
   );

@@ -20,7 +20,7 @@ async function EditInvoice({ params }: { params: PageProps<"/finance/invoices/[i
 
 export default function EditInvoicePage({ params }: PageProps<"/finance/invoices/[id]/edit">) {
   return (
-    <Suspense fallback={<FormSkeleton />}>
+    <Suspense fallback={<FormSkeleton title />}>
       <EditInvoice params={params} />
     </Suspense>
   );

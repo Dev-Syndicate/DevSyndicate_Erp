@@ -26,7 +26,7 @@ async function EditPayment({ params }: { params: PageProps<"/finance/payments/[i
 
 export default function EditPaymentPage({ params }: PageProps<"/finance/payments/[id]/edit">) {
   return (
-    <Suspense fallback={<FormSkeleton />}>
+    <Suspense fallback={<FormSkeleton title />}>
       <EditPayment params={params} />
     </Suspense>
   );
