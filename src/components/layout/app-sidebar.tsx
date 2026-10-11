@@ -128,7 +128,7 @@ export function AppSidebar({ user }: { user: CurrentUser | null }) {
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-medium">{user.fullName || user.email}</span>
-                      {user.fullName && <span className="truncate text-xs text-muted-foreground">{user.email}</span>}
+                      {user.roleName && <span className="truncate text-xs text-muted-foreground">{user.roleName}</span>}
                     </div>
                     <ChevronsUpDown className="ml-auto size-4" />
                   </SidebarMenuButton>
