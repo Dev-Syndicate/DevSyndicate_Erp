@@ -1,17 +1,14 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { FormSkeleton } from "@/components/page-skeletons";
-import { getCurrentUser } from "@/features/auth/queries";
 import { LeadForm } from "@/features/leads/components/lead-form";
-import { getLead, getLeadOwners } from "@/features/leads/queries";
+import { getLead } from "@/features/leads/queries";
 
 async function EditLead({ params }: { params: PageProps<"/leads/[id]/edit">["params"] }) {
-  const { id } = await params;
-  const [lead, user] = await Promise.all([getLead(id).catch(() => null), getCurrentUser()]);
+  const lead = await getLead((await params).id).catch(() => null);
   // Won leads are read-only (PRD §47).
   if (!lead || lead.status === "won") notFound();
-  const owners = user?.permissions.includes("leads.view_all") ? await getLeadOwners() : undefined;
-  return <LeadForm lead={lead} owners={owners} />;
+  return <LeadForm lead={lead} />;
 }
 
 export default function EditLeadPage({ params }: PageProps<"/leads/[id]/edit">) {

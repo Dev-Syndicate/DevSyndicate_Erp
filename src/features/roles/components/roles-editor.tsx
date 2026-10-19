@@ -19,7 +19,7 @@ const MODULES: Record<string, string> = {
   credit_notes: "Credit notes", payments: "Payments", expenses: "Expenses", owner: "Owner's account", documents: "Documents", reports: "Reports",
   data: "Data import", users: "Users", roles: "Roles", settings: "Settings", audit_logs: "Audit logs",
 };
-const ACTIONS: Record<string, string> = { view_all: "View all", create: "Create", update: "Edit", delete: "Delete", deactivate: "Deactivate", manage: "Manage", import: "Import" };
+const ACTIONS: Record<string, string> = { create: "Create", update: "Edit", delete: "Delete", deactivate: "Deactivate", manage: "Manage", import: "Import" };
 const actionLabel = (a: string) => ACTIONS[a] ?? a.charAt(0).toUpperCase() + a.slice(1);
 
 /** Permission checkboxes per role, grouped by module (PRD §5). Changes save immediately and apply on the next page load. */

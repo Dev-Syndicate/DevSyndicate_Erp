@@ -25,7 +25,7 @@ export async function saveLead(
   if (leadId && !id.safeParse(leadId).success) return { error: "Invalid request." };
   const parsed = leadSchema.safeParse(input);
   if (!parsed.success) return { error: "Please fix the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
-  const { owner_id, lost_reason, next_follow_up, ...lead } = parsed.data;
+  const { lost_reason, next_follow_up, ...lead } = parsed.data;
 
   const supabase = await createClient();
   if (!allowDuplicate) {
@@ -38,7 +38,6 @@ export async function saveLead(
     ...lead,
     lost_reason: lead.status === "lost" ? lost_reason : null,
     next_follow_up: next_follow_up || null,
-    ...(owner_id && { owner_id }),
   };
   let saved = leadId;
   if (leadId) {

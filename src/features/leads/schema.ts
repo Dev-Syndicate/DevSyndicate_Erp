@@ -44,8 +44,6 @@ export const leadSchema = z
     source_detail: z.string().trim().max(500),
     status: z.enum(["new", "contacted", "qualified", "lost"]),
     lost_reason: z.string().trim().max(500),
-    /** "" = keep the current owner (or you, for a new lead). */
-    owner_id: z.union([z.literal(""), z.uuid()]),
     next_follow_up: optionalDate,
     follow_up_note: z.string().trim().max(500),
     notes: z.string().trim().max(5000),

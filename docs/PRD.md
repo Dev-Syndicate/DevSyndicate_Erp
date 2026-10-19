@@ -14,7 +14,7 @@
 
 ### v1.6 (2026-10-19)
 
-- **CRM, first step: Leads (V2 starts).** Leads from referrals, LinkedIn, Instagram, the website, cold outreach or other sources; status New / Contacted / Qualified / Lost / Won; an owner per lead; an activity log; a next follow-up date with a "follow-ups due" list. Sales staff see only their own leads, managers see all. Won converts the lead into a client (new or existing), so the quotation → invoice flow continues from there (§47).
+- **CRM, first step: Leads (V2 starts).** Leads from referrals, LinkedIn, Instagram, the website, cold outreach or other sources; status New / Contacted / Qualified / Lost / Won; an activity log; a next follow-up date with a "follow-ups due" list. Leads are shared: one person adds a lead, anyone else calls and updates it; who added it and who logged each activity are recorded. Won converts the lead into a client (new or existing), so the quotation → invoice flow continues from there (§47).
 
 ### v1.5 (2026-10-11)
 
@@ -300,8 +300,7 @@ settings.update
 
 audit_logs.view
 
-leads.view               (own leads: owner is the user)
-leads.view_all           (every lead; also reassigns owners)
+leads.view               (every lead; leads are shared)
 leads.create
 leads.update
 leads.delete
@@ -329,7 +328,7 @@ leads.convert            (Won: create or link the client)
 | settings.view | ✅ | ✅ | ✅ | — | ✅ |
 | settings.update | ✅ | — | — | — | — |
 | audit_logs.view | ✅ | — | — | — | — |
-| leads.* | ✅ | ✅ | — | view, create, update, convert (own leads) | — |
+| leads.* | ✅ | ✅ | — | view, create, update, convert | — |
 
 Permissions are stored as data (seeded), so this matrix can be changed without code changes. Only the Super Admin protections in §32 are hard rules.
 
@@ -1879,7 +1878,7 @@ Source                Referral / LinkedIn / Instagram / Website / Cold outreach 
 Source Detail         (optional: who referred, profile or post link, campaign)
 Status                New / Contacted / Qualified / Lost / Won
 Lost Reason           (required when Lost)
-Owner                 (user responsible; defaults to the creator)
+Added By              (recorded automatically)
 Next Follow-up        (date, optional) + what to do
 Notes
 Client                (set on Won)
@@ -1892,10 +1891,10 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
 
 ## Rules
 
-- **Visibility.** `leads.view` sees leads the user owns; `leads.view_all` sees every lead and can change the owner. This follows Zoho CRM's private default, where the record owner and their superiors can see the record. Enforced in RLS.
+- **Shared leads (owner decision, v1.6).** There is no lead owner: everyone with `leads.view` sees every lead, and anyone with `leads.update` works it (one person adds, another calls or texts and updates). Zoho CRM's default is private records per owner; DevSyndicate's small team chose shared leads instead. Who added the lead and who logged each activity are recorded and shown.
 - **Duplicates.** Saving warns when another lead or client contact has the same email or phone; the user can still save.
 - **Lost** needs a reason. **Won** needs `leads.convert`: pick an existing client or create one from the lead (name, company, email, phone become the client and its primary contact). The lead keeps the client link and is read-only after Won. A Lost lead is reopened by changing its status back.
-- **Follow-ups due.** The dashboard and the Leads list show the user's open leads with a next follow-up on or before today (IST).
+- **Follow-ups due.** The dashboard and the Leads list show open leads with a next follow-up on or before today (IST).
 - Delete (`leads.delete`) is for mistakes only; won leads cannot be deleted.
 - Website form leads: not in this step. When built, a public form needs bot protection beyond a basic captcha (Zoho users report heavy web-form spam).
 

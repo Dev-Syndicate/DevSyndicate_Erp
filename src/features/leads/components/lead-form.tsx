@@ -17,13 +17,7 @@ import { saveLead, type Duplicate } from "@/features/leads/actions";
 import { LEAD_SOURCES, LEAD_STATUSES, leadSchema, type LeadInput } from "@/features/leads/schema";
 import type { Tables } from "@/lib/supabase/database.types";
 
-type Props = {
-  lead?: Tables<"leads">;
-  /** Owner picker, only for users who see every lead (leads.view_all). */
-  owners?: { id: string; full_name: string; email: string }[];
-};
-
-export function LeadForm({ lead, owners }: Props) {
+export function LeadForm({ lead }: { lead?: Tables<"leads"> }) {
   const [form, setForm] = useState<LeadInput>(() => ({
     name: lead?.name ?? "",
     company: lead?.company ?? "",
@@ -33,7 +27,6 @@ export function LeadForm({ lead, owners }: Props) {
     source_detail: lead?.source_detail ?? "",
     status: (lead?.status as LeadInput["status"]) ?? "new",
     lost_reason: lead?.lost_reason ?? "",
-    owner_id: lead?.owner_id ?? "",
     next_follow_up: lead?.next_follow_up ?? "",
     follow_up_note: lead?.follow_up_note ?? "",
     notes: lead?.notes ?? "",
@@ -134,25 +127,7 @@ export function LeadForm({ lead, owners }: Props) {
                   </SelectContent>
                 </Select>
               </Field>
-              {owners ? (
-                <Field>
-                  <FieldLabel htmlFor="owner_id">Owner</FieldLabel>
-                  <Select value={form.owner_id || undefined} onValueChange={(v) => set("owner_id", v)}>
-                    <SelectTrigger id="owner_id" className="w-full">
-                      <SelectValue placeholder="Me" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {owners.map((o) => (
-                        <SelectItem key={o.id} value={o.id}>
-                          {o.full_name || o.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              ) : (
-                <div className="hidden sm:block" />
-              )}
+              <div className="hidden sm:block" />
               {form.status === "lost" && (
                 <Field data-invalid={!!errors.lost_reason} className="sm:col-span-2">
                   <FieldLabel htmlFor="lost_reason">Why was it lost?</FieldLabel>

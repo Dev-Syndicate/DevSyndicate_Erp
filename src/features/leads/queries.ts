@@ -13,12 +13,12 @@ export type LeadView = (typeof LEAD_VIEWS)[number]["value"];
 
 const OPEN = ["new", "contacted", "qualified"];
 
-/** Leads the user may see (RLS: own leads, or all with leads.view_all). */
+/** Every lead (shared; RLS: leads.view). */
 export async function listLeads({ q, page, view }: { q: string; page: number; view: LeadView }) {
   const supabase = await createClient();
   let query = supabase
     .from("leads")
-    .select("id, name, company, email, phone, source, status, owner_id, next_follow_up, follow_up_note", { count: "exact" })
+    .select("id, name, company, email, phone, source, status, next_follow_up, follow_up_note", { count: "exact" })
     .order("next_follow_up", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
@@ -46,23 +46,20 @@ export async function getLead(id: string) {
   return data;
 }
 
-/** Users who can hold leads, for owner names and the owner picker. */
-export async function getLeadOwners() {
+/** Names of users who work leads, for "added by" and "logged by". */
+export async function getLeadUsers() {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("lead_owners");
+  const { data, error } = await supabase.rpc("lead_users");
   if (error) throw error;
   return data;
 }
 
-/** The signed-in user's open leads with a follow-up due today or earlier (dashboard). */
-export async function getMyDueFollowUps() {
+/** Open leads with a follow-up due today or earlier (dashboard). */
+export async function getDueFollowUps() {
   const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
-  if (!claims?.claims.sub) return [];
   const { data, error } = await supabase
     .from("leads")
     .select("id, name, company, next_follow_up, follow_up_note")
-    .eq("owner_id", claims.claims.sub)
     .in("status", OPEN)
     .lte("next_follow_up", istToday())
     .order("next_follow_up")

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { getMyDueFollowUps } from "@/features/leads/queries";
+import type { getDueFollowUps } from "@/features/leads/queries";
 import { formatDate, istToday } from "@/lib/dates";
 
-/** The signed-in user's lead follow-ups due today or overdue (PRD §47). */
-export function FollowUpsCard({ rows }: { rows: Awaited<ReturnType<typeof getMyDueFollowUps>> }) {
+/** Lead follow-ups due today or overdue (PRD §47). */
+export function FollowUpsCard({ rows }: { rows: Awaited<ReturnType<typeof getDueFollowUps>> }) {
   const today = istToday();
   return (
     <Card>

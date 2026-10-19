@@ -1107,7 +1107,6 @@ export type Database = {
           next_follow_up: string | null
           notes: string
           organization_id: string
-          owner_id: string
           phone: string
           source: string
           source_detail: string
@@ -1128,7 +1127,6 @@ export type Database = {
           next_follow_up?: string | null
           notes?: string
           organization_id: string
-          owner_id?: string
           phone?: string
           source: string
           source_detail?: string
@@ -1149,7 +1147,6 @@ export type Database = {
           next_follow_up?: string | null
           notes?: string
           organization_id?: string
-          owner_id?: string
           phone?: string
           source?: string
           source_detail?: string
@@ -1170,13 +1167,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leads_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1950,7 +1940,7 @@ export type Database = {
           name: string
         }[]
       }
-      lead_owners: {
+      lead_users: {
         Args: never
         Returns: {
           email: string

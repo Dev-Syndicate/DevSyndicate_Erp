@@ -1,14 +1,12 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { FormSkeleton } from "@/components/page-skeletons";
-import { getCurrentUser } from "@/features/auth/queries";
 import { LeadForm } from "@/features/leads/components/lead-form";
-import { getLeadOwners } from "@/features/leads/queries";
 
-// RLS rejects the insert for users without leads.create; the form shows that error.
+// The date picker reads today's date, so render per request. RLS rejects the insert without leads.create.
 async function NewLead() {
-  const user = await getCurrentUser();
-  const owners = user?.permissions.includes("leads.view_all") ? await getLeadOwners() : undefined;
-  return <LeadForm owners={owners} />;
+  await connection();
+  return <LeadForm />;
 }
 
 export default function NewLeadPage() {

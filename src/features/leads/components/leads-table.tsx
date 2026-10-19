@@ -11,10 +11,8 @@ import { formatDate, istToday } from "@/lib/dates";
 
 type Rows = Awaited<ReturnType<typeof listLeads>>["rows"];
 
-/** `owners` (id → name) is passed only to users who see everyone's leads; it adds the Owner column. */
-export function LeadsTable({ rows, owners }: { rows: Rows; owners?: Map<string, string> }) {
+export function LeadsTable({ rows }: { rows: Rows }) {
   const today = istToday();
-  const cols = owners ? 6 : 5;
   return (
     <Card className="flex-1">
       <CardContent>
@@ -26,12 +24,11 @@ export function LeadsTable({ rows, owners }: { rows: Rows; owners?: Map<string, 
               <TableHead>Source</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Next follow-up</TableHead>
-              {owners && <TableHead>Owner</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <EmptyRow colSpan={cols} icon={UserRoundSearch} title="No leads found" description="Leads you add appear here. If you searched or filtered, try another view." />
+              <EmptyRow colSpan={5} icon={UserRoundSearch} title="No leads found" description="Leads you add appear here. If you searched or filtered, try another view." />
             )}
             {rows.map((l) => {
               const open = l.status !== "won" && l.status !== "lost";
@@ -69,7 +66,6 @@ export function LeadsTable({ rows, owners }: { rows: Rows; owners?: Map<string, 
                       "—"
                     )}
                   </TableCell>
-                  {owners && <TableCell className="text-muted-foreground">{owners.get(l.owner_id) ?? "—"}</TableCell>}
                 </TableRow>
               );
             })}

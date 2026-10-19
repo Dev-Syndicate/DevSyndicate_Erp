@@ -11,18 +11,18 @@ import { deleteLead } from "@/features/leads/actions";
 import { ActivitiesCard } from "@/features/leads/components/activities-card";
 import { ConvertLeadDialog } from "@/features/leads/components/convert-lead-dialog";
 import { LeadStatusBadge } from "@/features/leads/components/lead-status-badge";
-import { getClientOptions, getLead, getLeadOwners } from "@/features/leads/queries";
+import { getClientOptions, getLead, getLeadUsers } from "@/features/leads/queries";
 import { sourceLabel } from "@/features/leads/schema";
 import { formatDate, istToday } from "@/lib/dates";
 
 async function LeadDetail({ params }: { params: PageProps<"/leads/[id]">["params"] }) {
   const { id } = await params;
-  const [lead, user, owners] = await Promise.all([getLead(id).catch(() => null), getCurrentUser(), getLeadOwners().catch(() => [])]);
+  const [lead, user, users] = await Promise.all([getLead(id).catch(() => null), getCurrentUser(), getLeadUsers().catch(() => [])]);
   if (!lead) notFound();
   const can = (p: string) => !!user?.permissions.includes(p);
   const won = lead.status === "won";
   const clients = can("leads.convert") && !won ? await getClientOptions() : [];
-  const people = new Map(owners.map((o) => [o.id, o.full_name || o.email]));
+  const people = new Map(users.map((u) => [u.id, u.full_name || u.email]));
   const overdue = !won && lead.status !== "lost" && !!lead.next_follow_up && lead.next_follow_up <= istToday();
 
   const details: [string, React.ReactNode][] = [
@@ -30,7 +30,7 @@ async function LeadDetail({ params }: { params: PageProps<"/leads/[id]">["params
     ["Email", lead.email && <a href={`mailto:${lead.email}`} className="hover:underline">{lead.email}</a>],
     ["Phone", lead.phone && <a href={`tel:${lead.phone}`} className="hover:underline">{lead.phone}</a>],
     ["Source", [sourceLabel(lead.source), lead.source_detail].filter(Boolean).join(" · ")],
-    ["Owner", people.get(lead.owner_id)],
+    ["Added by", [lead.created_by && people.get(lead.created_by), formatDate(lead.created_at)].filter(Boolean).join(" · ")],
     [
       "Next follow-up",
       won || lead.status === "lost" || !lead.next_follow_up ? "" : (

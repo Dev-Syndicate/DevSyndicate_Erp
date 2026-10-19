@@ -6,15 +6,13 @@ import { ListPagination, parseListParams, SearchForm } from "@/components/list-c
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/features/auth/queries";
 import { LeadsTable } from "@/features/leads/components/leads-table";
-import { getLeadOwners, LEAD_VIEWS, listLeads, type LeadView } from "@/features/leads/queries";
+import { LEAD_VIEWS, listLeads, type LeadView } from "@/features/leads/queries";
 
 async function Leads({ searchParams }: { searchParams: PageProps<"/leads">["searchParams"] }) {
   const raw = await searchParams;
   const params = parseListParams(raw);
   const view = (LEAD_VIEWS.find((v) => v.value === raw.view)?.value ?? "open") as LeadView;
-  const user = await getCurrentUser();
-  const seesAll = !!user?.permissions.includes("leads.view_all");
-  const [{ rows, total }, owners] = await Promise.all([listLeads({ ...params, view }), seesAll ? getLeadOwners() : null]);
+  const [{ rows, total }, user] = await Promise.all([listLeads({ ...params, view }), getCurrentUser()]);
   const viewHref = (v: string) => `/leads?${new URLSearchParams({ ...(v !== "open" && { view: v }), ...(params.q && { q: params.q }) })}`;
 
   return (
@@ -36,7 +34,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/leads">["sear
           </Button>
         )}
       </div>
-      <LeadsTable rows={rows} owners={owners ? new Map(owners.map((o) => [o.id, o.full_name || o.email])) : undefined} />
+      <LeadsTable rows={rows} />
       <ListPagination path="/leads" {...params} total={total} params={{ view: view === "open" ? "" : view }} />
     </>
   );

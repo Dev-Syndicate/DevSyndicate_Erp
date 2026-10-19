@@ -1,10 +1,11 @@
--- Self-check for CRM leads (PRD §47, v1.6): own vs all visibility, owner changes, activities, duplicates,
--- Lost needs a reason, Won only through convert_lead (new or existing client), won leads locked. Rolls back.
+-- Self-check for CRM leads (PRD §47, v1.6): shared leads (one adds, another calls and updates), activities with who
+-- logged them, duplicates, Lost needs a reason, Won only through convert_lead (new or existing client), won leads
+-- locked, permissions. Rolls back.
 begin;
 
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data, aud, role)
 select gen_random_uuid(), r.key || x || '@test.local', jsonb_build_object('role_id', r.id), '{}', 'authenticated', 'authenticated'
-from public.roles r, (values (''), ('2')) v(x) where r.key = 'admin' and x = '' or r.key = 'staff';
+from public.roles r, (values (''), ('2')) v(x) where r.key in ('admin', 'finance') and x = '' or r.key = 'staff';
 create temp table u as select email, id from public.profiles where email like '%@test.local';
 grant select on u to authenticated;
 
@@ -14,77 +15,58 @@ $$;
 
 set local role authenticated;
 
--- Staff: creates their own lead, cannot give it away or mark it won directly
+-- Staff adds a lead; validation
 select pg_temp.act_as('staff@test.local');
-do $$
-declare
-  me uuid := (select id from u where email = 'staff@test.local');
-  other uuid := (select id from u where email = 'staff2@test.local');
-  lid uuid;
-begin
+do $$ begin
   insert into public.leads (organization_id, name, company, phone, source)
-  values (public.current_org_id(), 'Asha Rao', 'Rao Studio', '+91 98450 12345', 'instagram') returning id into lid;
-  assert (select owner_id from public.leads where id = lid) = me, 'owner defaults to the creator';
-
+  values (public.current_org_id(), 'Asha Rao', 'Rao Studio', '+91 98450 12345', 'instagram');
+  assert (select created_by from public.leads where name = 'Asha Rao') = (select id from u where email = 'staff@test.local'), 'added by is recorded';
   begin
-    insert into public.leads (organization_id, name, email, source, owner_id)
-    values (public.current_org_id(), 'Given away', 'x@test.local', 'referral', other);
-    assert false, 'staff cannot create a lead for someone else';
-  exception when insufficient_privilege then null; end;
-end $$;
-
-do $$
-declare lid uuid := (select id from public.leads where name = 'Asha Rao');
-begin
-  begin
-    update public.leads set owner_id = (select id from u where email = 'staff2@test.local') where id = lid;
-    assert false, 'reassigning is rejected';
-  exception when insufficient_privilege then null; end;
-  begin
-    update public.leads set status = 'won' where id = lid;
+    update public.leads set status = 'won' where name = 'Asha Rao';
     assert false, 'won only through convert_lead';
   exception when insufficient_privilege then null; end;
   begin
-    update public.leads set status = 'lost' where id = lid;
+    update public.leads set status = 'lost' where name = 'Asha Rao';
     assert false, 'lost needs a reason';
   exception when check_violation then null; end;
   begin
     insert into public.leads (organization_id, name, source) values (public.current_org_id(), 'No contact', 'other');
     assert false, 'email or phone required';
   exception when check_violation then null; end;
+  delete from public.leads where name = 'Asha Rao';
+  assert exists (select 1 from public.leads where name = 'Asha Rao'), 'staff cannot delete';
+end $$;
 
+-- Another staff member sees it, calls, updates it and logs the call
+select pg_temp.act_as('staff2@test.local');
+do $$
+declare lid uuid := (select id from public.leads where name = 'Asha Rao');
+begin
+  assert lid is not null, 'leads are shared';
   insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'call', 'Intro call');
-  update public.leads set status = 'contacted', next_follow_up = public.ist_today() where id = lid;
-  assert (select status from public.leads where id = lid) = 'contacted', 'status updated';
-
-  -- Staff cannot delete (no leads.delete)
-  delete from public.leads where id = lid;
-  assert exists (select 1 from public.leads where id = lid), 'staff cannot delete';
-
+  update public.leads set status = 'contacted', next_follow_up = public.ist_today(), follow_up_note = 'Send proposal' where id = lid;
+  assert (select status from public.leads where id = lid) = 'contacted', 'any lead user updates it';
+  assert (select created_by from public.lead_activities where lead_id = lid) = (select id from u where email = 'staff2@test.local'), 'logged by is recorded';
+  begin
+    insert into public.lead_activities (organization_id, lead_id, kind, body, created_by)
+    values (public.current_org_id(), lid, 'note', 'Forged', (select id from u where email = 'staff@test.local'));
+    assert false, 'cannot log as someone else';
+  exception when insufficient_privilege then null; end;
+  assert (select count(*) from public.lead_users() where email like 'staff%@test.local') = 2, 'names for added by / logged by';
   -- Duplicate by phone, ignoring spaces and +91
   assert exists (select 1 from public.lead_duplicates('', '09845012345')), 'phone duplicate found';
   assert not exists (select 1 from public.lead_duplicates('', '09845012345', lid)), 'the lead itself is excluded';
 end $$;
 
--- Another staff member cannot see it; admin sees all and can reassign
-select pg_temp.act_as('staff2@test.local');
+-- Finance has no leads access
+select pg_temp.act_as('finance@test.local');
 do $$ begin
-  assert not exists (select 1 from public.leads where name = 'Asha Rao'), 'other staff cannot see the lead';
-  assert not exists (select 1 from public.lead_activities where body = 'Intro call'), 'nor its activities';
+  assert not exists (select 1 from public.leads), 'finance cannot see leads';
+  assert not exists (select 1 from public.lead_users()), 'nor lead user names';
   begin
-    perform public.convert_lead((select id from public.leads where name = 'Asha Rao' limit 1));
-    assert false, 'other staff cannot convert';
-  exception when invalid_parameter_value then null; end;
-end $$;
-
-select pg_temp.act_as('admin@test.local');
-do $$
-declare lid uuid := (select id from public.leads where name = 'Asha Rao');
-begin
-  assert lid is not null, 'admin sees every lead';
-  update public.leads set owner_id = (select id from u where email = 'staff2@test.local') where id = lid;
-  update public.leads set owner_id = (select id from u where email = 'staff@test.local') where id = lid;
-  assert (select count(*) from public.lead_owners() where email like 'staff%@test.local') = 2, 'owner picker lists staff';
+    perform public.convert_lead((select id from u limit 1));
+    assert false, 'finance cannot convert';
+  exception when insufficient_privilege then null; end;
 end $$;
 
 -- Staff converts: a new client with the person as primary contact; the lead is then locked

@@ -8,14 +8,14 @@ import { PeriodSelect } from "@/features/dashboard/components/period-select";
 import { RevenueChart } from "@/features/dashboard/components/revenue-chart";
 import { getDashboard, getDashboardLists, getRecentQuotations } from "@/features/dashboard/queries";
 import { FollowUpsCard } from "@/features/leads/components/follow-ups-card";
-import { getMyDueFollowUps } from "@/features/leads/queries";
+import { getDueFollowUps } from "@/features/leads/queries";
 import { PERIODS, periodRange } from "@/lib/periods";
 import { istToday } from "@/lib/dates";
 
 async function Dashboard({ searchParams }: { searchParams: PageProps<"/">["searchParams"] }) {
   const user = await getCurrentUser();
-  // Sales staff see their lead follow-ups first (PRD §47).
-  const followUps = user?.permissions.includes("leads.view") ? <FollowUpsCard rows={await getMyDueFollowUps()} /> : null;
+  // Lead follow-ups due come first for everyone who works leads (PRD §47).
+  const followUps = user?.permissions.includes("leads.view") ? <FollowUpsCard rows={await getDueFollowUps()} /> : null;
   // Financial KPIs need reports.view (PRD §10); others see their recent quotations.
   if (!user?.permissions.includes("reports.view")) {
     return (
