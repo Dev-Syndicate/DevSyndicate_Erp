@@ -6,6 +6,8 @@ type Json = Record<string, unknown> | null;
 export const MODULES: Record<string, string> = {
   clients: "Clients",
   client_contacts: "Client contacts",
+  leads: "Leads",
+  lead_activities: "Lead activity",
   vendors: "Vendors",
   quotations: "Quotations",
   quotation_items: "Quotation lines",

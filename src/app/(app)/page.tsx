@@ -7,14 +7,23 @@ import { KpiCards } from "@/features/dashboard/components/kpi-cards";
 import { PeriodSelect } from "@/features/dashboard/components/period-select";
 import { RevenueChart } from "@/features/dashboard/components/revenue-chart";
 import { getDashboard, getDashboardLists, getRecentQuotations } from "@/features/dashboard/queries";
+import { FollowUpsCard } from "@/features/leads/components/follow-ups-card";
+import { getMyDueFollowUps } from "@/features/leads/queries";
 import { PERIODS, periodRange } from "@/lib/periods";
 import { istToday } from "@/lib/dates";
 
 async function Dashboard({ searchParams }: { searchParams: PageProps<"/">["searchParams"] }) {
   const user = await getCurrentUser();
+  // Sales staff see their lead follow-ups first (PRD §47).
+  const followUps = user?.permissions.includes("leads.view") ? <FollowUpsCard rows={await getMyDueFollowUps()} /> : null;
   // Financial KPIs need reports.view (PRD §10); others see their recent quotations.
   if (!user?.permissions.includes("reports.view")) {
-    return user?.permissions.includes("quotations.view") ? <RecentQuotations rows={await getRecentQuotations()} /> : null;
+    return (
+      <>
+        {followUps}
+        {user?.permissions.includes("quotations.view") && <RecentQuotations rows={await getRecentQuotations()} />}
+      </>
+    );
   }
 
   const { period } = await searchParams;
@@ -33,6 +42,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/">["searc
           <PeriodSelect value={value} />
         </div>
       </div>
+      {followUps}
       <KpiCards f={figures} />
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <RevenueChart monthly={figures.monthly} fy={`${fyStart}-${String(fyStart + 1).slice(2)}`} />

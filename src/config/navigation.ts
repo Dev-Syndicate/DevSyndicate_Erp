@@ -5,6 +5,7 @@ import {
   Landmark,
   Settings,
   Truck,
+  UserRoundSearch,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,6 +37,7 @@ export const navigation: NavItem[] = [
     ],
   },
   { title: "Clients", href: "/clients", icon: Building2, permission: "clients.view" },
+  { title: "Leads", href: "/leads", icon: UserRoundSearch, permission: "leads.view" },
   { title: "Vendors", href: "/vendors", icon: Truck, permission: "vendors.view" },
   { title: "Documents", href: "/documents", icon: FolderOpen, permission: "documents.view" },
   {

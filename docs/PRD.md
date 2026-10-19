@@ -1,7 +1,7 @@
 # DevSyndicate ERP
 
 **Product Requirements Document (PRD)**  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Initial Development  
 **Product:** DevSyndicate ERP  
 **Primary Module:** Finance  
@@ -11,6 +11,10 @@
 ---
 
 ## Changelog
+
+### v1.6 (2026-10-19)
+
+- **CRM, first step: Leads (V2 starts).** Leads from referrals, LinkedIn, Instagram, the website, cold outreach or other sources; status New / Contacted / Qualified / Lost / Won; an owner per lead; an activity log; a next follow-up date with a "follow-ups due" list. Sales staff see only their own leads, managers see all. Won converts the lead into a client (new or existing), so the quotation → invoice flow continues from there (§47).
 
 ### v1.5 (2026-10-11)
 
@@ -295,6 +299,13 @@ settings.view
 settings.update
 
 audit_logs.view
+
+leads.view               (own leads: owner is the user)
+leads.view_all           (every lead; also reassigns owners)
+leads.create
+leads.update
+leads.delete
+leads.convert            (Won: create or link the client)
 ```
 
 ## 5.1 Default Role Matrix
@@ -318,6 +329,7 @@ audit_logs.view
 | settings.view | ✅ | ✅ | ✅ | — | ✅ |
 | settings.update | ✅ | — | — | — | — |
 | audit_logs.view | ✅ | — | — | — | — |
+| leads.* | ✅ | ✅ | — | view, create, update, convert (own leads) | — |
 
 Permissions are stored as data (seeded), so this matrix can be changed without code changes. Only the Super Admin protections in §32 are hard rules.
 
@@ -1441,6 +1453,8 @@ Finance
 
 Clients
 
+Leads
+
 Vendors
 
 Documents
@@ -1673,7 +1687,7 @@ Data Import
 
 ## V2
 
-**CRM**
+**CRM** (Leads started in v1.6, §47; pipeline with deal values and stages comes later)
 
 ```text
 Leads
@@ -1846,3 +1860,44 @@ That gives DevSyndicate a genuinely usable internal system from V1, while keepin
 | 5 | Is one role per user sufficient for V1? | Yes; multiple roles per user later if needed. |
 | 6 | Who may override "invoiced total exceeds quotation total"? | Anyone with `quotations.convert`, with a mandatory reason (logged). |
 | 7 | Where should encrypted backups be stored? | Decided (v1.4): the company Google Drive, one file replaced nightly with 30 days of versions (§34). |
+
+---
+
+# 47. CRM: Leads (v1.6, researched)
+
+A lead is a possible client before any quotation: someone to follow up with. Once qualified and won, the lead is converted into a client, which can be linked to an existing record instead of creating a duplicate (as Zoho CRM converts leads into accounts and contacts). Deals with values and stages are not in this step; the lead status is the pipeline for now.
+
+## Lead Fields
+
+```text
+Lead ID
+Name                  (person)
+Company               (optional)
+Email                 (optional)
+Phone                 (optional; at least one of email or phone)
+Source                Referral / LinkedIn / Instagram / Website / Cold outreach / Other
+Source Detail         (optional: who referred, profile or post link, campaign)
+Status                New / Contacted / Qualified / Lost / Won
+Lost Reason           (required when Lost)
+Owner                 (user responsible; defaults to the creator)
+Next Follow-up        (date, optional) + what to do
+Notes
+Client                (set on Won)
+Created At / Updated At
+```
+
+## Activities
+
+A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what happened, when. Logging an activity also replaces the next follow-up (date and what to do), or clears it when no date is given.
+
+## Rules
+
+- **Visibility.** `leads.view` sees leads the user owns; `leads.view_all` sees every lead and can change the owner. This follows Zoho CRM's private default, where the record owner and their superiors can see the record. Enforced in RLS.
+- **Duplicates.** Saving warns when another lead or client contact has the same email or phone; the user can still save.
+- **Lost** needs a reason. **Won** needs `leads.convert`: pick an existing client or create one from the lead (name, company, email, phone become the client and its primary contact). The lead keeps the client link and is read-only after Won. A Lost lead is reopened by changing its status back.
+- **Follow-ups due.** The dashboard and the Leads list show the user's open leads with a next follow-up on or before today (IST).
+- Delete (`leads.delete`) is for mistakes only; won leads cannot be deleted.
+- Website form leads: not in this step. When built, a public form needs bot protection beyond a basic captcha (Zoho users report heavy web-form spam).
+
+Sources: Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs.
+

@@ -1038,6 +1038,149 @@ export type Database = {
           },
         ]
       }
+      lead_activities: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          happened_at: string
+          id: string
+          kind: string
+          lead_id: string
+          organization_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          happened_at?: string
+          id?: string
+          kind: string
+          lead_id: string
+          organization_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          happened_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          client_id: string | null
+          company: string
+          created_at: string
+          created_by: string | null
+          email: string
+          follow_up_note: string
+          id: string
+          lost_reason: string | null
+          name: string
+          next_follow_up: string | null
+          notes: string
+          organization_id: string
+          owner_id: string
+          phone: string
+          source: string
+          source_detail: string
+          status: string
+          updated_at: string
+          won_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          company?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          follow_up_note?: string
+          id?: string
+          lost_reason?: string | null
+          name: string
+          next_follow_up?: string | null
+          notes?: string
+          organization_id: string
+          owner_id?: string
+          phone?: string
+          source: string
+          source_detail?: string
+          status?: string
+          updated_at?: string
+          won_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          company?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          follow_up_note?: string
+          id?: string
+          lost_reason?: string | null
+          name?: string
+          next_follow_up?: string | null
+          notes?: string
+          organization_id?: string
+          owner_id?: string
+          phone?: string
+          source?: string
+          source_detail?: string
+          status?: string
+          updated_at?: string
+          won_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -1747,6 +1890,10 @@ export type Database = {
           error: true
         } & "the function public.client_credit with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
+      convert_lead: {
+        Args: { p_client_id?: string; p_id: string }
+        Returns: string
+      }
       convert_quotation: {
         Args: {
           p_amount?: number
@@ -1795,6 +1942,22 @@ export type Database = {
       }
       is_super_admin: { Args: { uid: string }; Returns: boolean }
       ist_today: { Args: never; Returns: string }
+      lead_duplicates: {
+        Args: { p_email: string; p_exclude?: string; p_phone: string }
+        Returns: {
+          detail: string
+          kind: string
+          name: string
+        }[]
+      }
+      lead_owners: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+        }[]
+      }
       list_users: {
         Args: never
         Returns: {
