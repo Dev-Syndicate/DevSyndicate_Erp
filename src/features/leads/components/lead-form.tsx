@@ -81,10 +81,10 @@ export function LeadForm({ lead }: { lead?: Tables<"leads"> }) {
           </CardHeader>
           <CardContent>
             <FieldGroup className="grid gap-4 sm:grid-cols-2">
-              {text("name", "Name", { required: true })}
-              {text("company", "Company")}
-              {text("email", "Email", { type: "email" })}
-              {text("phone", "Phone", { type: "tel" })}
+              {text("name", "Name", { required: true, placeholder: "e.g. Asha Rao" })}
+              {text("company", "Company", { placeholder: "e.g. Rao Studio (optional)" })}
+              {text("email", "Email", { type: "email", placeholder: "e.g. asha@raostudio.in" })}
+              {text("phone", "Phone", { type: "tel", placeholder: "e.g. +91 98450 12345" })}
               <Field>
                 <FieldLabel htmlFor="source">Source</FieldLabel>
                 <Select value={form.source} onValueChange={(v) => set("source", v as LeadInput["source"])}>
@@ -100,7 +100,7 @@ export function LeadForm({ lead }: { lead?: Tables<"leads"> }) {
                   </SelectContent>
                 </Select>
               </Field>
-              {text("source_detail", source?.detail ?? "Source detail", { placeholder: "Optional" })}
+              {text("source_detail", source?.detail ?? "Source detail", { placeholder: `e.g. ${source?.example} (optional)` })}
             </FieldGroup>
           </CardContent>
         </Card>
@@ -152,7 +152,7 @@ export function LeadForm({ lead }: { lead?: Tables<"leads"> }) {
               </Field>
               <Field className="sm:col-span-2">
                 <FieldLabel htmlFor="notes">Notes</FieldLabel>
-                <Textarea id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={3} />
+                <Textarea id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={3} placeholder="e.g. Needs a 5-page site before Diwali; budget around ₹50,000" />
               </Field>
             </FieldGroup>
           </CardContent>

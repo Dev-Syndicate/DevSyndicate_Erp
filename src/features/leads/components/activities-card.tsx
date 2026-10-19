@@ -83,7 +83,7 @@ export function ActivitiesCard({ leadId, activities, people, canLog }: Props) {
                 </Field>
                 <Field data-invalid={!!errors.body}>
                   <FieldLabel htmlFor="activity-body">What happened</FieldLabel>
-                  <Textarea id="activity-body" value={form.body} onChange={(e) => set("body", e.target.value)} rows={2} aria-invalid={!!errors.body} />
+                  <Textarea id="activity-body" value={form.body} onChange={(e) => set("body", e.target.value)} rows={2} placeholder="e.g. Called, interested in a website redesign, wants a quote by Friday" aria-invalid={!!errors.body} />
                   <FieldError>{errors.body}</FieldError>
                 </Field>
                 <Field>
@@ -92,7 +92,7 @@ export function ActivitiesCard({ leadId, activities, people, canLog }: Props) {
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="activity-note">What to do next</FieldLabel>
-                  <Input id="activity-note" value={form.follow_up_note} onChange={(e) => set("follow_up_note", e.target.value)} disabled={!form.next_follow_up} />
+                  <Input id="activity-note" value={form.follow_up_note} onChange={(e) => set("follow_up_note", e.target.value)} disabled={!form.next_follow_up} placeholder="e.g. Send the proposal" />
                   <FieldDescription>Replaces the lead&apos;s next follow-up; leave the date empty if there is none.</FieldDescription>
                 </Field>
               </FieldGroup>

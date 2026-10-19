@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 export const LEAD_SOURCES = [
-  { value: "referral", label: "Referral", detail: "Who referred them" },
-  { value: "linkedin", label: "LinkedIn", detail: "Profile or post link" },
-  { value: "instagram", label: "Instagram", detail: "Handle or post link" },
-  { value: "website", label: "Website", detail: "Page or campaign" },
-  { value: "cold_outreach", label: "Cold outreach", detail: "Channel or campaign" },
-  { value: "other", label: "Other", detail: "Where they came from" },
+  { value: "referral", label: "Referral", detail: "Who referred them", example: "Karthik from Brightline" },
+  { value: "linkedin", label: "LinkedIn", detail: "Profile or post link", example: "linkedin.com/in/asharao" },
+  { value: "instagram", label: "Instagram", detail: "Handle or post link", example: "@raostudio" },
+  { value: "website", label: "Website", detail: "Page or campaign", example: "Contact page" },
+  { value: "cold_outreach", label: "Cold outreach", detail: "Channel or campaign", example: "Email campaign, Oct" },
+  { value: "other", label: "Other", detail: "Where they came from", example: "Met at a meetup" },
 ] as const;
 
 export const LEAD_STATUSES = [
