@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "./utils";
 
 export type SignInState = { error?: string; email?: string };
 
@@ -25,7 +26,19 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
     return { error: INACTIVE_MESSAGE, email };
   }
 
-  redirect("/");
+  // The proxy sent the user here as /login?next=…; the form posts from that page, so read it from the Referer.
+  const referer = (await headers()).get("referer");
+  redirect(safeNext(referer ? (new URL(referer).searchParams.get("next") ?? "") : ""));
+}
+
+/** Claude connector consent (PRD §48): approve or deny, then hand the browser back to Claude. */
+export async function decideAuthorization(authorizationId: string, approve: boolean) {
+  const supabase = await createClient();
+  const { data, error } = approve
+    ? await supabase.auth.oauth.approveAuthorization(authorizationId, { skipBrowserRedirect: true })
+    : await supabase.auth.oauth.denyAuthorization(authorizationId, { skipBrowserRedirect: true });
+  if (error) return { error: "This request has expired. Start connecting again from Claude." };
+  redirect(data.redirect_url);
 }
 
 export async function signOut() {

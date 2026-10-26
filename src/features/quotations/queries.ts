@@ -1,8 +1,11 @@
 import { PAGE_SIZE } from "@/components/list-controls";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
-export async function listQuotations({ q, page }: { q: string; page: number }) {
-  const supabase = await createClient();
+/** `db` = another user client, e.g. the Claude connector's (PRD §48). */
+export async function listQuotations({ q, page }: { q: string; page: number }, db?: SupabaseClient<Database>) {
+  const supabase = db ?? (await createClient());
   let query = supabase
     .from("quotations")
     .select("id, number, revision, title, status, quotation_date, valid_until, grand_total, invoiced_total, clients(company_name)", {
@@ -20,8 +23,8 @@ export async function listQuotations({ q, page }: { q: string; page: number }) {
   return { rows: data, total: count ?? 0 };
 }
 
-export async function getQuotation(id: string) {
-  const supabase = await createClient();
+export async function getQuotation(id: string, db?: SupabaseClient<Database>) {
+  const supabase = db ?? (await createClient());
   const { data, error } = await supabase
     .from("quotations")
     .select(

@@ -33,16 +33,20 @@ export async function updateSession(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.includes(request.nextUrl.pathname);
   if (LINK_PATHS.includes(request.nextUrl.pathname)) return response;
 
-  if (!signedIn && !isPublic) return redirectTo(request, response, "/login");
+  // Come back to the page after signing in (e.g. the Claude connector's consent page, PRD §48).
+  if (!signedIn && !isPublic) {
+    const next = request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname + request.nextUrl.search;
+    return redirectTo(request, response, "/login", next && `?${new URLSearchParams({ next })}`);
+  }
   if (signedIn && isPublic) return redirectTo(request, response, "/");
   return response;
 }
 
 // Carry refreshed auth cookies over to the redirect response.
-function redirectTo(request: NextRequest, from: NextResponse, pathname: string) {
+function redirectTo(request: NextRequest, from: NextResponse, pathname: string, search = "") {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
-  url.search = "";
+  url.search = search;
   const redirect = NextResponse.redirect(url);
   from.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
   return redirect;

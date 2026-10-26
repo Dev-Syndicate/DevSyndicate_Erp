@@ -14,6 +14,7 @@
 
 ### v1.6 (2026-10-19)
 
+- **Claude connector (MCP).** An MCP endpoint at `/api/mcp` lets Claude read and work leads and create or edit draft quotations as the signed-in user: Supabase Auth's OAuth 2.1 server signs Claude in, RLS and permissions apply unchanged, every change is audited under the user (§48).
 - **CRM, first step: Leads (V2 starts).** Leads from referrals, LinkedIn, Instagram, the website, cold outreach or other sources; status New / Contacted / Qualified / Lost / Won; an activity log; a next follow-up date with a "follow-ups due" list. Leads are shared: one person adds a lead, anyone else calls and updates it; who added it and who logged each activity are recorded. Won converts the lead into a client (new or existing), so the quotation → invoice flow continues from there (§47).
 
 ### v1.5 (2026-10-11)
@@ -1899,4 +1900,35 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
 - Website form leads: not in this step. When built, a public form needs bot protection beyond a basic captcha (Zoho users report heavy web-form spam).
 
 Sources: Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs.
+
+---
+
+# 48. Claude Connector (MCP, v1.6, researched)
+
+Claude connects to remote MCP servers as custom connectors (Pro, Max, Team, Enterprise) and signs in with OAuth 2.1 using dynamic client registration. The ERP serves one MCP endpoint, `/api/mcp` on the Vercel deployment.
+
+## Sign-in and security
+
+- **Authorization server:** Supabase Auth's OAuth 2.1 server (beta). Claude registers itself, opens the ERP's consent page (`/oauth/consent`), the user signs in if needed and approves, and Claude receives a normal Supabase access token for that user.
+- **Same rules as the app:** every tool call uses the user's token, so RLS, `has_permission()` and inactive-user blocking apply as they do in the browser. No service-role key (§32.3). A user without `leads.view` gets no leads; without `quotations.create` cannot create quotations.
+- **Audit:** changes go through the same tables and database functions and are logged under the user (§28).
+- The endpoint publishes OAuth protected-resource metadata (RFC 9728) at `/.well-known/oauth-protected-resource`, pointing to the Supabase issuer `https://<project-ref>.supabase.co/auth/v1`.
+- Known limit: Supabase does not yet support resource indicators (RFC 8707), so tokens are not bound to this endpoint. They are the user's own short-lived tokens.
+
+## Tools
+
+```text
+Leads        list_leads, get_lead, create_lead, update_lead, log_lead_activity, mark_lead_won
+Quotations   list_clients, list_quotations, get_quotation, create_quotation, update_quotation (drafts only)
+```
+
+- Inputs are validated with the same rules as the forms (§47, §11). `create_lead` returns possible duplicates first; the caller repeats with `allow_duplicate` to save anyway.
+- `create_quotation` fills anything left out from Company settings: validity days, default terms, default tax rate, default SAC code.
+- Not available through Claude: sending, accepting or converting quotations; invoices, payments, expenses, deleting anything.
+
+## Setup (once, Supabase dashboard)
+
+Authentication → OAuth Server: enable, Authorization Path `/oauth/consent`, allow dynamic client registration; Site URL = the Vercel URL. Users add the connector in Claude with the URL `https://<vercel-domain>/api/mcp`.
+
+Sources: Anthropic help center (building custom connectors via remote MCP servers), Claude connector authentication docs, Supabase OAuth 2.1 server and MCP authentication guides, Vercel MCP deployment docs.
 

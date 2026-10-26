@@ -1,5 +1,7 @@
 import { PAGE_SIZE } from "@/components/list-controls";
 import { istToday } from "@/lib/dates";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export const LEAD_VIEWS = [
@@ -13,9 +15,9 @@ export type LeadView = (typeof LEAD_VIEWS)[number]["value"];
 
 const OPEN = ["new", "contacted", "qualified"];
 
-/** Every lead (shared; RLS: leads.view). */
-export async function listLeads({ q, page, view }: { q: string; page: number; view: LeadView }) {
-  const supabase = await createClient();
+/** Every lead (shared; RLS: leads.view). `db` = another user client, e.g. the Claude connector's (PRD §48). */
+export async function listLeads({ q, page, view }: { q: string; page: number; view: LeadView }, db?: SupabaseClient<Database>) {
+  const supabase = db ?? (await createClient());
   let query = supabase
     .from("leads")
     .select("id, name, company, email, phone, source, status, next_follow_up, follow_up_note", { count: "exact" })
@@ -34,8 +36,8 @@ export async function listLeads({ q, page, view }: { q: string; page: number; vi
   return { rows: data, total: count ?? 0 };
 }
 
-export async function getLead(id: string) {
-  const supabase = await createClient();
+export async function getLead(id: string, db?: SupabaseClient<Database>) {
+  const supabase = db ?? (await createClient());
   const { data, error } = await supabase
     .from("leads")
     .select("*, clients(company_name), lead_activities(*)")
