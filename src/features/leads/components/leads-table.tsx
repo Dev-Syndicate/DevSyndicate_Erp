@@ -11,7 +11,8 @@ import { formatDate, istToday } from "@/lib/dates";
 
 type Rows = Awaited<ReturnType<typeof listLeads>>["rows"];
 
-export function LeadsTable({ rows }: { rows: Rows }) {
+/** `offset`: rows before this page, so the # column keeps counting across pages. */
+export function LeadsTable({ rows, offset = 0 }: { rows: Rows; offset?: number }) {
   const today = istToday();
   return (
     <Card className="flex-1">
@@ -19,6 +20,7 @@ export function LeadsTable({ rows }: { rows: Rows }) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10 text-right">#</TableHead>
               <TableHead className="w-[30%]">Lead</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Source</TableHead>
@@ -28,13 +30,14 @@ export function LeadsTable({ rows }: { rows: Rows }) {
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <EmptyRow colSpan={5} icon={UserRoundSearch} title="No leads found" description="Leads you add appear here. If you searched or filtered, try another view." />
+              <EmptyRow colSpan={6} icon={UserRoundSearch} title="No leads found" description="Leads you add appear here. If you searched or filtered, try another view." />
             )}
-            {rows.map((l) => {
+            {rows.map((l, i) => {
               const open = l.status !== "won" && l.status !== "lost";
               const due = open && !!l.next_follow_up && l.next_follow_up <= today;
               return (
                 <TableRow key={l.id}>
+                  <TableCell className="text-right text-muted-foreground tabular-nums">{offset + i + 1}</TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <StatusTile icon={UserRoundSearch} className={leadStatusClass(l.status)} />

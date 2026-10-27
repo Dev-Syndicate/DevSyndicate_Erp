@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { ListSkeleton } from "@/components/page-skeletons";
-import { ListPagination, parseListParams, SearchForm } from "@/components/list-controls";
+import { ListPagination, PAGE_SIZE, parseListParams, SearchForm } from "@/components/list-controls";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/features/auth/queries";
 import { LeadsTable } from "@/features/leads/components/leads-table";
@@ -34,7 +34,12 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/leads">["sear
           </Button>
         )}
       </div>
-      <LeadsTable rows={rows} />
+      <p className="text-sm text-muted-foreground">
+        {total} {total === 1 ? "lead" : "leads"}
+        {view !== "all" && ` · ${LEAD_VIEWS.find((v) => v.value === view)?.label}`}
+        {params.q && ` matching “${params.q}”`}
+      </p>
+      <LeadsTable rows={rows} offset={(params.page - 1) * PAGE_SIZE} />
       <ListPagination path="/leads" {...params} total={total} params={{ view: view === "open" ? "" : view }} />
     </>
   );
