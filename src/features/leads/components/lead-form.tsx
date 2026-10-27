@@ -14,10 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { saveLead, type Duplicate } from "@/features/leads/actions";
+import { LostFields } from "@/features/leads/components/lost-fields";
 import { LEAD_SOURCES, LEAD_STATUSES, leadSchema, type LeadInput } from "@/features/leads/schema";
 import type { Tables } from "@/lib/supabase/database.types";
 
-export function LeadForm({ lead }: { lead?: Tables<"leads"> }) {
+export function LeadForm({ lead }: { lead?: Omit<Tables<"leads">, "call_attempts"> }) {
   const [form, setForm] = useState<LeadInput>(() => ({
     name: lead?.name ?? "",
     company: lead?.company ?? "",
@@ -26,7 +27,8 @@ export function LeadForm({ lead }: { lead?: Tables<"leads"> }) {
     source: (lead?.source as LeadInput["source"]) ?? "referral",
     source_detail: lead?.source_detail ?? "",
     status: (lead?.status as LeadInput["status"]) ?? "new",
-    lost_reason: lead?.lost_reason ?? "",
+    lost_reason: (lead?.lost_reason as LeadInput["lost_reason"]) ?? "",
+    lost_note: lead?.lost_note ?? "",
     next_follow_up: lead?.next_follow_up ?? "",
     follow_up_note: lead?.follow_up_note ?? "",
     notes: lead?.notes ?? "",
@@ -128,28 +130,21 @@ export function LeadForm({ lead }: { lead?: Tables<"leads"> }) {
                 </Select>
               </Field>
               <div className="hidden sm:block" />
-              {form.status === "lost" && (
-                <Field data-invalid={!!errors.lost_reason} className="sm:col-span-2">
-                  <FieldLabel htmlFor="lost_reason">Why was it lost?</FieldLabel>
-                  <Input
-                    id="lost_reason"
-                    value={form.lost_reason}
-                    onChange={(e) => set("lost_reason", e.target.value)}
-                    placeholder="e.g. Budget, chose another agency, no reply"
-                    aria-invalid={!!errors.lost_reason}
-                  />
-                  <FieldError>{errors.lost_reason}</FieldError>
-                </Field>
+              {form.status === "lost" ? (
+                <LostFields value={form} onChange={(name, v) => set(name, v as never)} errors={errors} />
+              ) : (
+                <>
+                  <Field data-invalid={!!errors.next_follow_up}>
+                    <FieldLabel htmlFor="next_follow_up">Next follow-up</FieldLabel>
+                    <DatePicker id="next_follow_up" value={form.next_follow_up} onChange={(v) => set("next_follow_up", v)} clearable placeholder="None" />
+                    <FieldError>{errors.next_follow_up}</FieldError>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="follow_up_note">What to do</FieldLabel>
+                    <Input id="follow_up_note" value={form.follow_up_note} onChange={(e) => set("follow_up_note", e.target.value)} placeholder="e.g. Send the proposal" />
+                  </Field>
+                </>
               )}
-              <Field data-invalid={!!errors.next_follow_up}>
-                <FieldLabel htmlFor="next_follow_up">Next follow-up</FieldLabel>
-                <DatePicker id="next_follow_up" value={form.next_follow_up} onChange={(v) => set("next_follow_up", v)} clearable placeholder="None" />
-                <FieldError>{errors.next_follow_up}</FieldError>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="follow_up_note">What to do</FieldLabel>
-                <Input id="follow_up_note" value={form.follow_up_note} onChange={(e) => set("follow_up_note", e.target.value)} placeholder="e.g. Send the proposal" />
-              </Field>
               <Field className="sm:col-span-2">
                 <FieldLabel htmlFor="notes">Notes</FieldLabel>
                 <Textarea id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={3} placeholder="e.g. Needs a 5-page site before Diwali; budget around ₹50,000" />

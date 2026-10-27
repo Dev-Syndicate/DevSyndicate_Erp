@@ -1048,6 +1048,7 @@ export type Database = {
           kind: string
           lead_id: string
           organization_id: string
+          outcome: string | null
         }
         Insert: {
           body: string
@@ -1058,6 +1059,7 @@ export type Database = {
           kind: string
           lead_id: string
           organization_id: string
+          outcome?: string | null
         }
         Update: {
           body?: string
@@ -1068,6 +1070,7 @@ export type Database = {
           kind?: string
           lead_id?: string
           organization_id?: string
+          outcome?: string | null
         }
         Relationships: [
           {
@@ -1102,6 +1105,7 @@ export type Database = {
           email: string
           follow_up_note: string
           id: string
+          lost_note: string
           lost_reason: string | null
           name: string
           next_follow_up: string | null
@@ -1113,6 +1117,7 @@ export type Database = {
           status: string
           updated_at: string
           won_at: string | null
+          call_attempts: number | null
         }
         Insert: {
           client_id?: string | null
@@ -1122,6 +1127,7 @@ export type Database = {
           email?: string
           follow_up_note?: string
           id?: string
+          lost_note?: string
           lost_reason?: string | null
           name: string
           next_follow_up?: string | null
@@ -1142,6 +1148,7 @@ export type Database = {
           email?: string
           follow_up_note?: string
           id?: string
+          lost_note?: string
           lost_reason?: string | null
           name?: string
           next_follow_up?: string | null
@@ -1868,6 +1875,12 @@ export type Database = {
         Returns: {
           error: true
         } & "the function public.balance_due with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
+      call_attempts: {
+        Args: { "": Database["public"]["Tables"]["leads"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.call_attempts with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
       check_invite: {
         Args: { p_email: string; p_role_id: string }

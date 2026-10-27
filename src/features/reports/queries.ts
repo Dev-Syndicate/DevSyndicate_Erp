@@ -1,5 +1,6 @@
 import { formatDate, istToday } from "@/lib/dates";
 import { paise } from "@/lib/money";
+import { LEAD_SOURCES, LOST_REASONS, lostReasonLabel, OPEN_STATUSES } from "@/features/leads/schema";
 import { methodLabel } from "@/lib/payment-methods";
 import { createClient } from "@/lib/supabase/server";
 import { monthLabel, totalRow, type Column, type Report, type ReportName, type ReportTable, type Row } from "./utils";
@@ -277,6 +278,41 @@ export async function buildReport(name: ReportName, p: ReportParams): Promise<Re
         ],
         csv: table("TDS", [{ key: "type", label: "Type" }, ...cols], [...byClients, ...byUs]),
       };
+    }
+
+    case "leads": {
+      // Leads added in the period (IST dates). RLS returns nothing without leads.view.
+      const { data } = await supabase
+        .from("leads")
+        .select("source, status, lost_reason")
+        .gte("created_at", `${p.from}T00:00:00+05:30`)
+        .lte("created_at", `${p.to}T23:59:59.999+05:30`)
+        .limit(MAX);
+      const leads = data ?? [];
+      const count = (rows: typeof leads, status?: string) => rows.filter((l) => (status === "open" ? OPEN_STATUSES.includes(l.status) : l.status === status)).length;
+      const line = (label: string, rows: typeof leads): Row => {
+        const won = count(rows, "won");
+        return { source: label, added: rows.length, open: count(rows, "open"), won, lost: count(rows, "lost"), rate: rows.length ? `${Math.round((won * 100) / rows.length)}%` : "—" };
+      };
+      const bySource = table(
+        "By source",
+        [
+          { key: "source", label: "Source" }, { key: "added", label: "Added", kind: "number" }, { key: "open", label: "Open", kind: "number" },
+          { key: "won", label: "Won", kind: "number" }, { key: "lost", label: "Lost", kind: "number" }, { key: "rate", label: "Won %" },
+        ],
+        LEAD_SOURCES.map((s) => line(s.label, leads.filter((l) => l.source === s.value))).filter((r) => r.added),
+        { empty: "No leads added in this period.", description: "Leads added in the period, by where they came from. Won % = won ÷ added." },
+      );
+      if (bySource.rows.length) bySource.total = line("Total", leads);
+      const lost = leads.filter((l) => l.status === "lost");
+      const reasons = table(
+        "Lost reasons",
+        [{ key: "reason", label: "Reason" }, { key: "count", label: "Leads", kind: "number" }],
+        LOST_REASONS.map((r) => ({ reason: lostReasonLabel(r.value), count: lost.filter((l) => l.lost_reason === r.value).length })).filter((r) => r.count),
+        { empty: "No lost leads among those added in this period." },
+      );
+      if (reasons.rows.length) reasons.total = { reason: "Total", count: lost.length };
+      return { tables: [bySource, reasons], csv: bySource };
     }
 
     case "tax": {

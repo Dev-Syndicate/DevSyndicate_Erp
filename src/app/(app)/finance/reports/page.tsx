@@ -21,8 +21,10 @@ async function Reports({ searchParams }: { searchParams: PageProps<"/finance/rep
     if (params.categoryId && !("category" in extra)) q.set("category", params.categoryId);
     return q.toString();
   };
-  // GST summary only matters once the company is GST-registered.
-  const reports = REPORTS.filter((r) => r.value !== "tax" || options.gstRegistered || params.name === "tax");
+  // GST summary only matters once the company is GST-registered; Leads needs leads.view.
+  const reports = REPORTS.filter(
+    (r) => (r.value !== "tax" || options.gstRegistered || params.name === "tax") && (r.value !== "leads" || user?.permissions.includes("leads.view")),
+  );
 
   return (
     <>

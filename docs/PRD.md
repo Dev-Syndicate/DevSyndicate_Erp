@@ -15,7 +15,7 @@
 ### v1.6 (2026-10-19)
 
 - **Claude connector (MCP).** An MCP endpoint at `/api/mcp` lets Claude read and work leads and create or edit draft quotations as the signed-in user: Supabase Auth's OAuth 2.1 server signs Claude in, RLS and permissions apply unchanged, every change is audited under the user (§48).
-- **CRM, first step: Leads (V2 starts).** Leads from referrals, LinkedIn, Instagram, the website, cold outreach or other sources; status New / Contacted / Qualified / Lost / Won; an activity log; a next follow-up date with a "follow-ups due" list. Leads are shared: one person adds a lead, anyone else calls and updates it; who added it and who logged each activity are recorded. Won converts the lead into a client (new or existing), so the quotation → invoice flow continues from there (§47).
+- **CRM, first step: Leads (V2 starts).** Leads from referrals, LinkedIn, Instagram, the website, cold outreach or other sources; status New / Contacted / Qualified / Lost / Won; an activity log; a next follow-up date with a "follow-ups due" list. Leads are shared: one person adds a lead, anyone else calls and updates it; who added it and who logged each activity are recorded. Calls record an outcome (only reached calls count as contact) and unanswered attempts are counted; Lost uses a fixed reason list (Bad timing returns on a date); open leads without a follow-up are flagged; a Leads report shows sources and lost reasons. Won converts the lead into a client (new or existing), so the quotation → invoice flow continues from there (§47).
 
 ### v1.5 (2026-10-11)
 
@@ -1878,7 +1878,8 @@ Phone                 (optional; at least one of email or phone)
 Source                Referral / LinkedIn / Instagram / Website / Cold outreach / Other
 Source Detail         (optional: who referred, profile or post link, campaign)
 Status                New / Contacted / Qualified / Lost / Won
-Lost Reason           (required when Lost)
+Lost Reason           (required when Lost; see Rules)
+Lost Note             (optional detail; required for Other)
 Added By              (recorded automatically)
 Next Follow-up        (date, optional) + what to do
 Notes
@@ -1888,18 +1889,25 @@ Created At / Updated At
 
 ## Activities
 
-A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what happened, when. Logging an activity also replaces the next follow-up (date and what to do), or clears it when no date is given. Logging a call, meeting, email or message on a New lead moves it to Contacted (a note does not).
+A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what happened, when. Logging an activity also replaces the next follow-up (date and what to do), or clears it when no date is given.
+
+- **Call outcome (v1.6, researched).** Every call records an outcome: Reached / No answer / Busy / Wrong number. Only a reached call (or a meeting, email or message) moves a New lead to Contacted; a note never does. HubSpot separates "attempting" from "connected" for the same reason: trying is not talking.
+- **Attempts.** Unanswered calls (No answer, Busy) since the last reached call are counted and shown on the list and the lead. Picking No answer or Busy suggests tomorrow as the next follow-up. Studies of inbound leads found reps give up after one or two attempts while 4 to 6 attempts reach about half of leads, so the count makes giving up visible.
+- **Wrong number** suggests fixing the contact details or marking the lead Lost (Wrong contact details).
 
 ## Rules
 
 - **Shared leads (owner decision, v1.6).** There is no lead owner: everyone with `leads.view` sees every lead, and anyone with `leads.update` works it (one person adds, another calls or texts and updates). Zoho CRM's default is private records per owner; DevSyndicate's small team chose shared leads instead. Who added the lead and who logged each activity are recorded and shown.
 - **Duplicates.** Saving warns when another lead or client contact has the same email or phone; the user can still save.
-- **Lost** needs a reason. **Won** needs `leads.convert`: pick an existing client or create one from the lead (name, company, email, phone become the client and its primary contact). The lead keeps the client link and is read-only after Won. A Lost lead is reopened by changing its status back.
-- **Follow-ups due.** The dashboard and the Leads list show open leads with a next follow-up on or before today (IST).
+- **Lost** (Mark as lost, or Edit) needs a reason from a fixed list so losses can be counted: Not interested, Budget, Chose another agency, No response, Not a fit, Bad timing, Wrong contact details, Other (Other needs a note). An optional note adds detail. **Bad timing** asks for a date to try again: the lead stays Lost but comes back in Follow-ups due on that date. Practitioners advise specific reasons over vague ones like "bad fit", and tracking "no decision / no response" separately.
+- **Won** needs `leads.convert`: pick an existing client or create one from the lead (name, company, email, phone become the client and its primary contact). The lead keeps the client link and is read-only after Won. A Lost lead is reopened by changing its status back.
+- **Follow-ups due.** The dashboard and the Leads list show leads with a next follow-up on or before today (IST): open leads, and Lost (Bad timing) leads whose try-again date has come.
+- **No follow-up.** Open leads without a next follow-up have their own list view, and the lead page warns until one is set; leads without a next step go cold.
+- **Leads report** (Reports, needs `reports.view` and `leads.view`): leads added in the period by source (added, open, won, lost, won %), and lost leads by reason. CSV export.
 - Delete (`leads.delete`) is for mistakes only; won leads cannot be deleted.
 - Website form leads: not in this step. When built, a public form needs bot protection beyond a basic captcha (Zoho users report heavy web-form spam).
 
-Sources: Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs.
+Sources: Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs, HubSpot lead record stages, InsideSales contact-attempt research, CRM lost-reason practice guides (TechAdvisory, Crayon).
 
 ---
 
@@ -1918,7 +1926,7 @@ Claude connects to remote MCP servers as custom connectors (Pro, Max, Team, Ente
 ## Tools
 
 ```text
-Leads        list_leads, get_lead, create_lead, update_lead, log_lead_activity, mark_lead_won
+Leads        list_leads, get_lead, create_lead, update_lead, log_lead_activity, mark_lead_lost, mark_lead_won
 Quotations   list_clients, list_quotations, get_quotation, create_quotation, update_quotation (drafts only)
 ```
 

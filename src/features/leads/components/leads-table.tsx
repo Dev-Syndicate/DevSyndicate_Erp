@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LeadStatusBadge, leadStatusClass } from "@/features/leads/components/lead-status-badge";
 import type { listLeads } from "@/features/leads/queries";
-import { sourceLabel } from "@/features/leads/schema";
+import { lostReasonLabel, sourceLabel } from "@/features/leads/schema";
 import { formatDate, istToday } from "@/lib/dates";
 
 type Rows = Awaited<ReturnType<typeof listLeads>>["rows"];
@@ -33,8 +33,8 @@ export function LeadsTable({ rows, offset = 0 }: { rows: Rows; offset?: number }
               <EmptyRow colSpan={6} icon={UserRoundSearch} title="No leads found" description="Leads you add appear here. If you searched or filtered, try another view." />
             )}
             {rows.map((l, i) => {
-              const open = l.status !== "won" && l.status !== "lost";
-              const due = open && !!l.next_follow_up && l.next_follow_up <= today;
+              // Only open leads and Lost (Bad timing) ones carry a follow-up date.
+              const due = !!l.next_follow_up && l.next_follow_up <= today;
               return (
                 <TableRow key={l.id}>
                   <TableCell className="text-right text-muted-foreground tabular-nums">{offset + i + 1}</TableCell>
@@ -57,10 +57,14 @@ export function LeadsTable({ rows, offset = 0 }: { rows: Rows; offset?: number }
                   </TableCell>
                   <TableCell className="text-muted-foreground">{sourceLabel(l.source)}</TableCell>
                   <TableCell>
-                    <LeadStatusBadge status={l.status} />
+                    <div className="flex flex-col items-start gap-1">
+                      <LeadStatusBadge status={l.status} />
+                      {l.status === "lost" && l.lost_reason && <span className="text-xs text-muted-foreground">{lostReasonLabel(l.lost_reason)}</span>}
+                      {!!l.call_attempts && <span className="text-xs text-warning">{l.call_attempts} unanswered</span>}
+                    </div>
                   </TableCell>
                   <TableCell className={due ? "text-destructive tabular-nums" : "tabular-nums"}>
-                    {open && l.next_follow_up ? (
+                    {l.next_follow_up ? (
                       <div className="flex flex-col">
                         <span>{formatDate(l.next_follow_up)}</span>
                         {l.follow_up_note && <span className="max-w-48 truncate text-xs text-muted-foreground">{l.follow_up_note}</span>}

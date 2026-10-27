@@ -3,29 +3,31 @@ import { istToday } from "@/lib/dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
+import { OPEN_STATUSES } from "./schema";
 
 export const LEAD_VIEWS = [
   { value: "open", label: "Open" },
   { value: "due", label: "Follow-ups due" },
+  { value: "no_follow_up", label: "No follow-up" },
   { value: "won", label: "Won" },
   { value: "lost", label: "Lost" },
   { value: "all", label: "All" },
 ] as const;
 export type LeadView = (typeof LEAD_VIEWS)[number]["value"];
 
-const OPEN = ["new", "contacted", "qualified"];
-
 /** Every lead (shared; RLS: leads.view). `db` = another user client, e.g. the Claude connector's (PRD §48). */
 export async function listLeads({ q, page, view }: { q: string; page: number; view: LeadView }, db?: SupabaseClient<Database>) {
   const supabase = db ?? (await createClient());
   let query = supabase
     .from("leads")
-    .select("id, name, company, email, phone, source, status, next_follow_up, follow_up_note", { count: "exact" })
+    .select("id, name, company, email, phone, source, status, lost_reason, next_follow_up, follow_up_note, call_attempts", { count: "exact" })
     .order("next_follow_up", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-  if (view === "open") query = query.in("status", OPEN);
-  if (view === "due") query = query.in("status", OPEN).lte("next_follow_up", istToday());
+  if (view === "open") query = query.in("status", OPEN_STATUSES);
+  // Only open leads and Lost (Bad timing) leads carry a follow-up date (a CHECK on public.leads), so due = date passed.
+  if (view === "due") query = query.lte("next_follow_up", istToday());
+  if (view === "no_follow_up") query = query.in("status", OPEN_STATUSES).is("next_follow_up", null);
   if (view === "won" || view === "lost") query = query.eq("status", view);
   // Characters that would break PostgREST's or() syntax become spaces.
   const term = q.replace(/[,()*\\%]/g, " ").trim();
@@ -40,7 +42,7 @@ export async function getLead(id: string, db?: SupabaseClient<Database>) {
   const supabase = db ?? (await createClient());
   const { data, error } = await supabase
     .from("leads")
-    .select("*, clients(company_name), lead_activities(*)")
+    .select("*, call_attempts, clients(company_name), lead_activities(*)")
     .eq("id", id)
     .order("happened_at", { referencedTable: "lead_activities", ascending: false })
     .maybeSingle();
@@ -56,13 +58,12 @@ export async function getLeadUsers() {
   return data;
 }
 
-/** Open leads with a follow-up due today or earlier (dashboard). */
+/** Leads with a follow-up due today or earlier: open leads and Lost (Bad timing) ones to try again (dashboard). */
 export async function getDueFollowUps() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("leads")
     .select("id, name, company, next_follow_up, follow_up_note")
-    .in("status", OPEN)
     .lte("next_follow_up", istToday())
     .order("next_follow_up")
     .limit(8);

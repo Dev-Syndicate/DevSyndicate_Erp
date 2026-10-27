@@ -13,6 +13,7 @@ export const REPORTS = [
   { value: "sales", label: "Sales register" },
   { value: "tds", label: "TDS" },
   { value: "tax", label: "GST summary" },
+  { value: "leads", label: "Leads" },
 ] as const;
 
 export type ReportName = (typeof REPORTS)[number]["value"];

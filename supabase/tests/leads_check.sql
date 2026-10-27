@@ -30,6 +30,25 @@ do $$ begin
     assert false, 'lost needs a reason';
   exception when check_violation then null; end;
   begin
+    update public.leads set status = 'lost', lost_reason = 'cheap' where name = 'Asha Rao';
+    assert false, 'only listed lost reasons';
+  exception when check_violation then null; end;
+  begin
+    update public.leads set status = 'lost', lost_reason = 'other' where name = 'Asha Rao';
+    assert false, 'other needs a note';
+  exception when check_violation then null; end;
+  begin
+    update public.leads set status = 'lost', lost_reason = 'budget', next_follow_up = public.ist_today() where name = 'Asha Rao';
+    assert false, 'a lost lead has no follow-up unless bad timing';
+  exception when check_violation then null; end;
+  begin
+    update public.leads set status = 'lost', lost_reason = 'bad_timing', next_follow_up = null where name = 'Asha Rao';
+    assert false, 'bad timing needs a try-again date';
+  exception when check_violation then null; end;
+  update public.leads set status = 'lost', lost_reason = 'bad_timing', lost_note = 'After Diwali', next_follow_up = public.ist_today() where name = 'Asha Rao';
+  update public.leads set status = 'new', lost_reason = null, lost_note = '', next_follow_up = null where name = 'Asha Rao';
+  assert (select status from public.leads where name = 'Asha Rao') = 'new', 'bad timing saved with a date, then reopened';
+  begin
     insert into public.leads (organization_id, name, source) values (public.current_org_id(), 'No contact', 'other');
     assert false, 'email or phone required';
   exception when check_violation then null; end;
@@ -43,8 +62,17 @@ begin
   assert lid is not null, 'leads are shared';
   insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'note', 'Looked them up');
   assert (select status from public.leads where id = lid) = 'new', 'a note does not mark the lead contacted';
-  insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'call', 'Intro call');
-  assert (select status from public.leads where id = lid) = 'contacted', 'logging a call moves New to Contacted';
+  begin
+    insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'call', 'No outcome');
+    assert false, 'a call needs an outcome';
+  exception when check_violation then null; end;
+  insert into public.lead_activities (organization_id, lead_id, kind, body, outcome) values (public.current_org_id(), lid, 'call', 'RNR', 'no_answer');
+  insert into public.lead_activities (organization_id, lead_id, kind, body, outcome) values (public.current_org_id(), lid, 'call', 'Busy', 'busy');
+  assert (select status from public.leads where id = lid) = 'new', 'unanswered calls are not contact';
+  assert (select public.call_attempts(l) from public.leads l where id = lid) = 2, 'two unanswered attempts';
+  insert into public.lead_activities (organization_id, lead_id, kind, body, outcome) values (public.current_org_id(), lid, 'call', 'Intro call', 'reached');
+  assert (select status from public.leads where id = lid) = 'contacted', 'a reached call moves New to Contacted';
+  assert (select public.call_attempts(l) from public.leads l where id = lid) = 0, 'attempts count since the last reached call';
   update public.leads set status = 'qualified', next_follow_up = public.ist_today(), follow_up_note = 'Send proposal' where id = lid;
   insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'message', 'Sent deck');
   assert (select status from public.leads where id = lid) = 'qualified', 'later activity never moves a lead back';
@@ -93,7 +121,7 @@ begin
 
   -- Linking to an existing client creates nothing new
   insert into public.leads (organization_id, name, email, source, status, lost_reason)
-  values (public.current_org_id(), 'Second Contact', 'second@test.local', 'referral', 'lost', 'Budget');
+  values (public.current_org_id(), 'Second Contact', 'second@test.local', 'referral', 'lost', 'budget');
   assert public.convert_lead((select id from public.leads where name = 'Second Contact'), cid) = cid, 'linked to the existing client';
   assert (select count(*) from public.client_contacts where client_id = cid) = 1, 'no extra contact when linking';
 end $$;

@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { getLead, LEAD_VIEWS, listLeads } from "@/features/leads/queries";
-import { ACTIVITY_KINDS, activitySchema, LEAD_SOURCES, leadSchema, type LeadInput } from "@/features/leads/schema";
+import { ACTIVITY_KINDS, activitySchema, CALL_OUTCOMES, LEAD_SOURCES, leadRow, leadSchema, LOST_REASONS, lostSchema, OPEN_STATUSES, type LeadInput } from "@/features/leads/schema";
 import { getQuotation, listQuotations } from "@/features/quotations/queries";
 import { quotationSchema, type QuotationInput } from "@/features/quotations/schema";
 import { addDays, istToday } from "@/lib/dates";
@@ -43,19 +43,11 @@ const leadFields = {
   phone: z.string().optional().describe("Email or phone is required"),
   source: z.enum(LEAD_SOURCES.map((s) => s.value)).optional(),
   source_detail: z.string().optional().describe("Who referred them, profile link, campaign…"),
-  status: z.enum(["new", "contacted", "qualified", "lost"]).optional().describe("Won only through mark_lead_won"),
-  lost_reason: z.string().optional().describe("Required when status is lost"),
+  status: z.enum(["new", "contacted", "qualified"]).optional().describe("Lost only through mark_lead_lost, won through mark_lead_won"),
   next_follow_up: date.optional().describe('YYYY-MM-DD, or "" for none'),
   follow_up_note: z.string().optional().describe("What to do at the follow-up"),
   notes: z.string().optional(),
 };
-
-/** Lead form values → table row (same shaping as the app's saveLead). */
-const leadRow = (l: z.output<typeof leadSchema>) => ({
-  ...l,
-  lost_reason: l.status === "lost" ? l.lost_reason : null,
-  next_follow_up: l.next_follow_up || null,
-});
 
 const itemFields = z.object({
   description: z.string(),
@@ -154,7 +146,7 @@ export function registerTools(server: McpServer) {
     },
     run(async ({ allow_duplicate, ...args }, db) => {
       const parsed = leadSchema.safeParse({
-        company: "", email: "", phone: "", source: "other", source_detail: "", status: "new", lost_reason: "",
+        company: "", email: "", phone: "", source: "other", source_detail: "", status: "new", lost_reason: "", lost_note: "",
         next_follow_up: "", follow_up_note: "", notes: "", ...args,
       } satisfies LeadInput);
       if (!parsed.success) return invalid(parsed.error);
@@ -184,7 +176,7 @@ export function registerTools(server: McpServer) {
       const parsed = leadSchema.safeParse({
         name: lead.name, company: lead.company, email: lead.email, phone: lead.phone,
         source: lead.source as LeadInput["source"], source_detail: lead.source_detail,
-        status: lead.status as LeadInput["status"], lost_reason: lead.lost_reason ?? "",
+        status: lead.status as LeadInput["status"], lost_reason: (lead.lost_reason ?? "") as LeadInput["lost_reason"], lost_note: lead.lost_note,
         next_follow_up: lead.next_follow_up ?? "", follow_up_note: lead.follow_up_note, notes: lead.notes, ...changes,
       } satisfies LeadInput);
       if (!parsed.success) return invalid(parsed.error);
@@ -198,10 +190,11 @@ export function registerTools(server: McpServer) {
     "log_lead_activity",
     {
       title: "Log lead activity",
-      description: `Records a ${ACTIVITY_KINDS.map((k) => k.value).join(" / ")} on a lead. Give next_follow_up to set the next follow-up ("" clears it); leave it out to keep the current one.`,
+      description: `Records a ${ACTIVITY_KINDS.map((k) => k.value).join(" / ")} on a lead. Calls need an outcome; only "reached" (or a meeting, email or message) moves a New lead to Contacted. Give next_follow_up to set the next follow-up of an open lead ("" clears it); leave it out to keep the current one. After no_answer or busy, suggest trying again tomorrow.`,
       inputSchema: z.object({
         lead_id: z.uuid(),
         kind: z.enum(ACTIVITY_KINDS.map((k) => k.value)),
+        outcome: z.enum(CALL_OUTCOMES.map((o) => o.value)).optional().describe("Calls only, required for calls"),
         body: z.string().describe("What happened"),
         next_follow_up: date.optional(),
         follow_up_note: z.string().optional(),
@@ -209,22 +202,51 @@ export function registerTools(server: McpServer) {
       annotations: WRITE,
     },
     run(async ({ lead_id, ...args }, db) => {
-      const parsed = activitySchema.safeParse({ next_follow_up: "", follow_up_note: "", ...args });
+      const parsed = activitySchema.safeParse({ outcome: "", next_follow_up: "", follow_up_note: "", ...args });
       if (!parsed.success) return invalid(parsed.error);
-      const { kind, body, next_follow_up, follow_up_note } = parsed.data;
+      const { kind, outcome, body, next_follow_up, follow_up_note } = parsed.data;
       const { data: org } = await db.rpc("current_org_id");
       if (!org) return fail("You don't have permission to do this.");
-      const { error } = await db.from("lead_activities").insert({ organization_id: org, lead_id, kind, body });
+      const { error } = await db.from("lead_activities").insert({ organization_id: org, lead_id, kind, body, outcome: kind === "call" ? outcome : null });
       if (error) return fail(dbErrorMessage(error));
       if (args.next_follow_up !== undefined) {
         const update = await db
           .from("leads")
           .update({ next_follow_up: next_follow_up || null, follow_up_note: next_follow_up ? follow_up_note : "" })
           .eq("id", lead_id)
+          .in("status", OPEN_STATUSES)
           .select("id");
-        if (update.error || !update.data.length) return fail("The activity was saved, but the follow-up could not be changed.");
+        if (update.error || !update.data.length) return fail("The activity was saved, but the follow-up wasn't changed: the lead isn't open.");
       }
       return ok({ saved: true });
+    }),
+  );
+
+  server.registerTool(
+    "mark_lead_lost",
+    {
+      title: "Mark lead as lost",
+      description: `Marks an open lead as lost with a reason: ${LOST_REASONS.map((r) => r.value).join(", ")}. other needs a note. bad_timing needs try_again_on: the lead returns in follow-ups due on that date. Reopen with update_lead (status).`,
+      inputSchema: z.object({
+        lead_id: z.uuid(),
+        reason: z.enum(LOST_REASONS.map((r) => r.value)),
+        note: z.string().optional(),
+        try_again_on: date.optional().describe("bad_timing only"),
+      }),
+      annotations: WRITE,
+    },
+    run(async ({ lead_id, reason, note, try_again_on }, db) => {
+      const parsed = lostSchema.safeParse({ lost_reason: reason, lost_note: note ?? "", next_follow_up: try_again_on ?? "" });
+      if (!parsed.success) return invalid(parsed.error);
+      const badTiming = reason === "bad_timing";
+      const { data, error } = await db
+        .from("leads")
+        .update({ status: "lost", lost_reason: reason, lost_note: parsed.data.lost_note, next_follow_up: badTiming ? try_again_on : null, follow_up_note: badTiming ? "Try again" : "" })
+        .eq("id", lead_id)
+        .in("status", OPEN_STATUSES)
+        .select("id, status, lost_reason, next_follow_up");
+      if (error) return fail(dbErrorMessage(error));
+      return data.length ? ok(data[0]) : fail("Lead not found or not open.");
     }),
   );
 
