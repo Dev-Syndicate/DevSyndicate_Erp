@@ -1888,7 +1888,7 @@ Created At / Updated At
 
 ## Activities
 
-A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what happened, when. Logging an activity also replaces the next follow-up (date and what to do), or clears it when no date is given.
+A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what happened, when. Logging an activity also replaces the next follow-up (date and what to do), or clears it when no date is given. Logging a call, meeting, email or message on a New lead moves it to Contacted (a note does not).
 
 ## Rules
 

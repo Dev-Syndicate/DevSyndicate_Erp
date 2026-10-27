@@ -33,8 +33,6 @@ do $$ begin
     insert into public.leads (organization_id, name, source) values (public.current_org_id(), 'No contact', 'other');
     assert false, 'email or phone required';
   exception when check_violation then null; end;
-  delete from public.leads where name = 'Asha Rao';
-  assert exists (select 1 from public.leads where name = 'Asha Rao'), 'staff cannot delete';
 end $$;
 
 -- Another staff member sees it, calls, updates it and logs the call
@@ -43,10 +41,16 @@ do $$
 declare lid uuid := (select id from public.leads where name = 'Asha Rao');
 begin
   assert lid is not null, 'leads are shared';
+  insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'note', 'Looked them up');
+  assert (select status from public.leads where id = lid) = 'new', 'a note does not mark the lead contacted';
   insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'call', 'Intro call');
-  update public.leads set status = 'contacted', next_follow_up = public.ist_today(), follow_up_note = 'Send proposal' where id = lid;
+  assert (select status from public.leads where id = lid) = 'contacted', 'logging a call moves New to Contacted';
+  update public.leads set status = 'qualified', next_follow_up = public.ist_today(), follow_up_note = 'Send proposal' where id = lid;
+  insert into public.lead_activities (organization_id, lead_id, kind, body) values (public.current_org_id(), lid, 'message', 'Sent deck');
+  assert (select status from public.leads where id = lid) = 'qualified', 'later activity never moves a lead back';
+  update public.leads set status = 'contacted' where id = lid;
   assert (select status from public.leads where id = lid) = 'contacted', 'any lead user updates it';
-  assert (select created_by from public.lead_activities where lead_id = lid) = (select id from u where email = 'staff2@test.local'), 'logged by is recorded';
+  assert (select created_by from public.lead_activities where lead_id = lid and body = 'Intro call') = (select id from u where email = 'staff2@test.local'), 'logged by is recorded';
   begin
     insert into public.lead_activities (organization_id, lead_id, kind, body, created_by)
     values (public.current_org_id(), lid, 'note', 'Forged', (select id from u where email = 'staff@test.local'));

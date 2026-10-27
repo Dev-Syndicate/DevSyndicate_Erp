@@ -15,7 +15,10 @@ grant select on u to authenticated;
 do $$ begin
   assert (select is_active from public.profiles where email = 'finance@test.local'), 'invited user should be active';
   assert not (select is_active from public.profiles where email = 'stranger@test.local'), 'sign-up without role must be inactive';
-  assert (select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.key = 'staff') = 8, 'staff has 8 permissions (4 + 4 leads)';
+  -- Staff's grants are editable in Roles; check only that it never holds money or admin rights.
+  assert not exists (select 1 from public.role_permissions rp join public.roles r on r.id = rp.role_id
+                     where r.key = 'staff' and split_part(rp.permission, '.', 1) in ('invoices', 'payments', 'expenses', 'owner', 'users', 'roles', 'audit_logs')),
+         'staff has no money or admin permissions';
   assert (select bool_and(rp.permission like '%.view') and count(*) = 11
           from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.key = 'viewer'), 'viewer has only 11 view permissions';
 end $$;
