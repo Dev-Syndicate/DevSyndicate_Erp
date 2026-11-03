@@ -1903,6 +1903,7 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
 - **Won** needs `leads.convert`: pick an existing client or create one from the lead (name, company, email, phone become the client and its primary contact). The lead keeps the client link and is read-only after Won. A Lost lead is reopened by changing its status back.
 - **Follow-ups due.** The dashboard and the Leads list show leads with a next follow-up on or before today (IST): open leads, and Lost (Bad timing) leads whose try-again date has come.
 - **No follow-up.** Open leads without a next follow-up have their own list view, and the lead page warns until one is set; leads without a next step go cold.
+- **List filters.** On top of the views and search, the Leads list filters by Source, Status (New / Contacted / Qualified; Won and Lost have their own views) and Added By, and they combine. Zoho CRM and HubSpot both filter leads by source, status and owner; shared leads have no owner, so Added By takes that place.
 - **Leads report** (Reports, needs `reports.view` and `leads.view`): leads added in the period by source (added, open, won, lost, won %), and lost leads by reason. CSV export.
 - Delete (`leads.delete`) is for mistakes only; won leads cannot be deleted.
 - Website form leads: not in this step. When built, a public form needs bot protection beyond a basic captcha (Zoho users report heavy web-form spam).

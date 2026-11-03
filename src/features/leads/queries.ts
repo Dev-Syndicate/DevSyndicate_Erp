@@ -16,7 +16,10 @@ export const LEAD_VIEWS = [
 export type LeadView = (typeof LEAD_VIEWS)[number]["value"];
 
 /** Every lead (shared; RLS: leads.view). `db` = another user client, e.g. the Claude connector's (PRD §48). */
-export async function listLeads({ q, page, view }: { q: string; page: number; view: LeadView }, db?: SupabaseClient<Database>) {
+export async function listLeads(
+  { q, page, view, source, status, addedBy }: { q: string; page: number; view: LeadView; source?: string; status?: string; addedBy?: string },
+  db?: SupabaseClient<Database>,
+) {
   const supabase = db ?? (await createClient());
   let query = supabase
     .from("leads")
@@ -29,6 +32,9 @@ export async function listLeads({ q, page, view }: { q: string; page: number; vi
   if (view === "due") query = query.lte("next_follow_up", istToday());
   if (view === "no_follow_up") query = query.in("status", OPEN_STATUSES).is("next_follow_up", null);
   if (view === "won" || view === "lost") query = query.eq("status", view);
+  if (source) query = query.eq("source", source);
+  if (status) query = query.eq("status", status);
+  if (addedBy) query = query.eq("created_by", addedBy);
   // Characters that would break PostgREST's or() syntax become spaces.
   const term = q.replace(/[,()*\\%]/g, " ").trim();
   if (term) query = query.or(["name", "company", "email", "phone"].map((c) => `${c}.ilike.%${term}%`).join(","));
