@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const LEAD_SOURCES = [
   { value: "referral", label: "Referral", detail: "Who referred them", example: "Karthik from Brightline" },
-  { value: "linkedin", label: "LinkedIn", detail: "Profile or post link", example: "linkedin.com/in/asharao" },
-  { value: "instagram", label: "Instagram", detail: "Handle or post link", example: "@raostudio" },
+  { value: "linkedin", label: "LinkedIn", detail: "Profile link", example: "linkedin.com/in/asharao" },
+  { value: "instagram", label: "Instagram", detail: "Handle or profile link", example: "@raostudio" },
   { value: "website", label: "Website", detail: "Page or campaign", example: "Contact page" },
   { value: "cold_outreach", label: "Cold outreach", detail: "Channel or campaign", example: "Email campaign, Oct" },
   { value: "other", label: "Other", detail: "Where they came from", example: "Met at a meetup" },
@@ -62,6 +62,11 @@ const badTimingHasDate = (l: Lost) => l.lost_reason !== "bad_timing" || !!l.next
 const NOTE = { path: ["lost_note"], message: "Say why" };
 const DATE = { path: ["next_follow_up"], message: "Pick when to try again" };
 
+/** Reached through their profile, so a handle can stand in for an email or phone (leads_contact_check, PRD §47). */
+export const isSocialSource = (source: string) => source === "instagram" || source === "linkedin";
+type Contact = { email: string; phone: string; source: string; source_detail: string };
+const hasContact = (l: Contact) => !!(l.email || l.phone || (isSocialSource(l.source) && l.source_detail));
+
 // Mirrors the CHECK constraints on public.leads (PRD §47). Won is set only by convert_lead.
 export const leadSchema = z
   .object({
@@ -78,7 +83,8 @@ export const leadSchema = z
     follow_up_note: z.string().trim().max(500),
     notes: z.string().trim().max(5000),
   })
-  .refine((l) => l.email || l.phone, { path: ["phone"], message: "Enter an email or a phone number" })
+  .refine((l) => hasContact(l) || isSocialSource(l.source), { path: ["phone"], message: "Enter an email or a phone number" })
+  .refine((l) => hasContact(l) || !isSocialSource(l.source), { path: ["source_detail"], message: "Enter the handle, an email or a phone number" })
   .refine((l) => l.status !== "lost" || l.lost_reason, { path: ["lost_reason"], message: "Choose the reason" })
   .refine((l) => l.status !== "lost" || otherHasNote(l), NOTE)
   .refine((l) => l.status !== "lost" || badTimingHasDate(l), DATE);

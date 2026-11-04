@@ -23,7 +23,7 @@ export async function listLeads(
   const supabase = db ?? (await createClient());
   let query = supabase
     .from("leads")
-    .select("id, name, company, email, phone, source, status, lost_reason, next_follow_up, follow_up_note, call_attempts", { count: "exact" })
+    .select("id, name, company, email, phone, source, source_detail, status, lost_reason, next_follow_up, follow_up_note, call_attempts", { count: "exact" })
     .order("next_follow_up", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
@@ -37,7 +37,7 @@ export async function listLeads(
   if (addedBy) query = query.eq("created_by", addedBy);
   // Characters that would break PostgREST's or() syntax become spaces.
   const term = q.replace(/[,()*\\%]/g, " ").trim();
-  if (term) query = query.or(["name", "company", "email", "phone"].map((c) => `${c}.ilike.%${term}%`).join(","));
+  if (term) query = query.or(["name", "company", "email", "phone", "source_detail"].map((c) => `${c}.ilike.%${term}%`).join(","));
 
   const { data, count, error } = await query;
   if (error) throw error;

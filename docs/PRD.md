@@ -1874,9 +1874,9 @@ Lead ID
 Name                  (person)
 Company               (optional)
 Email                 (optional)
-Phone                 (optional; at least one of email or phone)
+Phone                 (optional; at least one of email or phone, or the handle on Instagram / LinkedIn leads)
 Source                Referral / LinkedIn / Instagram / Website / Cold outreach / Other
-Source Detail         (optional: who referred, profile or post link, campaign)
+Source Detail         (optional: who referred, handle or profile link, campaign)
 Status                New / Contacted / Qualified / Lost / Won
 Lost Reason           (required when Lost; see Rules)
 Lost Note             (optional detail; required for Other)
@@ -1898,7 +1898,8 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
 ## Rules
 
 - **Shared leads (owner decision, v1.6).** There is no lead owner: everyone with `leads.view` sees every lead, and anyone with `leads.update` works it (one person adds, another calls or texts and updates). Zoho CRM's default is private records per owner; DevSyndicate's small team chose shared leads instead. Who added the lead and who logged each activity are recorded and shown.
-- **Duplicates.** Saving warns when another lead or client contact has the same email or phone; the user can still save.
+- **Instagram and LinkedIn leads without contact details (researched).** Someone who messages on Instagram may share no email or phone. These two sources can save with only the handle or profile link, because that is how you reach them; other sources still need an email or phone. Zoho CRM lists Last Name as the required lead field and Kommo creates a lead card from a new Instagram contact. The list shows the handle under Contact, search finds it, and a lead won this way becomes a client contact with no email or phone until someone adds them.
+- **Duplicates.** Saving warns when another lead or client contact has the same email or phone, or another lead has the same handle on the same source (`@raostudio` and its profile link match); the user can still save.
 - **Lost** (Mark as lost, or Edit) needs a reason from a fixed list so losses can be counted: Not interested, Budget, Chose another agency, No response, Not a fit, Bad timing, Wrong contact details, Other (Other needs a note). An optional note adds detail. **Bad timing** asks for a date to try again: the lead stays Lost but comes back in Follow-ups due on that date. Practitioners advise specific reasons over vague ones like "bad fit", and tracking "no decision / no response" separately.
 - **Won** needs `leads.convert`: pick an existing client or create one from the lead (name, company, email, phone become the client and its primary contact). The lead keeps the client link and is read-only after Won. A Lost lead is reopened by changing its status back.
 - **Follow-ups due.** The dashboard and the Leads list show leads with a next follow-up on or before today (IST): open leads, and Lost (Bad timing) leads whose try-again date has come.
@@ -1908,7 +1909,7 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
 - Delete (`leads.delete`) is for mistakes only; won leads cannot be deleted.
 - Website form leads: not in this step. When built, a public form needs bot protection beyond a basic captcha (Zoho users report heavy web-form spam).
 
-Sources: Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs, HubSpot lead record stages, InsideSales contact-attempt research, CRM lost-reason practice guides (TechAdvisory, Crayon).
+Sources: Zoho CRM standard lead fields, Kommo Instagram integration, Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs, HubSpot lead record stages, InsideSales contact-attempt research, CRM lost-reason practice guides (TechAdvisory, Crayon).
 
 ---
 

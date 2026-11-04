@@ -1946,13 +1946,20 @@ export type Database = {
       is_super_admin: { Args: { uid: string }; Returns: boolean }
       ist_today: { Args: never; Returns: string }
       lead_duplicates: {
-        Args: { p_email: string; p_exclude?: string; p_phone: string }
+        Args: {
+          p_email: string
+          p_exclude?: string
+          p_phone: string
+          p_source?: string
+          p_source_detail?: string
+        }
         Returns: {
           detail: string
           kind: string
           name: string
         }[]
       }
+      lead_handle: { Args: { p: string }; Returns: string }
       lead_users: {
         Args: never
         Returns: {

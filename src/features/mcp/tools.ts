@@ -40,9 +40,9 @@ const leadFields = {
   name: z.string().describe("Person's name"),
   company: z.string().optional(),
   email: z.string().optional(),
-  phone: z.string().optional().describe("Email or phone is required"),
+  phone: z.string().optional().describe("Email or phone is required, unless source is instagram or linkedin with source_detail set"),
   source: z.enum(LEAD_SOURCES.map((s) => s.value)).optional(),
-  source_detail: z.string().optional().describe("Who referred them, profile link, campaign…"),
+  source_detail: z.string().optional().describe("Who referred them, handle or profile link, campaign…"),
   status: z.enum(["new", "contacted", "qualified"]).optional().describe("Lost only through mark_lead_lost, won through mark_lead_won"),
   next_follow_up: date.optional().describe('YYYY-MM-DD, or "" for none'),
   follow_up_note: z.string().optional().describe("What to do at the follow-up"),
@@ -118,7 +118,7 @@ export function registerTools(server: McpServer) {
       description: "Leads, soonest follow-up first. view: open (default), due (follow-up today or overdue), won, lost, all.",
       inputSchema: z.object({
         view: z.enum(LEAD_VIEWS.map((v) => v.value)).optional(),
-        search: z.string().optional().describe("Name, company, email or phone"),
+        search: z.string().optional().describe("Name, company, email, phone or handle"),
         page: z.number().int().min(1).optional(),
       }),
       annotations: READ,
@@ -140,7 +140,7 @@ export function registerTools(server: McpServer) {
     {
       title: "Create lead",
       description:
-        "Adds a lead. If someone with the same email or phone exists, returns them instead of saving; confirm with the user, then repeat with allow_duplicate: true.",
+        "Adds a lead. If someone with the same email, phone or handle exists, returns them instead of saving; confirm with the user, then repeat with allow_duplicate: true.",
       inputSchema: z.object({ ...leadFields, allow_duplicate: z.boolean().optional() }),
       annotations: WRITE,
     },
@@ -151,7 +151,7 @@ export function registerTools(server: McpServer) {
       } satisfies LeadInput);
       if (!parsed.success) return invalid(parsed.error);
       if (!allow_duplicate) {
-        const { data: duplicates } = await db.rpc("lead_duplicates", { p_email: parsed.data.email, p_phone: parsed.data.phone });
+        const { data: duplicates } = await db.rpc("lead_duplicates", { p_email: parsed.data.email, p_phone: parsed.data.phone, p_source: parsed.data.source, p_source_detail: parsed.data.source_detail });
         if (duplicates?.length) return ok({ saved: false, duplicates });
       }
       const { data: org } = await db.rpc("current_org_id");

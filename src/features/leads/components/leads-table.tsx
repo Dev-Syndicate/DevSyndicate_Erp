@@ -51,7 +51,7 @@ export function LeadsTable({ rows, offset = 0 }: { rows: Rows; offset?: number }
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col text-sm">
-                      <span>{l.phone}</span>
+                      <span className="max-w-64 truncate">{l.phone || (!l.email && l.source_detail)}</span>
                       <span className="text-xs text-muted-foreground">{l.email}</span>
                     </div>
                   </TableCell>

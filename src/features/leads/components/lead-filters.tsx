@@ -25,7 +25,7 @@ export function LeadFilters({ f, users }: { f: Filters; users: { id: string; ful
             <FieldLabel htmlFor="q">Search</FieldLabel>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="q" name="q" defaultValue={f.q} placeholder="Name, company, email, phone" className="pl-8" />
+              <Input id="q" name="q" defaultValue={f.q} placeholder="Name, company, email, phone, handle" className="pl-8" />
             </div>
           </Field>
           <Field className="w-40">

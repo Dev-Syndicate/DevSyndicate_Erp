@@ -14,7 +14,7 @@ const id = z.uuid();
 export type Duplicate = { kind: string; name: string; detail: string };
 
 /**
- * Creates a lead, or edits it when `leadId` is given. Same email or phone as another lead or client contact returns
+ * Creates a lead, or edits it when `leadId` is given. Same email, phone or handle as another lead or client contact returns
  * `duplicates` first; saving again with `allowDuplicate` goes ahead (PRD §47: warn only).
  */
 export async function saveLead(
@@ -30,7 +30,7 @@ export async function saveLead(
   const supabase = await createClient();
   if (!allowDuplicate) {
     // Generated types can't mark SQL args nullable; p_exclude = null checks against every lead.
-    const { data: duplicates } = await supabase.rpc("lead_duplicates", { p_email: row.email, p_phone: row.phone, p_exclude: leadId as string });
+    const { data: duplicates } = await supabase.rpc("lead_duplicates", { p_email: row.email, p_phone: row.phone, p_exclude: leadId as string, p_source: row.source, p_source_detail: row.source_detail });
     if (duplicates?.length) return { duplicates };
   }
 

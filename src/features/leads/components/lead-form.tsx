@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { saveLead, type Duplicate } from "@/features/leads/actions";
 import { LostFields } from "@/features/leads/components/lost-fields";
-import { LEAD_SOURCES, LEAD_STATUSES, leadSchema, type LeadInput } from "@/features/leads/schema";
+import { isSocialSource, LEAD_SOURCES, LEAD_STATUSES, leadSchema, type LeadInput } from "@/features/leads/schema";
 import type { Tables } from "@/lib/supabase/database.types";
 
 export function LeadForm({ lead }: { lead?: Omit<Tables<"leads">, "call_attempts"> }) {
@@ -102,7 +102,7 @@ export function LeadForm({ lead }: { lead?: Omit<Tables<"leads">, "call_attempts
                   </SelectContent>
                 </Select>
               </Field>
-              {text("source_detail", source?.detail ?? "Source detail", { placeholder: `e.g. ${source?.example} (optional)` })}
+              {text("source_detail", source?.detail ?? "Source detail", { placeholder: `e.g. ${source?.example}${isSocialSource(form.source) && !form.email && !form.phone ? "" : " (optional)"}` })}
             </FieldGroup>
           </CardContent>
         </Card>
@@ -156,7 +156,7 @@ export function LeadForm({ lead }: { lead?: Omit<Tables<"leads">, "call_attempts
         {duplicates.length > 0 && (
           <Alert>
             <TriangleAlert />
-            <AlertTitle>Someone with this email or phone already exists</AlertTitle>
+            <AlertTitle>Someone with these contact details already exists</AlertTitle>
             <AlertDescription>
               <ul className="list-disc pl-4">
                 {duplicates.map((d, i) => (

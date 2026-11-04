@@ -52,6 +52,14 @@ do $$ begin
     insert into public.leads (organization_id, name, source) values (public.current_org_id(), 'No contact', 'other');
     assert false, 'email or phone required';
   exception when check_violation then null; end;
+  begin
+    insert into public.leads (organization_id, name, source, source_detail) values (public.current_org_id(), 'Referral only', 'referral', 'Karthik');
+    assert false, 'a referral note is not contact details';
+  exception when check_violation then null; end;
+  begin
+    insert into public.leads (organization_id, name, source, source_detail) values (public.current_org_id(), 'Blank handle', 'instagram', '  ');
+    assert false, 'a blank handle is not contact details';
+  exception when check_violation then null; end;
 end $$;
 
 -- Another staff member sees it, calls, updates it and logs the call
@@ -124,6 +132,28 @@ begin
   values (public.current_org_id(), 'Second Contact', 'second@test.local', 'referral', 'lost', 'budget');
   assert public.convert_lead((select id from public.leads where name = 'Second Contact'), cid) = cid, 'linked to the existing client';
   assert (select count(*) from public.client_contacts where client_id = cid) = 1, 'no extra contact when linking';
+end $$;
+
+-- Instagram lead with only a handle: saved, duplicates matched on the handle, converts to a contact with no details
+select pg_temp.act_as('staff@test.local');
+do $$
+declare
+  lid uuid;
+  cid uuid;
+begin
+  insert into public.leads (organization_id, name, source, source_detail)
+  values (public.current_org_id(), 'Handle Only', 'instagram', '@HandleOnly') returning id into lid;
+  assert exists (select 1 from public.lead_duplicates('', '', null, 'instagram', 'https://www.instagram.com/handleonly/?hl=en')), 'same handle from a link is a duplicate';
+  assert not exists (select 1 from public.lead_duplicates('', '', lid, 'instagram', 'handleonly')), 'the lead itself is excluded';
+  assert not exists (select 1 from public.lead_duplicates('', '', null, 'linkedin', 'handleonly')), 'another source is another person';
+  assert not exists (select 1 from public.lead_duplicates('', '', null, 'referral', 'handleonly')), 'only social sources have handles';
+  assert not exists (select 1 from public.lead_duplicates('', '', null, 'instagram', '')), 'no handle matches nothing';
+  begin
+    update public.leads set source = 'other' where id = lid;
+    assert false, 'a handle only counts on a social source';
+  exception when check_violation then null; end;
+  cid := public.convert_lead(lid);
+  assert (select email = '' and phone = '' from public.client_contacts where client_id = cid and is_primary), 'contact details are added on the client later';
 end $$;
 
 -- Admin cannot delete won leads; deletes open ones
