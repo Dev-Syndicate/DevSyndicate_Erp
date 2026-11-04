@@ -85,8 +85,8 @@ export function LeadForm({ lead }: { lead?: Omit<Tables<"leads">, "call_attempts
             <FieldGroup className="grid gap-4 sm:grid-cols-2">
               {text("name", "Name", { required: true, placeholder: "e.g. Asha Rao" })}
               {text("company", "Company", { placeholder: "e.g. Rao Studio (optional)" })}
-              {text("email", "Email", { type: "email", placeholder: "e.g. asha@raostudio.in" })}
-              {text("phone", "Phone", { type: "tel", placeholder: "e.g. +91 98450 12345" })}
+              {text("email", "Email", { type: "email", placeholder: "e.g. asha@raostudio.in (optional)" })}
+              {text("phone", "Phone", { type: "tel", placeholder: `e.g. +91 98450 12345${isSocialSource(form.source) ? " (optional)" : ""}` })}
               <Field>
                 <FieldLabel htmlFor="source">Source</FieldLabel>
                 <Select value={form.source} onValueChange={(v) => set("source", v as LeadInput["source"])}>
