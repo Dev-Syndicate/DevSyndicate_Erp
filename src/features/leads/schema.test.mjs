@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { leadSchema } from "./schema.ts";
+import { leadSchema, urlDate } from "./schema.ts";
 
 const lead = (fields) => ({
   name: "Asha", company: "", email: "", phone: "", source: "instagram", source_detail: "", status: "new",
   lost_reason: "", lost_note: "", next_follow_up: "", follow_up_note: "", notes: "", ...fields,
 });
 const errorAt = (fields) => leadSchema.safeParse(lead(fields)).error?.issues.map((i) => i.path[0]);
+
+test("only real dates from the URL become filters", () => {
+  assert.equal(urlDate("2026-11-09"), "2026-11-09");
+  for (const bad of ["2026-13-45", "2026-02-30", "09-11-2026", "", undefined, ["2026-11-09"]]) assert.equal(urlDate(bad), "");
+});
 
 test("an email or phone is enough on any source", () => {
   assert.equal(errorAt({ source: "referral", phone: "98450 12345" }), undefined);

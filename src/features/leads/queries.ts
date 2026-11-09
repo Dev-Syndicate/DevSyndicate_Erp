@@ -1,5 +1,5 @@
 import { PAGE_SIZE } from "@/components/list-controls";
-import { istToday } from "@/lib/dates";
+import { addDays, istToday } from "@/lib/dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
@@ -17,7 +17,7 @@ export type LeadView = (typeof LEAD_VIEWS)[number]["value"];
 
 /** Every lead (shared; RLS: leads.view). `db` = another user client, e.g. the Claude connector's (PRD §48). */
 export async function listLeads(
-  { q, page, view, source, status, addedBy }: { q: string; page: number; view: LeadView; source?: string; status?: string; addedBy?: string },
+  { q, page, view, source, status, addedBy, from, to }: { q: string; page: number; view: LeadView; source?: string; status?: string; addedBy?: string; from?: string; to?: string },
   db?: SupabaseClient<Database>,
 ) {
   const supabase = db ?? (await createClient());
@@ -35,6 +35,9 @@ export async function listLeads(
   if (source) query = query.eq("source", source);
   if (status) query = query.eq("status", status);
   if (addedBy) query = query.eq("created_by", addedBy);
+  // Dates are IST business days (PRD §8).
+  if (from) query = query.gte("created_at", `${from}T00:00:00+05:30`);
+  if (to) query = query.lt("created_at", `${addDays(to, 1)}T00:00:00+05:30`);
   // Characters that would break PostgREST's or() syntax become spaces.
   const term = q.replace(/[,()*\\%]/g, " ").trim();
   if (term) query = query.or(["name", "company", "email", "phone", "source_detail"].map((c) => `${c}.ilike.%${term}%`).join(","));

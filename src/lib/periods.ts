@@ -14,9 +14,17 @@ const lastDay = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate
 
 /** From/to dates (YYYY-MM-DD) for a period containing `today` (YYYY-MM-DD, IST). Unknown periods mean this FY. */
 export function periodRange(period: string | undefined, today: string): { from: string; to: string } {
-  const [y, m] = today.split("-").map(Number);
+  const [y, m, d] = today.split("-").map(Number);
   const fyStart = m >= 4 ? y : y - 1;
   switch (period) {
+    case "today":
+      return { from: today, to: today };
+    case "week": {
+      // Monday to Sunday; Date.UTC rolls over month and year ends.
+      const monday = d - ((new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7);
+      const at = (day: number) => new Date(Date.UTC(y, m - 1, day)).toISOString().slice(0, 10);
+      return { from: at(monday), to: at(monday + 6) };
+    }
     case "month":
       return { from: iso(y, m, 1), to: iso(y, m, lastDay(y, m)) };
     case "quarter": {

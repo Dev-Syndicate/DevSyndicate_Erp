@@ -50,6 +50,8 @@ export const statusLabel = (v: string) => label(LEAD_STATUSES, v);
 export const activityLabel = (v: string) => label(ACTIVITY_KINDS, v);
 export const outcomeLabel = (v: string) => label(CALL_OUTCOMES, v);
 export const lostReasonLabel = (v: string) => label(LOST_REASONS, v);
+/** A real YYYY-MM-DD from the URL, otherwise "" (no filter). */
+export const urlDate = (v: unknown) => (z.iso.date().safeParse(v).success ? (v as string) : "");
 export const OPEN_STATUSES = ["new", "contacted", "qualified"];
 
 const optionalDate = z.union([z.literal(""), z.iso.date("Pick a date")]);

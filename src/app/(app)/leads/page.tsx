@@ -8,7 +8,8 @@ import { getCurrentUser } from "@/features/auth/queries";
 import { LeadFilters } from "@/features/leads/components/lead-filters";
 import { LeadsTable } from "@/features/leads/components/leads-table";
 import { getLeadUsers, LEAD_VIEWS, listLeads, type LeadView } from "@/features/leads/queries";
-import { LEAD_SOURCES, OPEN_STATUSES, sourceLabel, statusLabel } from "@/features/leads/schema";
+import { LEAD_SOURCES, OPEN_STATUSES, sourceLabel, statusLabel, urlDate } from "@/features/leads/schema";
+import { formatDate } from "@/lib/dates";
 
 async function Leads({ searchParams }: { searchParams: PageProps<"/leads">["searchParams"] }) {
   const raw = await searchParams;
@@ -19,10 +20,14 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/leads">["sear
   const source = LEAD_SOURCES.find((s) => s.value === raw.source)?.value ?? "";
   const pickedStatus = OPEN_STATUSES.find((s) => s === raw.status) ?? "";
   const addedBy = users.find((u) => u.id === raw.added_by);
+  const from = urlDate(raw.from);
+  const to = urlDate(raw.to);
   // Won and Lost have no status to pick; the choice comes back on the other views.
   const status = view === "won" || view === "lost" ? "" : pickedStatus;
-  const [{ rows, total }, user] = await Promise.all([listLeads({ ...params, view, source, status, addedBy: addedBy?.id }), getCurrentUser()]);
-  const filters = { ...(source && { source }), ...(pickedStatus && { status: pickedStatus }), ...(addedBy && { added_by: addedBy.id }) };
+  const [{ rows, total }, user] = await Promise.all([listLeads({ ...params, view, source, status, addedBy: addedBy?.id, from, to }), getCurrentUser()]);
+  const kept = { ...(source && { source }), ...(pickedStatus && { status: pickedStatus }), ...(addedBy && { added_by: addedBy.id }) };
+  const filters = { ...kept, ...(from && { from }), ...(to && { to }) };
+  const datesHref = (dates: Record<string, string>) => `/leads?${new URLSearchParams({ ...(view !== "open" && { view }), ...(params.q && { q: params.q }), ...kept, ...dates })}`;
   const viewHref = (v: string) => `/leads?${new URLSearchParams({ ...(v !== "open" && { view: v }), ...(params.q && { q: params.q }), ...filters })}`;
 
   return (
@@ -43,13 +48,14 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/leads">["sear
           </Button>
         )}
       </div>
-      <LeadFilters f={{ q: params.q, view, source, status, addedBy: addedBy?.id ?? "" }} users={users} />
+      <LeadFilters f={{ q: params.q, view, source, status, addedBy: addedBy?.id ?? "", from, to, custom: raw.custom === "1" }} users={users} datesHref={datesHref} />
       <p className="text-sm text-muted-foreground">
         {total} {total === 1 ? "lead" : "leads"}
         {view !== "all" && ` · ${LEAD_VIEWS.find((v) => v.value === view)?.label}`}
         {source && ` · ${sourceLabel(source)}`}
         {status && ` · ${statusLabel(status)}`}
         {addedBy && ` · Added by ${addedBy.full_name || addedBy.email}`}
+        {(from || to) && ` · Added ${[from && `from ${formatDate(from)}`, to && `to ${formatDate(to)}`].filter(Boolean).join(" ")}`}
         {params.q && ` matching “${params.q}”`}
       </p>
       <LeadsTable rows={rows} offset={(params.page - 1) * PAGE_SIZE} />
