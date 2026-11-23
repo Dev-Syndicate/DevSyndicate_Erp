@@ -1482,6 +1482,7 @@ Settings
     Expense Categories
     Users
     Roles & Permissions
+    Integrations
     Data Import
     Audit Logs
 ```
@@ -1926,7 +1927,7 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
 - Delete (`leads.delete`) is for mistakes only; won leads cannot be deleted.
 - **Website contact form (v1.7, researched).** Each enquiry becomes a lead, as Zoho CRM's Web-to-Lead forms do: source Website, detail "Contact form", status New, Added by "Website form", the next follow-up set to today ("Reply to website enquiry") so it shows in Follow-ups due. "What do you need?" and the message go into Notes. Firms that reply within an hour are about 7× likelier to qualify a lead (Harvard Business Review, 2011), so speed matters.
   - **Endpoint:** `POST /api/leads/website` with `Authorization: Bearer <form key>`. The website's server calls it after its own checks; the browser never sees the key. Fields: name*, email*, company, need, message* (JSON).
-  - **Form key:** generated once in Settings → Company (`settings.update`), shown once, stored only as a SHA-256 hash; regenerating revokes the old key. The database checks the key (no service-role key, §32.3).
+  - **Form key:** generated once in Settings → Integrations (`settings.update`), shown once, stored only as a SHA-256 hash; regenerating revokes the old key. The database checks the key (no service-role key, §32.3).
   - **Spam:** web forms attract heavy spam (Zoho users report it), so the website verifies a Cloudflare Turnstile token and a hidden honeypot field before calling the ERP. The ERP also ignores a repeat from the same email within 10 minutes (double submits).
   - **Rate limits (in the database):** 10 enquiries per visitor an hour (the website forwards the visitor's IP in `X-Visitor-IP`; it is stored only as a SHA-256 hash salted with the organisation), 10 per email a day, and 30 website enquiries an hour in total, in case the key leaks. Over a limit the endpoint answers 429 with `Retry-After` and saves nothing.
   - **Privacy:** under the DPDP Act 2023 the form states why the details are collected (to reply to the enquiry) and links the privacy policy.

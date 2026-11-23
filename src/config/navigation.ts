@@ -62,6 +62,7 @@ export const navigation: NavItem[] = [
       { title: "Expense Categories", href: "/settings/expense-categories", permission: "settings.view" },
       { title: "Users", href: "/settings/users", permission: "users.view" },
       { title: "Roles & Permissions", href: "/settings/roles", permission: "roles.view" },
+      { title: "Integrations", href: "/settings/integrations", permission: "settings.view" },
       { title: "Data Import", href: "/settings/import", permission: "data.import" },
       { title: "Audit Logs", href: "/settings/audit-logs", permission: "audit_logs.view" },
     ],

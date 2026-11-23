@@ -163,6 +163,6 @@ export async function generateWebsiteFormKey(): Promise<{ ok?: boolean; error?: 
     .eq("organization_id", organizationId)
     .select("organization_id");
   if (error || !data.length) return { error: NO_PERMISSION };
-  revalidatePath("/settings/company");
+  revalidatePath("/settings/integrations");
   return { ok: true, key };
 }

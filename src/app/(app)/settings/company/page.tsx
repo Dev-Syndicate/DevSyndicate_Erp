@@ -3,7 +3,6 @@ import { FormSkeleton } from "@/components/page-skeletons";
 import { getCurrentUser } from "@/features/auth/queries";
 import { BrandingCard } from "@/features/settings/components/branding-card";
 import { CompanyForm } from "@/features/settings/components/company-form";
-import { WebsiteFormCard } from "@/features/settings/components/website-form-card";
 import { getBrandingUrls, getCompanySettings, getDocumentNumbering, getTaxRates } from "@/features/settings/queries";
 
 async function CompanySettings() {
@@ -26,7 +25,6 @@ async function CompanySettings() {
       taxRates={taxRates.filter((t) => t.is_active || t.id === settings.default_tax_rate_id)}
       canEdit={canEdit}
       />
-      <WebsiteFormCard hasKey={!!settings.website_form_key_hash} canEdit={canEdit} />
     </>
   );
 }

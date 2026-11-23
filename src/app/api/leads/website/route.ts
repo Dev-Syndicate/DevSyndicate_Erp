@@ -3,7 +3,7 @@ import { fieldErrors } from "@/lib/forms";
 import { createAnonClient } from "@/lib/supabase/anon";
 
 // Website contact form → a Website lead (PRD §47). Called by the website's server with the form key from
-// Settings → Company and the visitor's IP in X-Visitor-IP; the database checks the key, ignores double submits and
+// Settings → Integrations and the visitor's IP in X-Visitor-IP; the database checks the key, ignores double submits and
 // rate-limits per visitor, per email and overall.
 const IP_RE = /^[0-9a-fA-F.:]{3,45}$/;
 
