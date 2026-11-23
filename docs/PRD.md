@@ -2021,7 +2021,7 @@ One notification system for the whole ERP. The first sender is the website conta
 ## Rules
 
 - **Per person.** An event creates one notification per recipient (the users with the permission that event needs, active users only), as GitHub and Zoho do. Each person reads and clears their own; reading one doesn't clear it for anyone else. People added later don't get older notifications.
-- **Bell.** Top bar, every signed-in user. The badge counts unread; the list shows the latest 20, unread highlighted. Opening one marks it read and goes to its link; "Mark all as read" clears the rest.
+- **Bell.** Top bar, every signed-in user. The badge counts unread; the list shows the latest 20, unread highlighted. When a new unread notification is there, the bell opens by itself once (per browser); after it is closed it stays closed until another new one arrives. Opening one marks it read and goes to its link; "Mark all as read" clears the rest.
 - **When it updates.** On page load or reload. No live connection or polling (owner decision: keeps the free tier simple).
 - **Security.** Users see and mark only their own notifications (RLS). Notifications are created only by database functions (`notify`), never directly by users or the website.
 

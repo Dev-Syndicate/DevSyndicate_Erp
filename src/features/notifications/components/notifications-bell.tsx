@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Globe, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -16,14 +16,26 @@ type Notification = { id: string; kind: string; title: string; body: string; lin
 // One icon per kind; add a line when a module starts sending a new kind (PRD §50).
 const ICONS: Record<string, LucideIcon> = { website_enquiry: Globe };
 
+// Newest unread notification the bell already opened for, so it opens once per new one, not on every page load.
+const SEEN_KEY = "notifications:auto-opened";
+
 const when = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 
 /** Top-bar bell: the user's own notifications, unread highlighted. Updates on page load (no polling, PRD §50). */
 export function NotificationsBell({ rows, unread }: { rows: Notification[]; unread: number }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
+  const newestUnread = rows.find((n) => !n.read_at)?.id;
+
+  useEffect(() => {
+    if (!newestUnread || localStorage.getItem(SEEN_KEY) === newestUnread) return;
+    localStorage.setItem(SEEN_KEY, newestUnread);
+    setIsOpen(true); // eslint-disable-line react-hooks/set-state-in-effect -- localStorage only exists in the browser
+  }, [newestUnread]);
 
   function open(n: Notification) {
+    setIsOpen(false);
     startTransition(async () => {
       if (!n.read_at) await markNotificationRead(n.id);
       if (n.link) router.push(n.link);
@@ -38,7 +50,7 @@ export function NotificationsBell({ rows, unread }: { rows: Notification[]; unre
   }
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon-sm" className="relative" aria-label={unread ? `${unread} unread notifications` : "Notifications"}>
           <Bell />
