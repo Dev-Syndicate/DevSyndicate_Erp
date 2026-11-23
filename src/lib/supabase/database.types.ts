@@ -1239,6 +1239,7 @@ export type Database = {
           source_detail: string
           status: string
           updated_at: string
+          visitor_ip_hash: string | null
           won_at: string | null
           call_attempts: number | null
         }
@@ -1261,6 +1262,7 @@ export type Database = {
           source_detail?: string
           status?: string
           updated_at?: string
+          visitor_ip_hash?: string | null
           won_at?: string | null
         }
         Update: {
@@ -1282,6 +1284,7 @@ export type Database = {
           source_detail?: string
           status?: string
           updated_at?: string
+          visitor_ip_hash?: string | null
           won_at?: string | null
         }
         Relationships: [
@@ -2207,6 +2210,7 @@ export type Database = {
         Args: {
           p_company: string
           p_email: string
+          p_ip?: string
           p_key: string
           p_message: string
           p_name: string
