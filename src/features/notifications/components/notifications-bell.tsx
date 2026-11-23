@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Globe, type LucideIcon } from "lucide-react";
+import { Bell, BellOff, CheckCheck, Globe, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { StatusTile } from "@/components/status-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { markAllNotificationsRead, markNotificationRead } from "@/features/notifications/actions";
@@ -55,43 +57,55 @@ export function NotificationsBell({ rows, unread }: { rows: Notification[]; unre
         <Button variant="ghost" size="icon-sm" className="relative" aria-label={unread ? `${unread} unread notifications` : "Notifications"}>
           <Bell />
           {unread > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-primary px-1 text-[10px] text-primary-foreground tabular-nums">
+            <Badge className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-info px-1 text-[10px] text-info-foreground tabular-nums">
               {unread > 9 ? "9+" : unread}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between px-4 py-3">
-          <p className="text-sm font-medium">Notifications</p>
+      <PopoverContent align="end" className="w-96 gap-0 overflow-hidden p-0">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <p className="font-medium">Notifications</p>
+          {unread > 0 && <Badge className="bg-info/15 text-info tabular-nums">{unread} new</Badge>}
           {unread > 0 && (
-            <Button variant="link" size="sm" className="h-auto p-0" onClick={markAll} disabled={pending}>
-              Mark all as read
+            <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={markAll} disabled={pending}>
+              <CheckCheck /> Mark all as read
             </Button>
           )}
         </div>
         <Separator />
         {rows.length === 0 ? (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">No notifications yet.</p>
+          <Empty className="py-10">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <BellOff />
+              </EmptyMedia>
+              <EmptyTitle>You&apos;re all caught up</EmptyTitle>
+              <EmptyDescription>New website enquiries and other updates show up here.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
-          <ul className="max-h-96 overflow-y-auto">
+          <ul className="max-h-[28rem] divide-y overflow-y-auto">
             {rows.map((n) => {
-              const Icon = ICONS[n.kind] ?? Bell;
+              const unreadRow = !n.read_at;
               return (
                 <li key={n.id}>
                   <button
                     type="button"
                     onClick={() => open(n)}
                     disabled={pending}
-                    className={cn("flex w-full gap-3 px-4 py-3 text-left hover:bg-muted", !n.read_at && "bg-primary/5")}
+                    className={cn(
+                      "flex w-full items-start gap-3 border-l-2 px-4 py-3 text-left transition-colors hover:bg-muted/60",
+                      unreadRow ? "border-l-info bg-info/5" : "border-l-transparent",
+                    )}
                   >
-                    <Icon className={cn("mt-0.5 size-4 shrink-0", n.read_at ? "text-muted-foreground" : "text-primary")} aria-hidden />
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className={cn("text-sm", !n.read_at && "font-medium")}>{n.title}</span>
+                    <StatusTile icon={ICONS[n.kind] ?? Bell} className={unreadRow ? "bg-info/15 text-info" : undefined} />
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className={cn("line-clamp-2 text-sm", unreadRow ? "font-medium" : "text-muted-foreground")}>{n.title}</span>
                       {n.body && <span className="truncate text-xs text-muted-foreground">{n.body}</span>}
-                      <span className="text-xs text-muted-foreground">{when.format(new Date(n.created_at))}</span>
+                      <span className="text-xs text-muted-foreground/80">{when.format(new Date(n.created_at))}</span>
                     </span>
-                    {!n.read_at && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+                    {unreadRow && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-info" aria-label="Unread" />}
                   </button>
                 </li>
               );
