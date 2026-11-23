@@ -2,6 +2,7 @@ import {
   Building2,
   FolderOpen,
   LayoutDashboard,
+  Newspaper,
   Landmark,
   Settings,
   Truck,
@@ -38,6 +39,16 @@ export const navigation: NavItem[] = [
   },
   { title: "Clients", href: "/clients", icon: Building2, permission: "clients.view" },
   { title: "Leads", href: "/leads", icon: UserRoundSearch, permission: "leads.view" },
+  {
+    title: "Blog",
+    href: "/blog",
+    icon: Newspaper,
+    permission: "blog.view",
+    children: [
+      { title: "Posts", href: "/blog/posts", permission: "blog.view" },
+      { title: "Categories", href: "/blog/categories", permission: "blog.view" },
+    ],
+  },
   { title: "Vendors", href: "/vendors", icon: Truck, permission: "vendors.view" },
   { title: "Documents", href: "/documents", icon: FolderOpen, permission: "documents.view" },
   {

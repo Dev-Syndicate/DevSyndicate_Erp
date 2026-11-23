@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors, type FormState } from "@/lib/forms";
+import { imageType } from "@/lib/images";
 import { companySettingsSchema, expenseCategorySchema, numberingFromForm, numberingSchema, taxRateSchema } from "./schema";
 
 const NO_PERMISSION = "You don't have permission to change settings.";
@@ -101,13 +102,6 @@ type BrandingKind = "logo" | "signature";
 // Under the 1 MB server action body limit (Next.js default), leaving room for multipart overhead.
 const MAX_IMAGE_BYTES = 900 * 1024;
 
-/** PNG or JPEG by file signature, not by name or browser-reported type (PRD §26). */
-function imageType(bytes: Uint8Array): "png" | "jpg" | null {
-  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png";
-  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
-  return null;
-}
-
 /** Points company settings at a new logo/signature file (or none), then deletes the old file. */
 async function setBrandingPath(kind: BrandingKind, path: string | null): Promise<{ error?: string }> {
   const { supabase, organizationId } = await orgId();
@@ -134,7 +128,8 @@ export async function uploadBranding(kind: BrandingKind, _prev: FormState, formD
   if (file.size > MAX_IMAGE_BYTES) return { error: "Images can be up to 900 KB." };
   const bytes = new Uint8Array(await file.arrayBuffer());
   const type = imageType(bytes);
-  if (!type) return { error: "Use a PNG or JPG image." };
+  // The PDF renderer can't draw WEBP.
+  if (type !== "png" && type !== "jpg") return { error: "Use a PNG or JPG image." };
 
   const { supabase, organizationId } = await orgId();
   if (!organizationId) return { error: NO_PERMISSION };

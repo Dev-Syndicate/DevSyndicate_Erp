@@ -1,7 +1,7 @@
 # DevSyndicate ERP
 
 **Product Requirements Document (PRD)**  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Initial Development  
 **Product:** DevSyndicate ERP  
 **Primary Module:** Finance  
@@ -11,6 +11,10 @@
 ---
 
 ## Changelog
+
+### v1.7 (2026-11-23)
+
+- **Blog (website content).** Posts with a rich-text body, one category each (News, Tech News, Company News…, editable), cover image with alt text and SEO fields (SEO title, meta description, canonical URL). Draft / Published; publishing needs `blog.publish`. The company website reads published posts from a public read-only API and renders them itself. Claude can draft posts through the connector; a person publishes (§49).
 
 ### v1.6 (2026-10-19)
 
@@ -306,6 +310,12 @@ leads.create
 leads.update
 leads.delete
 leads.convert            (Won: create or link the client)
+
+blog.view
+blog.create
+blog.update              (edit posts, manage categories)
+blog.delete
+blog.publish             (publish, unpublish, edit published posts)
 ```
 
 ## 5.1 Default Role Matrix
@@ -330,6 +340,7 @@ leads.convert            (Won: create or link the client)
 | settings.update | ✅ | — | — | — | — |
 | audit_logs.view | ✅ | — | — | — | — |
 | leads.* | ✅ | ✅ | — | view, create, update, convert | — |
+| blog.* | ✅ | ✅ | — | view, create, update | view |
 
 Permissions are stored as data (seeded), so this matrix can be changed without code changes. Only the Super Admin protections in §32 are hard rules.
 
@@ -1455,6 +1466,10 @@ Clients
 
 Leads
 
+Blog
+    Posts
+    Categories
+
 Vendors
 
 Documents
@@ -1930,11 +1945,12 @@ Claude connects to remote MCP servers as custom connectors (Pro, Max, Team, Ente
 ```text
 Leads        list_leads, get_lead, create_lead, update_lead, log_lead_activity, mark_lead_lost, mark_lead_won
 Quotations   list_clients, list_quotations, get_quotation, create_quotation, update_quotation (drafts only)
+Blog         list_blog_categories, create_blog_category, list_blog_posts, get_blog_post, create_blog_post, update_blog_post (drafts only)
 ```
 
 - Inputs are validated with the same rules as the forms (§47, §11). `create_lead` returns possible duplicates first; the caller repeats with `allow_duplicate` to save anyway.
 - `create_quotation` fills anything left out from Company settings: validity days, default terms, default tax rate, default SAC code.
-- Not available through Claude: sending, accepting or converting quotations; invoices, payments, expenses, deleting anything.
+- Not available through Claude: sending, accepting or converting quotations; publishing blog posts or uploading images; invoices, payments, expenses, deleting anything.
 
 ## Setup (once, Supabase dashboard)
 
@@ -1942,3 +1958,47 @@ Authentication → OAuth Server: enable, Authorization Path `/oauth/consent`, al
 
 Sources: Anthropic help center (building custom connectors via remote MCP servers), Claude connector authentication docs, Supabase OAuth 2.1 server and MCP authentication guides, Vercel MCP deployment docs.
 
+---
+
+# 49. Blog (v1.7, researched)
+
+The company website (Next.js, separate project) shows blog posts written in the ERP. The ERP stores and serves content only; the website decides the design. Like a headless CMS (Ghost Content API, Contentful Delivery API), published content is served read-only and public, while drafts never leave the ERP.
+
+## Post Fields
+
+```text
+Title                 (the H1, up to 200)
+Slug                  (URL part, lowercase-with-dashes, unique; filled from the title)
+Category              (exactly one)
+Excerpt               (list cards and the fallback meta description, up to 300)
+Content               (rich text, stored as cleaned HTML)
+Cover Image + Alt     (PNG / JPG / WEBP up to 900 KB; alt text required with an image)
+SEO Title             (optional, ~60 characters shown by Google; falls back to Title)
+Meta Description      (optional, ~155 characters; falls back to Excerpt)
+Canonical URL         (optional; only when the post first appeared elsewhere)
+Status                Draft / Published
+Published At          (set on first publish, kept when re-published)
+Created By / Created At / Updated At
+```
+
+## Rules
+
+- **One category per post (owner decision, v1.7).** A single category gives each post one URL (`/blog/<category>/<slug>`) and no duplicate archive pages; Yoast recommends one primary category for the same reason. Categories (name, slug, description) are created, renamed and deleted in the ERP; a category with posts cannot be deleted until its posts move.
+- **Rich text.** Headings (H2 to H4), bold, italic, underline, strikethrough, links, lists, quotes, code and dividers. Saved as HTML without styles or scripts (cleaned on the server), so the website styles it itself and no unsafe markup is ever served.
+- **Publishing.** `blog.create` / `blog.update` work on drafts; `blog.publish` publishes, unpublishes and edits published posts (a change to a published post is live at once). Delete (`blog.delete`) removes the post and its cover image.
+- **SEO.** Google uses the title link, meta description, image alt text and Article structured data (headline, image, datePublished, dateModified); the API returns each of these so the website can render `<title>`, meta and Open Graph tags, JSON-LD and the sitemap on the server. Google warns against mass-produced unhelpful content (scaled content abuse), so posts drafted by Claude are reviewed and published by a person.
+- **Claude connector (§48).** Claude can list and create categories and create or edit draft posts. It cannot publish, delete or upload images; the cover is uploaded in the ERP.
+
+## Public API (for the website)
+
+No sign-in. Only published posts; drafts and internal fields (creator, organisation) are never returned. Enforced in the database: the `anon` role may read only listed columns of published posts and categories (RLS + column grants). Responses are cacheable for 5 minutes.
+
+```text
+GET /api/blog/categories                     name, slug, description
+GET /api/blog/posts?category=<slug>&page=N   published posts, newest first (no content), 25 per page
+GET /api/blog/posts/<slug>                   one published post with content and SEO fields
+```
+
+Author is not exposed (staff profiles stay private); the website shows the organisation as author, which Google's Article markup allows.
+
+Sources: Google Search Central (title links, meta descriptions, image SEO, Article structured data, canonical URLs, spam policies on scaled content abuse), Yoast on primary categories, Ghost Content API and Contentful Delivery API docs.

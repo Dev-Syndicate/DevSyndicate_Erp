@@ -1,5 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { getPost, listCategories, listPosts } from "@/features/blog/queries";
+import { categorySchema, POST_STATUSES, postSchema, type PostInput } from "@/features/blog/schema";
 import { getLead, LEAD_VIEWS, listLeads } from "@/features/leads/queries";
 import { ACTIVITY_KINDS, activitySchema, CALL_OUTCOMES, LEAD_SOURCES, leadRow, leadSchema, LOST_REASONS, lostSchema, OPEN_STATUSES, type LeadInput } from "@/features/leads/schema";
 import { getQuotation, listQuotations } from "@/features/quotations/queries";
@@ -76,6 +78,18 @@ const quotationFields = {
 };
 
 type ItemArgs = z.output<typeof itemFields>;
+
+const postFields = {
+  title: z.string().describe("Headline (H1), up to 200 characters"),
+  category_id: z.uuid().describe("From list_blog_categories"),
+  content: z.string().describe("Body as HTML using only <p> <h2> <h3> <h4> <strong> <em> <u> <s> <a href> <ul> <ol> <li> <blockquote> <code> <pre> <hr>; no title (H1), images, styles or classes"),
+  excerpt: z.string().optional().describe("1-2 sentence summary, up to 300 characters"),
+  slug: z.string().optional().describe("lowercase-with-dashes; made from the title when left out"),
+  seo_title: z.string().optional().describe("About 50-60 characters with the main keyword; empty uses the title"),
+  meta_description: z.string().optional().describe("About 140-155 characters; empty uses the excerpt"),
+  canonical_url: z.string().optional().describe("Only if the post first appeared on another site"),
+};
+const EMPTY_POST = { slug: "", excerpt: "", seo_title: "", meta_description: "", canonical_url: "" };
 
 /** Company defaults for new quotation lines and dates (Settings → Company). */
 async function quotationDefaults(db: BearerClient) {
@@ -381,6 +395,107 @@ export function registerTools(server: McpServer) {
         ...strip,
         items: items ? items.map((i) => toItem(i, d?.default_sac_code ?? "", String(d?.tax_rates?.rate ?? 0))) : existing,
       });
+    }),
+  );
+
+  // ───────────── Blog (PRD §49): drafts only; publishing and cover images stay in the app ─────────────
+
+  server.registerTool(
+    "list_blog_categories",
+    { title: "List blog categories", description: "Blog categories (ids for posts) with post counts.", inputSchema: z.object({}), annotations: READ },
+    run(async (_args, db) => ok(await listCategories(db))),
+  );
+
+  server.registerTool(
+    "create_blog_category",
+    {
+      title: "Create blog category",
+      description: "Adds a blog category, e.g. Tech News. Check list_blog_categories first so you don't add a near-duplicate.",
+      inputSchema: z.object({
+        name: z.string(),
+        slug: z.string().optional().describe("lowercase-with-dashes; made from the name when left out"),
+        description: z.string().optional(),
+      }),
+      annotations: WRITE,
+    },
+    run(async (args, db) => {
+      const parsed = categorySchema.safeParse({ slug: "", description: "", ...args });
+      if (!parsed.success) return invalid(parsed.error);
+      const { data: org } = await db.rpc("current_org_id");
+      if (!org) return fail("You don't have permission to do this.");
+      const { data, error } = await db.from("blog_categories").insert({ ...parsed.data, organization_id: org }).select("id, name, slug").single();
+      if (error) return fail(error.code === "23505" ? "A category with this slug already exists." : dbErrorMessage(error));
+      return ok(data);
+    }),
+  );
+
+  server.registerTool(
+    "list_blog_posts",
+    {
+      title: "List blog posts",
+      description: "Blog posts, most recently updated first (no content; use get_blog_post).",
+      inputSchema: z.object({
+        search: z.string().optional().describe("Title"),
+        status: z.enum(POST_STATUSES.map((s) => s.value)).optional(),
+        category_id: z.uuid().optional(),
+        page: z.number().int().min(1).optional(),
+      }),
+      annotations: READ,
+    },
+    run(async ({ search, status, category_id, page }, db) => ok(await listPosts({ q: search ?? "", page: page ?? 1, status, category: category_id }, db))),
+  );
+
+  server.registerTool(
+    "get_blog_post",
+    { title: "Get blog post", description: "One blog post with its HTML content and SEO fields.", inputSchema: z.object({ id: z.uuid() }), annotations: READ },
+    run(async ({ id }, db) => {
+      const post = await getPost(id, db);
+      return post ? ok(post) : fail("Post not found.");
+    }),
+  );
+
+  server.registerTool(
+    "create_blog_post",
+    {
+      title: "Create blog post",
+      description:
+        "Saves a draft blog post for the company website. A person reviews, adds the cover image and publishes it in the app. " +
+        "For news about a new release, read the official release notes or announcement first and link them; summarise in your own words with what it means for clients, never copy text.",
+      inputSchema: z.object(postFields),
+      annotations: WRITE,
+    },
+    run(async (args, db) => {
+      const parsed = postSchema.safeParse({ ...EMPTY_POST, ...args } satisfies PostInput);
+      if (!parsed.success) return invalid(parsed.error);
+      const { data: org } = await db.rpc("current_org_id");
+      if (!org) return fail("You don't have permission to do this.");
+      const { data, error } = await db.from("blog_posts").insert({ ...parsed.data, organization_id: org }).select("id, slug, status").single();
+      if (error) return fail(error.code === "23505" ? "Another post already uses this slug; pass a different slug." : dbErrorMessage(error));
+      return ok({ ...data, url: `/blog/posts/${data.id}` });
+    }),
+  );
+
+  server.registerTool(
+    "update_blog_post",
+    {
+      title: "Update draft blog post",
+      description: "Changes the given fields of a draft post; others stay as they are. content, when given, replaces the whole body. Published posts are changed in the app.",
+      inputSchema: z.object({ id: z.uuid(), ...postFields, title: postFields.title.optional(), category_id: postFields.category_id.optional(), content: postFields.content.optional() }),
+      annotations: WRITE,
+    },
+    run(async ({ id, ...changes }, db) => {
+      const post = await getPost(id, db);
+      if (!post) return fail("Post not found.");
+      if (post.status !== "draft") return fail("Only draft posts can be edited through Claude. Unpublish it in the app first.");
+      const strip = Object.fromEntries(Object.entries(changes).filter(([, v]) => v !== undefined));
+      const parsed = postSchema.safeParse({
+        title: post.title, slug: post.slug, category_id: post.category_id, excerpt: post.excerpt, content: post.content,
+        seo_title: post.seo_title, meta_description: post.meta_description, canonical_url: post.canonical_url, ...strip,
+      } satisfies PostInput);
+      if (!parsed.success) return invalid(parsed.error);
+      const { data, error } = await db.from("blog_posts").update(parsed.data).eq("id", id).eq("status", "draft").select("id, slug, status");
+      if (error) return fail(error.code === "23505" ? "Another post already uses this slug." : dbErrorMessage(error));
+      return data.length ? ok({ ...data[0], url: `/blog/posts/${id}` }) : fail("This post is no longer a draft, or you can't edit posts.");
     }),
   );
 }
