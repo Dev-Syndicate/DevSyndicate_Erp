@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/features/auth/queries";
-import { WebsiteEnquiries } from "@/features/leads/components/website-enquiries";
+import { Notifications } from "@/features/notifications/components/notifications";
 import { BackupStatus } from "@/features/settings/components/backup-status";
 
 async function UserSidebar() {
@@ -39,7 +39,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
               <BackupStatus />
             </Suspense>
             <Suspense>
-              <WebsiteEnquiries />
+              <Notifications />
             </Suspense>
             <ThemeToggle />
           </div>

@@ -88,16 +88,3 @@ export async function getClientOptions() {
   return data;
 }
 
-/** Website enquiries nobody has worked yet (still New), newest first, for the top-bar bell (PRD §47). */
-export async function listNewWebsiteEnquiries() {
-  const supabase = await createClient();
-  const { data, count, error } = await supabase
-    .from("leads")
-    .select("id, name, company, created_at", { count: "exact" })
-    .eq("source", "website")
-    .eq("status", "new")
-    .order("created_at", { ascending: false })
-    .limit(8);
-  if (error) throw error;
-  return { rows: data, total: count ?? 0 };
-}

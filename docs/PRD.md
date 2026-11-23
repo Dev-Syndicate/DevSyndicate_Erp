@@ -14,7 +14,8 @@
 
 ### v1.7 (2026-11-23)
 
-- **Website contact form → Leads.** The company website's contact form creates a Website lead through a key-protected endpoint; a bell in the top bar lists unanswered website enquiries and a pop-up appears the moment one arrives (§47).
+- **Website contact form → Leads.** The company website's contact form creates a Website lead through a key-protected endpoint; each enquiry notifies the people who see leads (§47).
+- **Notifications.** A bell in the top bar with per-user unread notifications, highlighted until read; any module can send them (§50).
 - **Blog (website content).** Posts with a rich-text body, one category each (News, Tech News, Company News…, editable), cover image with alt text and SEO fields (SEO title, meta description, canonical URL). Draft / Published; publishing needs `blog.publish`. The company website reads published posts from a public read-only API and renders them itself. Claude can draft posts through the connector; a person publishes (§49).
 
 ### v1.6 (2026-10-19)
@@ -1929,7 +1930,7 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
   - **Spam:** web forms attract heavy spam (Zoho users report it), so the website verifies a Cloudflare Turnstile token and a hidden honeypot field before calling the ERP. The ERP also ignores a repeat from the same email within 10 minutes (double submits).
   - **Rate limits (in the database):** 10 enquiries per visitor an hour (the website forwards the visitor's IP in `X-Visitor-IP`; it is stored only as a SHA-256 hash salted with the organisation), 10 per email a day, and 30 website enquiries an hour in total, in case the key leaks. Over a limit the endpoint answers 429 with `Retry-After` and saves nothing.
   - **Privacy:** under the DPDP Act 2023 the form states why the details are collected (to reply to the enquiry) and links the privacy policy.
-- **Website enquiry notifications.** A bell in the top bar (users with `leads.view`) counts website leads still New, i.e. nobody has reached them yet, and lists the latest with a link to each. A new enquiry pops up at once for everyone signed in (Supabase Realtime, RLS applies). The notification clears when someone works the lead (Contacted, Qualified, Lost or Won); there is no separate read/unread state because leads are shared.
+- **Website enquiry notification.** Each enquiry sends a notification (§50) to every active user with `leads.view`: "New website enquiry from <name>", opening the lead.
 
 Sources: Zoho CRM standard lead fields, Kommo Instagram integration, Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs, HubSpot lead record stages, InsideSales contact-attempt research, CRM lost-reason practice guides (TechAdvisory, Crayon).
 
@@ -2009,3 +2010,27 @@ GET /api/blog/posts/<slug>                   one published post with content and
 Author is not exposed (staff profiles stay private); the website shows the organisation as author, which Google's Article markup allows.
 
 Sources: Google Search Central (title links, meta descriptions, image SEO, Article structured data, canonical URLs, spam policies on scaled content abuse), Yoast on primary categories, Ghost Content API and Contentful Delivery API docs.
+
+---
+
+# 50. Notifications (v1.7, owner decision)
+
+One notification system for the whole ERP. The first sender is the website contact form (§47); other modules add their own kinds later.
+
+## Rules
+
+- **Per person.** An event creates one notification per recipient (the users with the permission that event needs, active users only), as GitHub and Zoho do. Each person reads and clears their own; reading one doesn't clear it for anyone else. People added later don't get older notifications.
+- **Bell.** Top bar, every signed-in user. The badge counts unread; the list shows the latest 20, unread highlighted. Opening one marks it read and goes to its link; "Mark all as read" clears the rest.
+- **When it updates.** On page load or reload. No live connection or polling (owner decision: keeps the free tier simple).
+- **Security.** Users see and mark only their own notifications (RLS). Notifications are created only by database functions (`notify`), never directly by users or the website.
+
+## Fields
+
+```text
+Recipient (user)
+Kind          website_enquiry (more later)
+Title / Body
+Link          page in the ERP, e.g. /leads/<id>
+Read At       empty = unread
+Created At
+```
