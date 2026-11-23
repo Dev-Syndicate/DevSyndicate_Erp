@@ -376,6 +376,7 @@ export type Database = {
           updated_at: string
           upi_id: string
           website: string
+          website_form_key_hash: string | null
         }
         Insert: {
           address?: string
@@ -413,6 +414,7 @@ export type Database = {
           updated_at?: string
           upi_id?: string
           website?: string
+          website_form_key_hash?: string | null
         }
         Update: {
           address?: string
@@ -450,6 +452,7 @@ export type Database = {
           updated_at?: string
           upi_id?: string
           website?: string
+          website_form_key_hash?: string | null
         }
         Relationships: [
           {
@@ -2197,6 +2200,17 @@ export type Database = {
           p_padding: number
           p_pattern: string
           p_reset: string
+        }
+        Returns: undefined
+      }
+      submit_website_lead: {
+        Args: {
+          p_company: string
+          p_email: string
+          p_key: string
+          p_message: string
+          p_name: string
+          p_need: string
         }
         Returns: undefined
       }

@@ -14,6 +14,7 @@
 
 ### v1.7 (2026-11-23)
 
+- **Website contact form → Leads.** The company website's contact form creates a Website lead through a key-protected endpoint; a bell in the top bar lists unanswered website enquiries and a pop-up appears the moment one arrives (§47).
 - **Blog (website content).** Posts with a rich-text body, one category each (News, Tech News, Company News…, editable), cover image with alt text and SEO fields (SEO title, meta description, canonical URL). Draft / Published; publishing needs `blog.publish`. The company website reads published posts from a public read-only API and renders them itself. Claude can draft posts through the connector; a person publishes (§49).
 
 ### v1.6 (2026-10-19)
@@ -1922,7 +1923,12 @@ A timeline on each lead: type (Call, Meeting, Email, WhatsApp / DM, Note), what 
 - **List filters.** On top of the views and search, the Leads list filters by Source, Status (New / Contacted / Qualified; Won and Lost have their own views) Added By, and the date the lead was added (Any time, Today, This week (Monday to Sunday), This month, or a Custom From / To; IST days, either end optional), and they combine. Zoho CRM and HubSpot both filter leads by source, status and owner, and Zoho's Created Time supports a between range; shared leads have no owner, so Added By takes that place.
 - **Leads report** (Reports, needs `reports.view` and `leads.view`): leads added in the period by source (added, open, won, lost, won %), and lost leads by reason. CSV export.
 - Delete (`leads.delete`) is for mistakes only; won leads cannot be deleted.
-- Website form leads: not in this step. When built, a public form needs bot protection beyond a basic captcha (Zoho users report heavy web-form spam).
+- **Website contact form (v1.7, researched).** Each enquiry becomes a lead, as Zoho CRM's Web-to-Lead forms do: source Website, detail "Contact form", status New, Added by "Website form", the next follow-up set to today ("Reply to website enquiry") so it shows in Follow-ups due. "What do you need?" and the message go into Notes. Firms that reply within an hour are about 7× likelier to qualify a lead (Harvard Business Review, 2011), so speed matters.
+  - **Endpoint:** `POST /api/leads/website` with `Authorization: Bearer <form key>`. The website's server calls it after its own checks; the browser never sees the key. Fields: name*, email*, company, need, message* (JSON).
+  - **Form key:** generated once in Settings → Company (`settings.update`), shown once, stored only as a SHA-256 hash; regenerating revokes the old key. The database checks the key (no service-role key, §32.3).
+  - **Spam:** web forms attract heavy spam (Zoho users report it), so the website verifies a Cloudflare Turnstile token and a hidden honeypot field before calling the ERP. The ERP also ignores a repeat from the same email within 10 minutes (double submits) and accepts at most 30 website enquiries an hour, in case the key leaks.
+  - **Privacy:** under the DPDP Act 2023 the form states why the details are collected (to reply to the enquiry) and links the privacy policy.
+- **Website enquiry notifications.** A bell in the top bar (users with `leads.view`) counts website leads still New, i.e. nobody has reached them yet, and lists the latest with a link to each. A new enquiry pops up at once for everyone signed in (Supabase Realtime, RLS applies). The notification clears when someone works the lead (Contacted, Qualified, Lost or Won); there is no separate read/unread state because leads are shared.
 
 Sources: Zoho CRM standard lead fields, Kommo Instagram integration, Zoho CRM lead management FAQ, Zoho CRM data sharing rules, Zoho Deluge convert-lead docs, HubSpot lead record stages, InsideSales contact-attempt research, CRM lost-reason practice guides (TechAdvisory, Crayon).
 

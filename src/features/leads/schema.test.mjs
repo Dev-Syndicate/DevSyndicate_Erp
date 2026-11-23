@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { leadSchema, urlDate } from "./schema.ts";
+import { leadSchema, urlDate, websiteEnquirySchema } from "./schema.ts";
 
 const lead = (fields) => ({
   name: "Asha", company: "", email: "", phone: "", source: "instagram", source_detail: "", status: "new",
@@ -27,4 +27,12 @@ test("a handle stands in for contact details only on Instagram and LinkedIn", ()
 test("a social lead with nothing asks for the handle; a blank one does not count", () => {
   assert.deepEqual(errorAt({ source: "instagram" }), ["source_detail"]);
   assert.deepEqual(errorAt({ source: "instagram", source_detail: "   " }), ["source_detail"]);
+});
+
+test("website enquiries need a name, a real email and a message", () => {
+  const ok = websiteEnquirySchema.safeParse({ name: " Jane ", email: "jane@company.com", message: "A support bot" });
+  assert.deepEqual(ok.data, { name: "Jane", email: "jane@company.com", company: "", need: "", message: "A support bot" });
+  for (const bad of [{ email: "jane@company.com", message: "x" }, { name: "Jane", email: "not-an-email", message: "x" }, { name: "Jane", email: "jane@company.com", message: "  " }]) {
+    assert.equal(websiteEnquirySchema.safeParse(bad).success, false);
+  }
 });

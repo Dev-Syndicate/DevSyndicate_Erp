@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors, type FormState } from "@/lib/forms";
@@ -149,4 +150,19 @@ export async function removeBranding(kind: BrandingKind) {
   if (kind !== "logo" && kind !== "signature") return { error: "Invalid request." };
   const result = await setBrandingPath(kind, null);
   return result.error ? { error: result.error } : { ok: true };
+}
+
+/** New website form key (PRD §47): returned once, only its SHA-256 hash is kept; the old key stops working. */
+export async function generateWebsiteFormKey(): Promise<{ ok?: boolean; error?: string; key?: string }> {
+  const key = randomBytes(32).toString("base64url");
+  const { supabase, organizationId } = await orgId();
+  if (!organizationId) return { error: NO_PERMISSION };
+  const { data, error } = await supabase
+    .from("company_settings")
+    .update({ website_form_key_hash: createHash("sha256").update(key).digest("hex") })
+    .eq("organization_id", organizationId)
+    .select("organization_id");
+  if (error || !data.length) return { error: NO_PERMISSION };
+  revalidatePath("/settings/company");
+  return { ok: true, key };
 }

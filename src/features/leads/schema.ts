@@ -130,3 +130,12 @@ export const activitySchema = z
   .refine((a) => a.kind !== "call" || a.outcome, { path: ["outcome"], message: "How did the call go?" });
 
 export type ActivityInput = z.input<typeof activitySchema>;
+
+/** Website contact form (PRD §47): JSON from the website's server. Limits mirror submit_website_lead and the leads CHECKs. */
+export const websiteEnquirySchema = z.object({
+  name: z.string().trim().min(1, "Required").max(200),
+  email: z.email("Invalid email").max(320),
+  company: z.string().trim().max(200).default(""),
+  need: z.string().trim().max(100).default(""),
+  message: z.string().trim().min(1, "Required").max(4000),
+});

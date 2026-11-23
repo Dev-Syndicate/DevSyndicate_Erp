@@ -34,7 +34,7 @@ async function LeadDetail({ params }: { params: PageProps<"/leads/[id]">["params
     ["Email", lead.email && <a href={`mailto:${lead.email}`} className="hover:underline">{lead.email}</a>],
     ["Phone", lead.phone && <a href={`tel:${lead.phone}`} className="hover:underline">{lead.phone}</a>],
     ["Source", [sourceLabel(lead.source), lead.source_detail].filter(Boolean).join(" · ")],
-    ["Added by", [lead.created_by && people.get(lead.created_by), formatDate(lead.created_at)].filter(Boolean).join(" · ")],
+    ["Added by", [lead.created_by ? people.get(lead.created_by) : lead.source === "website" && "Website form", formatDate(lead.created_at)].filter(Boolean).join(" · ")],
     ...(lead.call_attempts ? [["Unanswered calls", `${lead.call_attempts} since the last time they picked up`] as [string, React.ReactNode]] : []),
     ...(lost
       ? [["Lost because", [lostReasonLabel(lead.lost_reason ?? ""), lead.lost_note].filter(Boolean).join(" · ")] as [string, React.ReactNode]]

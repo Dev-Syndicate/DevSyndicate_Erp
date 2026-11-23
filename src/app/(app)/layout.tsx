@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/features/auth/queries";
+import { WebsiteEnquiries } from "@/features/leads/components/website-enquiries";
 import { BackupStatus } from "@/features/settings/components/backup-status";
 
 async function UserSidebar() {
@@ -36,6 +37,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           <div className="ml-auto flex items-center gap-2">
             <Suspense>
               <BackupStatus />
+            </Suspense>
+            <Suspense>
+              <WebsiteEnquiries />
             </Suspense>
             <ThemeToggle />
           </div>

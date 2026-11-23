@@ -1,5 +1,6 @@
-import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { PAGE_SIZE } from "@/components/list-controls";
+import { createAnonClient as anon } from "@/lib/supabase/anon";
 import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,11 +41,6 @@ export async function getPost(id: string, db?: Db) {
 }
 
 // ───────────── Website API (anon: RLS returns only published posts and public columns, PRD §49) ─────────────
-
-const anon = () =>
-  createSupabaseClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
 export async function publicCategories() {
   const { data, error } = await anon().from("blog_categories").select("name, slug, description").order("name");
