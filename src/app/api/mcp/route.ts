@@ -7,7 +7,7 @@ import { createBearerClient } from "@/lib/supabase/bearer";
 const handler = createMcpHandler(registerTools, {
   serverInfo: { name: "devsyndicate-erp", version: "1.0.0" },
   instructions:
-    "DevSyndicate ERP (Indian agency, amounts in INR). Leads: find, add, update, log calls, mark won. Quotations: find clients, create and edit drafts. Blog: categories and draft posts for the company website (a person publishes). Dates are YYYY-MM-DD (IST).",
+    "DevSyndicate ERP (Indian agency, amounts in INR). Leads: find, add, update, log calls, mark won. Clients: find, read, add, update, add or edit contacts. Quotations: create and edit drafts. Blog: categories and draft posts for the company website (a person publishes). Dates are YYYY-MM-DD (IST).",
 });
 
 /** Accepts any valid Supabase access token for this project; the database decides what the user may do. */

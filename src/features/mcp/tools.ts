@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { getPost, listCategories, listPosts } from "@/features/blog/queries";
 import { categorySchema, POST_STATUSES, postSchema, type PostInput } from "@/features/blog/schema";
+import { clientSchema, contactSchema } from "@/features/clients/schema";
 import { getLead, LEAD_VIEWS, listLeads } from "@/features/leads/queries";
 import { ACTIVITY_KINDS, activitySchema, CALL_OUTCOMES, LEAD_SOURCES, leadRow, leadSchema, LOST_REASONS, lostSchema, OPEN_STATUSES, type LeadInput } from "@/features/leads/schema";
 import { getQuotation, listQuotations } from "@/features/quotations/queries";
@@ -89,6 +90,20 @@ const postFields = {
   meta_description: z.string().optional().describe("About 140-155 characters; empty uses the excerpt"),
   canonical_url: z.string().optional().describe("Only if the post first appeared on another site"),
 };
+const clientFields = {
+  company_name: z.string().describe("Company or person billed"),
+  billing_address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional().describe('Indian state name, e.g. "Tamil Nadu" (sets GST place of supply)'),
+  country: z.string().optional().describe('Defaults to "India"'),
+  pin_code: z.string().optional().describe("6 digits in India"),
+  gstin: z.string().optional().describe("15 characters; its first 2 digits must match the state"),
+  payment_terms_days: z.number().int().min(0).max(365).optional(),
+  notes: z.string().optional(),
+};
+const EMPTY_CLIENT = { billing_address: "", city: "", state: "", country: "India", pin_code: "", gstin: "", notes: "" };
+const contactFields = z.object({ name: z.string(), designation: z.string().optional(), email: z.string().optional(), phone: z.string().optional() });
+
 const EMPTY_POST = { slug: "", excerpt: "", seo_title: "", meta_description: "", canonical_url: "" };
 
 /** Company defaults for new quotation lines and dates (Settings → Company). */
@@ -277,6 +292,117 @@ export function registerTools(server: McpServer) {
       const { data, error } = await db.rpc("convert_lead", { p_id: lead_id, p_client_id: client_id as string });
       if (error) return fail(dbErrorMessage(error));
       return ok({ client_id: data, url: `/clients/${data}` });
+    }),
+  );
+
+  // ───────────── Clients ─────────────
+
+  server.registerTool(
+    "get_client",
+    { title: "Get client", description: "One client with all its details and contacts.", inputSchema: z.object({ id: z.uuid() }), annotations: READ },
+    run(async ({ id }, db) => {
+      const { data, error } = await db.from("clients").select("*, client_contacts(*)").eq("id", id).maybeSingle();
+      if (error) throw error;
+      return data ? ok({ ...data, url: `/clients/${id}` }) : fail("Client not found.");
+    }),
+  );
+
+  server.registerTool(
+    "create_client",
+    {
+      title: "Create client",
+      description:
+        "Adds a client, with an optional primary contact. If an active client with the same company name exists, returns it instead of saving; confirm with the user, then repeat with allow_duplicate: true.",
+      inputSchema: z.object({ ...clientFields, contact: contactFields.optional().describe("Primary contact"), allow_duplicate: z.boolean().optional() }),
+      annotations: WRITE,
+    },
+    run(async ({ contact, allow_duplicate, ...args }, db) => {
+      const client = clientSchema.safeParse({ ...EMPTY_CLIENT, ...args, payment_terms_days: args.payment_terms_days ?? "" });
+      if (!client.success) return invalid(client.error);
+      const primary = contact && contactSchema.safeParse({ designation: "", email: "", phone: "", ...contact, is_primary: true });
+      if (primary && !primary.success) return invalid(primary.error);
+      if (!allow_duplicate) {
+        const { data: duplicates } = await db.from("clients").select("id, company_name, city").ilike("company_name", client.data.company_name.replace(/[\\%_]/g, "\\$&")).is("deleted_at", null);
+        if (duplicates?.length) return ok({ saved: false, duplicates });
+      }
+      const { data: org } = await db.rpc("current_org_id");
+      if (!org) return fail("You don't have permission to do this.");
+      const { data, error } = await db.from("clients").insert({ ...client.data, organization_id: org }).select("id").single();
+      if (error) return fail(dbErrorMessage(error));
+      if (primary) {
+        const added = await db.from("client_contacts").insert({ ...primary.data, client_id: data.id, organization_id: org });
+        if (added.error) return ok({ saved: true, id: data.id, url: `/clients/${data.id}`, warning: "The client was saved but the contact wasn't; add it in the app." });
+      }
+      return ok({ saved: true, id: data.id, url: `/clients/${data.id}` });
+    }),
+  );
+
+  server.registerTool(
+    "update_client",
+    {
+      title: "Update client",
+      description: "Changes the given fields of a client; others stay as they are. Contacts: use save_client_contact.",
+      inputSchema: z.object({ id: z.uuid(), ...clientFields, company_name: clientFields.company_name.optional() }),
+      annotations: WRITE,
+    },
+    run(async ({ id, ...changes }, db) => {
+      const { data: cur, error: readError } = await db
+        .from("clients")
+        .select("company_name, billing_address, city, state, country, pin_code, gstin, payment_terms_days, notes, deleted_at")
+        .eq("id", id)
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!cur) return fail("Client not found.");
+      // The app shows archived clients read-only; RLS alone would allow the edit.
+      const { deleted_at, ...fields } = cur;
+      if (deleted_at) return fail("This client is archived. Restore it in the app first.");
+      const strip = Object.fromEntries(Object.entries(changes).filter(([, v]) => v !== undefined));
+      const client = clientSchema.safeParse({ ...fields, payment_terms_days: fields.payment_terms_days ?? "", ...strip });
+      if (!client.success) return invalid(client.error);
+      const { data, error } = await db.from("clients").update(client.data).eq("id", id).is("deleted_at", null).select("id, company_name");
+      if (error) return fail(dbErrorMessage(error));
+      return data.length ? ok({ ...data[0], url: `/clients/${id}` }) : fail("You can't edit clients.");
+    }),
+  );
+
+  server.registerTool(
+    "save_client_contact",
+    {
+      title: "Add or edit client contact",
+      description:
+        "Adds a contact to a client, or edits one when contact_id is given (only the fields given change). A client can have many contacts: call once per contact. is_primary: true makes it the primary contact (the others stop being primary); false removes primary from it.",
+      inputSchema: z.object({
+        client_id: z.uuid(),
+        contact_id: z.uuid().optional().describe("From get_client; leave out to add a new contact"),
+        ...contactFields.shape,
+        name: contactFields.shape.name.optional().describe("Required when adding"),
+        is_primary: z.boolean().optional().describe("A client's first contact is primary by default"),
+      }),
+      annotations: WRITE,
+    },
+    run(async ({ client_id, contact_id, ...changes }, db) => {
+      const { data: client, error: readError } = await db
+        .from("clients")
+        .select("organization_id, deleted_at, client_contacts(id, name, designation, email, phone, is_primary)")
+        .eq("id", client_id)
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!client) return fail("Client not found.");
+      // The app shows archived clients read-only.
+      if (client.deleted_at) return fail("This client is archived. Restore it in the app first.");
+      const cur = contact_id ? client.client_contacts.find((c) => c.id === contact_id) : undefined;
+      if (contact_id && !cur) return fail("Contact not found on this client.");
+      const strip = Object.fromEntries(Object.entries(changes).filter(([, v]) => v !== undefined));
+      // A client's first contact is primary unless told otherwise.
+      const contact = contactSchema.safeParse({ name: "", designation: "", email: "", phone: "", is_primary: client.client_contacts.length === 0, ...cur, ...strip });
+      if (!contact.success) return invalid(contact.error);
+      // Marking a contact primary un-marks the others in the database (trigger one_primary_contact).
+      const { data, error } = cur
+        ? await db.from("client_contacts").update(contact.data).eq("id", cur.id).eq("client_id", client_id).select("id")
+        : await db.from("client_contacts").insert({ ...contact.data, client_id, organization_id: client.organization_id }).select("id");
+      if (error) return fail(dbErrorMessage(error));
+      if (!data.length) return fail("You can't edit client contacts.");
+      return ok({ saved: true, contact_id: data[0].id, url: `/clients/${client_id}` });
     }),
   );
 

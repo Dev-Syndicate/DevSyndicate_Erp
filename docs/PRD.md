@@ -1953,13 +1953,15 @@ Claude connects to remote MCP servers as custom connectors (Pro, Max, Team, Ente
 
 ```text
 Leads        list_leads, get_lead, create_lead, update_lead, log_lead_activity, mark_lead_lost, mark_lead_won
-Quotations   list_clients, list_quotations, get_quotation, create_quotation, update_quotation (drafts only)
+Clients      list_clients, get_client, create_client (with an optional primary contact), update_client, save_client_contact
+Quotations   list_quotations, get_quotation, create_quotation, update_quotation (drafts only)
 Blog         list_blog_categories, create_blog_category, list_blog_posts, get_blog_post, create_blog_post, update_blog_post (drafts only)
 ```
 
 - Inputs are validated with the same rules as the forms (§47, §11). `create_lead` returns possible duplicates first; the caller repeats with `allow_duplicate` to save anyway.
+- `create_client` returns an active client with the same company name first; the caller repeats with `allow_duplicate` to save anyway. `update_client` changes only the fields given. `save_client_contact` adds a contact or edits one (only the fields given), and can make it the primary contact. Archived clients are read-only through Claude, as in the app. Same validation as the client form (PIN, state, GSTIN matching the state, §24).
 - `create_quotation` fills anything left out from Company settings: validity days, default terms, default tax rate, default SAC code.
-- Not available through Claude: sending, accepting or converting quotations; publishing blog posts or uploading images; invoices, payments, expenses, deleting anything.
+- Not available through Claude: archiving clients or deleting contacts; sending, accepting or converting quotations; publishing blog posts or uploading images; invoices, payments, expenses, deleting anything.
 
 ## Setup (once, Supabase dashboard)
 
